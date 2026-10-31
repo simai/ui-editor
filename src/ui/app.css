@@ -1,0 +1,37 @@
+/* The editor shell. Layout inside a region comes from Framework utilities in
+   the markup (flex, gap-*, p-*, items-*); the side panels are sf-drawer inside
+   the editor area. This file keeps only what no utility or component says.
+   Values are Framework tokens. */
+html, body { margin: 0; block-size: 100%; }
+body { background: var(--sf-surface-0); color: var(--sf-on-surface); display: flex; flex-direction: column; min-block-size: 100vh; }
+.muted { color: var(--sf-on-surface-variant); }
+
+/* Top bar: one row of size-1/2 controls (32 px), 48 px high. */
+.top-bar { block-size: var(--sf-d2); flex-shrink: 0; border-block-end: var(--sf-px) solid var(--sf-outline-variant); box-sizing: border-box; }
+.top-title { font-weight: var(--sf-font-weight-medium); min-inline-size: 0; }
+.storage-state { border-block-end: var(--sf-px) solid var(--sf-outline-variant); background: var(--sf-surface-1); }
+
+/* The editor area holds the panels and the canvas between them. */
+.editor { flex: 1; display: flex; min-block-size: 0; position: relative; }
+.canvas-area { flex: 1; min-inline-size: 0; display: flex; flex-direction: column; background: var(--sf-surface-1); }
+.canvas-scroll { flex: 1; overflow: auto; padding: var(--sf-space-2); box-sizing: border-box; }
+.canvas { max-inline-size: var(--sf-h2); margin-inline: auto; padding: var(--sf-space-2); background: var(--sf-surface-0); border-radius: var(--sf-radius--surface); box-sizing: border-box; }
+.canvas section { display: flex; flex-direction: column; gap: var(--sf-space-1); padding-block: var(--sf-space-1\/2); }
+.canvas h1, .canvas h2, .canvas p { margin: 0; }
+.problems { color: var(--sf-error); }
+#content-view { display: flex; align-items: center; justify-content: center; }
+#content-view[hidden] { display: none; }
+
+.pane-title { font-size: var(--sf-text--size-1); font-weight: var(--sf-font-weight-bold); }
+.props { display: grid; grid-template-columns: auto 1fr; gap: var(--sf-space-1\/4) var(--sf-space-1); }
+.props dt { color: var(--sf-on-surface-variant); }
+.props dd { margin: 0; overflow-wrap: anywhere; }
+
+/* The edge of a panel shows where it can be dragged. The panel keeps a
+   scrollbar's room at both sides and sf-resizer stands inside that room: the
+   body scrolls instead, so the handle is on the edge itself
+   (simai/ui-source#59, docs/GAPS.md G-01). */
+.sf-drawer-panel:has(> .sf-drawer-body > sf-resizer) { overflow: visible; scrollbar-gutter: auto; }
+.sf-drawer-panel:has(> .sf-drawer-body > sf-resizer) > .sf-drawer-body { overflow-y: auto; min-block-size: 0; flex: 1; }
+sf-resizer { --sf-resizer-line-color: var(--sf-outline-variant); }
+body[data-layout="narrow"] sf-resizer { display: none; }

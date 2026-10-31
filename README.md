@@ -5,8 +5,9 @@ The reference page editor for SIMAI Framework and SIMAI Pro, in the line of
 pages before products take them: the email editor (`simai/ui-mail`), Larena's
 layout editor and documentation editing in Docara.
 
-**Status: started 2026-10-31. Nothing is built yet.** The repository is private
-until it passes acceptance.
+**Status: step 0, the shell, built 2026-11-01** on Framework `ui-2194bce0e673`
+and Pro `larena-5a2ae14a0ea0`. The repository is private until it passes
+acceptance.
 
 ## Two modes, one core
 
@@ -38,10 +39,29 @@ through one node, so an author never breaks the layout.
 | Path | What it is |
 |:---|:---|
 | [`docs/STATUS.md`](docs/STATUS.md) | Decisions, plan and what each step must prove |
+| [`docs/GAPS.md`](docs/GAPS.md) | What the pinned releases do not give yet, and who owns it |
+| [`src/ui/`](src/ui) | The shell: the page, its wiring, the page store and the seeded pages |
+| [`locales/`](locales) | The RU/EN dictionaries |
+| [`framework.lock.json`](framework.lock.json) | The pinned Framework release and Pro package, with their hashes |
+| [`scripts/`](scripts) | Fetch and verify the pins, build, serve, the checks and the end-to-end runs |
 | [`prototypes/block-canvas.html`](prototypes/block-canvas.html) | Behaviour accepted for the layout mode (toolbar above the block) |
 | [`prototypes/content-editor.html`](prototypes/content-editor.html) | Behaviour accepted for the content mode, with parameters and JSON, Markdown and HTML |
 
 The prototypes are behaviour references in plain code, not code to copy.
+
+## Run it
+
+Node 24 (`.nvmrc`) and Google Chrome for the end-to-end runs.
+
+```sh
+npm ci
+node scripts/framework-fetch.mjs   # download the pins and check every hash
+node scripts/build-ui.mjs          # dist/: a static site
+node scripts/serve.mjs             # http://127.0.0.1:4730/
+npm run check && npm run typecheck && npm run e2e
+```
+
+CI (`.github/workflows/quality.yml`) runs the same chain.
 
 ## Licence
 

@@ -1,0 +1,46 @@
+{
+  "schema": "simai.ui-editor.framework-lock",
+  "version": 1,
+  "note": "The SIMAI Framework release and the SIMAI Pro package the editor is built and checked against, never latest. scripts/framework-fetch.mjs downloads the npm tarball and the package tar, checks them against the hashes here, checks every Framework file against the package's own package-manifest.json, and checks that the Pro package's receipt names this pair and the pinned source. A repin changes this file, then the end-to-end runs pass again.",
+  "pair": "ui-2194bce0e673",
+  "pinned_on": "2026-10-31",
+  "ui": {
+    "repository": "simai/ui",
+    "commit": "2194bce0e673fd96fb1fe48e66ebcbc50b3495e0",
+    "npm": {
+      "package": "@simai-studio/ui",
+      "version": "5.20261031.1043",
+      "tarball": "https://registry.npmjs.org/@simai-studio/ui/-/ui-5.20261031.1043.tgz",
+      "integrity": "sha512-iCcXrafTlhRp+0NEqfb/1raJb69+xtZzNhnPuDAQBeJdZ/cKBUYTeZTz09YFQl7fPDSh+v7F50T0vdysHbdXOg==",
+      "shasum": "e9f758f3880b00b4f112c495aa92084e658e6e4e",
+      "tarball_sha256": "970201691518a68b6efecbfd66306482fe167fb912dc1b5443efa17ca1db395e",
+      "file_count": 4785,
+      "license": "Apache-2.0"
+    },
+    "package_manifest": {
+      "path": "package-manifest.json",
+      "sha256": "02d580dd9d9c40f5fbb36e6965e92421532f070ef6e107f12e9aaa32ac4df048",
+      "files": 4779
+    }
+  },
+  "ui_source": {
+    "repository": "simai/ui-source",
+    "commit": "b654f80718f7fe3e70ba4981ece0a806853a4aa1"
+  },
+  "package": {
+    "name": "larena",
+    "release": "larena-5a2ae14a0ea0",
+    "repository": "simai/larena-ui",
+    "source": {
+      "repository": "simai/ui-pro",
+      "commit": "5a2ae14a0ea04d5bcb34b20329e086dbe69608de"
+    },
+    "tar": "https://github.com/simai/larena-ui/releases/download/larena-5a2ae14a0ea0/package-larena.tar",
+    "tar_sha256": "ce60d5dd9f07b9259104ab08253c88d95146d090ef5ea914e5e6d5d4580ee1e2",
+    "receipt": "https://github.com/simai/larena-ui/releases/download/larena-5a2ae14a0ea0/package-receipt.json",
+    "receipt_sha256": "a55da62a00e349070e91e50f7f13ada214bceb701412ffbd06419ce5ebf9afea",
+    "base": "pkg/larena/smart",
+    "licence": "PolyForm-Small-Business-1.0.0 OR PolyForm-Noncommercial-1.0.0 OR LicenseRef-SIMAI-Commercial"
+  },
+  "history": []
+}

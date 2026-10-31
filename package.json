@@ -1,0 +1,27 @@
+{
+  "name": "ui-editor",
+  "private": true,
+  "version": "0.1.0",
+  "description": "SIMAI Editor: the reference page editor for SIMAI Framework and SIMAI Pro.",
+  "author": "Rim Zabarov",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "type": "module",
+  "engines": {
+    "node": ">=24.11 <25"
+  },
+  "scripts": {
+    "check": "node scripts/check-hygiene.mjs && node scripts/check-lock.mjs",
+    "typecheck": "tsc -p .",
+    "framework:fetch": "node scripts/framework-fetch.mjs",
+    "build": "node scripts/build-ui.mjs",
+    "serve": "node scripts/serve.mjs",
+    "e2e": "node scripts/build-ui.mjs && node scripts/e2e-shell.mjs && node scripts/e2e-a11y.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "axe-core": "4.14.0",
+    "esbuild": "0.28.2",
+    "playwright-core": "1.63.0",
+    "typescript": "6.0.3"
+  }
+}

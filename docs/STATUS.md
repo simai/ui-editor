@@ -31,3 +31,22 @@ points are kept in the dispatcher's control plane:
 This repository starts with the shell (panels that resize and close, the page
 list, the two modes switching) over pinned Framework and Pro releases, and takes
 each part as it is released.
+
+## Step 0: the shell
+
+Built 2026-11-01 on Framework `ui-2194bce0e673` (`@simai-studio/ui@5.20261031.1043`)
+and Pro `larena-5a2ae14a0ea0`, the newest released pair on that day.
+
+| What | Proved by |
+|:---|:---|
+| The pins match their hashes: the npm tarball, every file of the package manifest, the Pro tar, its receipt naming this pair and the pinned sources | `scripts/framework-fetch.mjs` |
+| One exact pair, never latest; the page loads that pair and that package; Node pinned alike in `.nvmrc`, `package.json` and CI | `scripts/check-lock.mjs` |
+| No local paths, no secret-shaped strings, the required files, every doc reachable from the README | `scripts/check-hygiene.mjs` |
+| The seeded page is a Composition Document (`ui-layout`) and the canvas holds exactly what `SF.Composition.render` draws | `scripts/e2e-shell.mjs` |
+| A top bar of 32 px controls; both panels resize with `sf-resizer` (drag, arrows, double click, remembered) and close by their `left_panel_*` / `right_panel_*` toggles and ⌘\ / ⌥⌘\, remembered, with no tab stop left in a closed panel | `scripts/e2e-shell.mjs` |
+| Layout mode: `sf-composition-overlay` selects a block and its frame stands on it, also after the panels close; Content mode: a placeholder until `sf-content-editor` | `scripts/e2e-shell.mjs` |
+| The page list in IndexedDB: seeded, opened, a new page added, kept over a reload | `scripts/e2e-shell.mjs` |
+| RU/EN dictionaries, the components' words too, kept over a reload | `scripts/e2e-shell.mjs` |
+| axe-core finds nothing at 1440 light and dark, 390, 400 % zoom, forced colours and reduced motion, in both modes and with a block selected | `scripts/e2e-a11y.mjs` |
+
+What is missing is in [GAPS.md](GAPS.md).
