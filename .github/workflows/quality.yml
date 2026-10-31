@@ -30,5 +30,7 @@ jobs:
         run: node scripts/build-ui.mjs
       - name: The shell end to end in headless Chrome (canvas, top bar, panels, modes, page list, RU/EN)
         run: node scripts/e2e-shell.mjs --chrome "$(command -v google-chrome)"
-      - name: Accessibility (axe-core) at 1440 light and dark, 390, 400 % zoom, forced colours, reduced motion
+      - name: The Layout mode end to end (overlay toolbar, keys, drag, insert at the seam, no jump)
+        run: node scripts/e2e-layout.mjs --chrome "$(command -v google-chrome)"
+      - name: Accessibility (axe-core) at 1440 light and dark, 390, 400 % zoom, forced colours, reduced motion, a block selected, the list of types open
         run: node scripts/e2e-a11y.mjs --chrome "$(command -v google-chrome)"

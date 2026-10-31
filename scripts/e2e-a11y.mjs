@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // The accessibility gate: axe-core on the editor at 1440 light and dark, on a
 // phone (390), at 320×256 (what 400 % zoom gives a 1280 px screen), in forced
-// colours and with reduced motion, each in both modes and with a block
-// selected. Any violation fails the run unless it is in ALLOWED, which holds
+// colours and with reduced motion, each in both modes, with a block selected
+// (the overlay's toolbar above it) and with the list of types open. Any violation fails the run unless it is in ALLOWED, which holds
 // Framework defects only, each with its simai/ui-source issue. The page must
 // also never scroll sideways.
 //
@@ -42,6 +42,11 @@ async function audit(name, options) {
     await page.evaluate(() => document.querySelector('#overlay').select('home-layout-title'));
     await page.waitForTimeout(300);
     await scan('a block selected');
+    await page.evaluate(() => globalThis.uiEditor.offerTypes({parent_id: 'home-root', slot: 'default', index: 1}));
+    await page.waitForTimeout(300);
+    await scan('the list of types open');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
   }
   await page.evaluate(() => globalThis.uiEditor.setMode('content'));
   await page.waitForTimeout(300);

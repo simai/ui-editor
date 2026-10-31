@@ -31,7 +31,14 @@
     "type.layout.columns": "Columns",
     "type.content.heading": "Heading",
     "type.content.paragraph": "Paragraph",
-    "storage.unavailable": "The browser storage is unavailable: pages will not outlive this tab."
+    "storage.unavailable": "The browser storage is unavailable: pages will not outlive this tab.",
+    "action.drag": "Drag",
+    "action.up": "Move up",
+    "action.down": "Move down",
+    "action.duplicate": "Duplicate",
+    "action.remove": "Delete",
+    "insert.label": "What to insert",
+    "insert.heading": "Block types"
   },
   "seed": {
     "home.title": "SIMAI page editor",
@@ -41,6 +48,8 @@
     "home.contentTitle": "The Content mode",
     "home.contentText": "Typing in a flow comes with the sf-content-editor component.",
     "about.title": "About",
-    "about.text": "The second page shows that the page list is kept in the browser and switches the document on the canvas."
+    "about.text": "The second page shows that the page list is kept in the browser and switches the document on the canvas.",
+    "starter.heading": "A new heading",
+    "starter.paragraph": "A new paragraph."
   }
 }

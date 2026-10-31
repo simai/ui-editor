@@ -49,4 +49,21 @@ and Pro `larena-5a2ae14a0ea0`, the newest released pair on that day.
 | RU/EN dictionaries, the components' words too, kept over a reload | `scripts/e2e-shell.mjs` |
 | axe-core finds nothing at 1440 light and dark, 390, 400 % zoom, forced colours and reduced motion, in both modes and with a block selected | `scripts/e2e-a11y.mjs` |
 
+## Step 1: the Layout mode on the overlay
+
+Built 2026-11-01 on Framework `ui-a7c68408a293` (`@simai-studio/ui@5.20261031.2233`,
+ui-source `c2949690`) and Pro `larena-7bc706e9a07f`, the pair that brought
+`sf-composition-overlay` 1.3.0. The shell's proofs above hold on this pair.
+
+| What | Proved by |
+|:---|:---|
+| The repin: both pins match their hashes, and the Pro tar is the one its release receipt names (`output.archive_sha256`) | `scripts/framework-fetch.mjs` |
+| The toolbar stands above the selected block (`placement="top"`) and never covers it: on select, after a move and after a scroll | `scripts/e2e-layout.mjs` |
+| Icon actions, 32 px: drag, up, down, duplicate, delete, named in the interface language; what cannot be done where the block stands is dimmed (the first block cannot go up, the root cannot move) | `scripts/e2e-layout.mjs` |
+| ⌥↓ and ⌥↑ move, ⌘D copies with fresh ids, ⌫ deletes and selects the next block; the buttons do the same; a drag by the grip moves | `scripts/e2e-layout.mjs` |
+| One + at the seam under the pointer raises, under it, a simple list of the types the place accepts; the chosen one is inserted there and selected | `scripts/e2e-layout.mjs` |
+| No jump: select and move keep the canvas's scroll and the frame on its block; on scroll the frame moves with its block in the same frame, with no script | `scripts/e2e-layout.mjs` |
+| Every change is saved in IndexedDB and outlives a reload; an edit keeps the page list's order | `scripts/e2e-layout.mjs` |
+| axe-core finds nothing with the toolbar shown and with the list of types open, at every size and scheme of step 0 | `scripts/e2e-a11y.mjs` |
+
 What is missing is in [GAPS.md](GAPS.md).

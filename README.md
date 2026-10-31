@@ -5,9 +5,10 @@ The reference page editor for SIMAI Framework and SIMAI Pro, in the line of
 pages before products take them: the email editor (`simai/ui-mail`), Larena's
 layout editor and documentation editing in Docara.
 
-**Status: step 0, the shell, built 2026-11-01** on Framework `ui-2194bce0e673`
-and Pro `larena-5a2ae14a0ea0`. The repository is private until it passes
-acceptance.
+**Status: step 1, the Layout mode on the overlay, built 2026-11-01** on
+Framework `ui-a7c68408a293` and Pro `larena-7bc706e9a07f`: blocks are selected,
+moved (buttons, keys, a drag by the grip), copied, deleted and inserted at the
+seam. The repository is private until it passes acceptance.
 
 ## Two modes, one core
 
@@ -40,7 +41,7 @@ through one node, so an author never breaks the layout.
 |:---|:---|
 | [`docs/STATUS.md`](docs/STATUS.md) | Decisions, plan and what each step must prove |
 | [`docs/GAPS.md`](docs/GAPS.md) | What the pinned releases do not give yet, and who owns it |
-| [`src/ui/`](src/ui) | The shell: the page, its wiring, the page store and the seeded pages |
+| [`src/ui/`](src/ui) | The shell: the page, its wiring, the Layout mode's changes to a Document, the page store and the seeded pages |
 | [`locales/`](locales) | The RU/EN dictionaries |
 | [`framework.lock.json`](framework.lock.json) | The pinned Framework release and Pro package, with their hashes |
 | [`scripts/`](scripts) | Fetch and verify the pins, build, serve, the checks and the end-to-end runs |

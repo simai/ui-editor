@@ -3,6 +3,11 @@
    the editor area. This file keeps only what no utility or component says.
    Values are Framework tokens. */
 html, body { margin: 0; block-size: 100%; }
+/* The panels stand under the top bar, docked or sliding (sf-drawer's own
+   variables). The editor area is no data-sf-overlay-container: a container is
+   the containing block of everything fixed in it, and the overlay's tooltips
+   would stand a top bar lower than their buttons (docs/GAPS.md, G-10). */
+:root { --sf-drawer-block-start: var(--sf-d2); --sf-drawer-dock-block-start: var(--sf-d2); }
 body { background: var(--sf-surface-0); color: var(--sf-on-surface); display: flex; flex-direction: column; min-block-size: 100vh; }
 .muted { color: var(--sf-on-surface-variant); }
 
@@ -15,6 +20,10 @@ body { background: var(--sf-surface-0); color: var(--sf-on-surface); display: fl
 .editor { flex: 1; display: flex; min-block-size: 0; position: relative; }
 .canvas-area { flex: 1; min-inline-size: 0; display: flex; flex-direction: column; background: var(--sf-surface-1); }
 .canvas-scroll { flex: 1; overflow: auto; padding: var(--sf-space-2); box-sizing: border-box; }
+/* The overlay's toolbar stands above the selected block (placement="top"):
+   the scroller keeps its height and gap above the canvas, so the first block
+   has room for it too. */
+#layout-view { padding-block-start: calc(var(--sf-d0) + var(--sf-space-1)); }
 .canvas { max-inline-size: var(--sf-h2); margin-inline: auto; padding: var(--sf-space-2); background: var(--sf-surface-0); border-radius: var(--sf-radius--surface); box-sizing: border-box; }
 .canvas section { display: flex; flex-direction: column; gap: var(--sf-space-1); padding-block: var(--sf-space-1\/2); }
 .canvas h1, .canvas h2, .canvas p { margin: 0; }

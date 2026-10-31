@@ -1,5 +1,6 @@
 // The page list, kept in this browser's IndexedDB: database `ui-editor`, store
-// `pages`, one record per page {id, title, document, updated}. When IndexedDB
+// `pages`, one record per page {id, title, document, created, updated}, listed in
+// the order they were made. When IndexedDB
 // is refused (a private window, a blocked origin) the list lives in memory for
 // the tab and the shell says so.
 
@@ -9,6 +10,8 @@ export interface Page {
   id: string;
   title: string;
   document: CompositionDocument;
+  /** ISO time the page was made: the list's order, which an edit keeps. Pages kept before step 1 have none. */
+  created?: string;
   /** ISO time of the last write. */
   updated: string;
 }
@@ -37,13 +40,13 @@ function open(): Promise<IDBDatabase> {
   });
 }
 
-const byUpdate = (pages: Page[]) => pages.sort((a, b) => a.updated.localeCompare(b.updated) || a.id.localeCompare(b.id));
+const inOrder = (pages: Page[]) => pages.sort((a, b) => (a.created ?? a.updated).localeCompare(b.created ?? b.updated) || a.id.localeCompare(b.id));
 
 function memoryStore(): PageStore {
   const pages = new Map<string, Page>();
   return {
     persistent: false,
-    list: async () => byUpdate([...pages.values()].map((page) => structuredClone(page))),
+    list: async () => inOrder([...pages.values()].map((page) => structuredClone(page))),
     put: async (page) => void pages.set(page.id, structuredClone(page)),
   };
 }
@@ -57,7 +60,7 @@ export async function openPageStore(): Promise<PageStore> {
   }
   return {
     persistent: true,
-    list: async () => byUpdate(await request(db.transaction(STORE).objectStore(STORE).getAll() as IDBRequest<Page[]>)),
+    list: async () => inOrder(await request(db.transaction(STORE).objectStore(STORE).getAll() as IDBRequest<Page[]>)),
     put: async (page) => {
       const tx = db.transaction(STORE, 'readwrite');
       tx.objectStore(STORE).put(page);

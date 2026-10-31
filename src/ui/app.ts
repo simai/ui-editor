@@ -1,46 +1,66 @@
-// The editor shell, step 0: one page from the page list, rendered by
-// SF.Composition.render onto the canvas; the Layout mode draws
-// sf-composition-overlay over it; the Content mode shows a placeholder until
-// sf-content-editor is released in SIMAI Pro. Everything on screen is a
-// Framework or Pro component; this file only wires them.
+// The editor shell: one page from the page list, rendered by
+// SF.Composition.render onto the canvas. The Layout mode draws
+// sf-composition-overlay over it, with its toolbar above the selected block and
+// one insertion point at the seam; the editor turns the overlay's intent into a
+// changed Document, saves it and draws it again. The Content mode shows a
+// placeholder until sf-content-editor is released in SIMAI Pro. Everything on
+// screen is a Framework or Pro component; this file only wires them.
 
 import {onUiLanguage, preferredLanguage, setUiLanguage, t, translate, uiLanguage, type Language} from './i18n.ts';
 import {openPageStore, type Page, type PageStore} from './pages.ts';
-import {blankDocument, seedDocuments, type CompositionDocument, type CompositionNode} from './seed.ts';
+import {abilities, duplicate, freshId, locate, move, neighbour, remove, shift, insert} from './document.ts';
+import {blankDocument, seedDocuments, starterNode, STARTER_TYPES, type CompositionDocument, type CompositionNode} from './seed.ts';
 import {startShell} from './shell.ts';
 
 type Mode = 'layout' | 'content';
+interface TypeManifest {
+  type: string;
+  category: string;
+  slots: Record<string, {categories: string[]}>;
+}
 interface Composition {
+  BUILTIN_TYPE_MANIFESTS: TypeManifest[];
   render(document: CompositionDocument): Promise<{html: string; diagnostics: {code: string; path: string}[]}>;
+}
+interface Action {
+  id: string;
+  label: string;
+  icon: string;
+  shortcut?: string;
+  disabled?: boolean;
+  tone?: 'danger';
+}
+interface InsertTarget {
+  parent_id: string;
+  slot: string;
+  index: number;
 }
 interface Overlay extends HTMLElement {
   setDocument(document: CompositionDocument, options?: {describe?: (node: CompositionNode) => {label: string}}): unknown;
+  setActions(actions: Action[]): unknown;
+  setInsertionTarget(target: InsertTarget | null): unknown;
   select(id: string | null, options?: {focus?: boolean; emit?: boolean}): unknown;
   refresh(): unknown;
 }
+interface ContextMenu extends HTMLElement {
+  entries: unknown[];
+  openFor(anchor: Element): unknown;
+}
 
-const USED = ['sf-composition-overlay', 'sf-menu', 'sf-button-group', 'sf-drawer', 'sf-resizer', 'sf-icon-button', 'sf-button'];
+const USED = ['sf-composition-overlay', 'sf-context-menu', 'sf-menu', 'sf-button-group', 'sf-drawer', 'sf-resizer', 'sf-icon-button', 'sf-button'];
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const sf = () => (globalThis as unknown as {SF: {Composition: Composition}}).SF;
 
-const state: {store: PageStore | null; pages: Page[]; current: string | null; mode: Mode; selected: string | null} = {
+const state: {store: PageStore | null; pages: Page[]; current: string | null; mode: Mode; selected: string | null; inserting: InsertTarget | null} = {
   store: null,
   pages: [],
   current: null,
   mode: 'layout',
   selected: null,
+  inserting: null,
 };
 
 const page = () => state.pages.find((p) => p.id === state.current) ?? null;
-
-function findNode(node: CompositionNode, id: string): CompositionNode | null {
-  if (node.id === id) return node;
-  for (const child of Object.values(node.slots ?? {}).flat()) {
-    const found = findNode(child, id);
-    if (found) return found;
-  }
-  return null;
-}
 
 const typeLabel = (type: string) => {
   const label = t(`type.${type}`);
@@ -55,7 +75,7 @@ function showPages() {
 
 function showProperties() {
   const current = page();
-  const node = current && state.selected ? findNode(current.document.root, state.selected) : null;
+  const node = current && state.selected ? (locate(current.document.root, state.selected)?.node ?? null) : null;
   $('#props-empty').hidden = Boolean(node);
   $('#props').hidden = !node;
   if (node) {
@@ -64,7 +84,26 @@ function showProperties() {
   }
 }
 
-async function renderCanvas() {
+/** The toolbar over the selected block: icons, keys, and what cannot be done where it stands. */
+function showActions() {
+  const current = page();
+  const can = current && state.selected ? abilities(current.document, state.selected) : {nested: false, first: true, last: true};
+  $<Overlay>('#overlay').setActions([
+    {id: 'drag', label: t('action.drag'), icon: 'drag_indicator', disabled: !can.nested},
+    {id: 'move-up', label: t('action.up'), icon: 'arrow_upward', shortcut: '⌥↑', disabled: can.first},
+    {id: 'move-down', label: t('action.down'), icon: 'arrow_downward', shortcut: '⌥↓', disabled: can.last},
+    {id: 'duplicate', label: t('action.duplicate'), icon: 'content_copy', shortcut: '⌘D', disabled: !can.nested},
+    {id: 'remove', label: t('action.remove'), icon: 'delete', shortcut: '⌫', tone: 'danger', disabled: !can.nested},
+  ]);
+}
+
+function select(id: string | null) {
+  state.selected = id;
+  showProperties();
+  showActions();
+}
+
+async function renderCanvas(keep: string | null = null) {
   const current = page();
   const canvas = $('#canvas');
   const problems = $('#canvas-problems');
@@ -80,8 +119,72 @@ async function renderCanvas() {
   canvas.dataset.document = current.id;
   const overlay = $<Overlay>('#overlay');
   overlay.setDocument(current.document, {describe: (node) => ({label: typeLabel(node.type)})});
-  state.selected = null;
-  showProperties();
+  const kept = keep && locate(current.document.root, keep) ? keep : null;
+  overlay.select(kept, {emit: false});
+  select(kept);
+}
+
+/** Saves the changed Document of the open page, draws it and selects `selected`. */
+async function change(document: CompositionDocument, selected: string | null) {
+  const current = page();
+  if (!current || document === current.document) return;
+  const changed: Page = {...current, document, updated: new Date().toISOString()};
+  state.pages = state.pages.map((p) => (p.id === changed.id ? changed : p));
+  await state.store!.put(changed);
+  await renderCanvas(selected);
+}
+
+function apply(action: string, id: string) {
+  const current = page();
+  if (!current || !locate(current.document.root, id)) return;
+  const document = current.document;
+  if (action === 'move-up' || action === 'move-down') void change(shift(document, id, action === 'move-up' ? -1 : 1), id);
+  else if (action === 'duplicate') {
+    const twin = duplicate(document, id);
+    if (twin) void change(twin.document, twin.id);
+  } else if (action === 'remove') void change(remove(document, id), neighbour(document, id));
+}
+
+/** The starter types that the parent's slot accepts, by the Framework's own type manifests. */
+function typesFor(target: InsertTarget) {
+  const current = page();
+  const parent = current ? locate(current.document.root, target.parent_id)?.node : null;
+  const manifests = sf().Composition.BUILTIN_TYPE_MANIFESTS;
+  const accepts = manifests.find((m) => m.type === parent?.type)?.slots[target.slot]?.categories ?? [];
+  return STARTER_TYPES.filter((type) => accepts.includes(manifests.find((m) => m.type === type)?.category ?? ''));
+}
+
+const TYPE_ICONS: Record<string, string> = {'content.heading': 'title', 'content.paragraph': 'notes', 'layout.section': 'view_agenda'};
+
+/** The seam's + raises a simple list of types; the block picker proper is ui-pro's (plan step 5, docs/GAPS.md G-11). */
+function offerTypes(target: InsertTarget) {
+  const overlay = $<Overlay>('#overlay');
+  const types = typesFor(target);
+  if (types.length === 0) return void overlay.setInsertionTarget(null);
+  state.inserting = target;
+  const menu = $<ContextMenu>('#insert-menu');
+  menu.entries = [
+    {type: 'heading', text: t('insert.heading')},
+    ...types.map((type) => ({id: type, text: typeLabel(type), icon: TYPE_ICONS[type]})),
+  ];
+  // The overlay keeps the chosen place marked and its + on screen; the list
+  // opens under the + (the button is the whole seam line, the mark its circle).
+  // The insert event names the place only (G-12).
+  const key = `${target.parent_id}|${target.slot}|${target.index}`;
+  const place = [...overlay.querySelectorAll<HTMLElement>('button[data-key]')].find((button) => button.dataset.key === key);
+  menu.openFor(place?.querySelector('.sf-composition-overlay-insert-mark') ?? place ?? overlay);
+}
+
+
+function insertType(type: (typeof STARTER_TYPES)[number]) {
+  const current = page();
+  const target = state.inserting;
+  state.inserting = null;
+  $<Overlay>('#overlay').setInsertionTarget(null);
+  if (!current || !target) return;
+  const language = current.document.locale === 'en' ? 'en' : 'ru';
+  const node = starterNode(type, (base) => freshId(current.document, `${current.id}-${base}`), language);
+  void change(insert(current.document, target.parent_id, target.slot, target.index, node), node.id);
 }
 
 async function openPage(id: string) {
@@ -97,7 +200,8 @@ async function newPage() {
   while (state.pages.some((p) => p.id === `page-${n}`)) n += 1;
   const id = `page-${n}`;
   const title = t('pages.untitled', {n});
-  const created: Page = {id, title, document: blankDocument(id, title, uiLanguage()), updated: new Date().toISOString()};
+  const at = new Date().toISOString();
+  const created: Page = {id, title, document: blankDocument(id, title, uiLanguage()), created: at, updated: at};
   await store.put(created);
   state.pages = await store.list();
   await openPage(id);
@@ -132,7 +236,7 @@ async function start() {
   wordsOfComponents();
   onUiLanguage(() => {
     wordsOfComponents();
-    void renderCanvas();
+    void renderCanvas(state.selected);
   });
 
   const store = await openPageStore();
@@ -142,7 +246,8 @@ async function start() {
   if (pages.length === 0) {
     const at = Date.now();
     for (const [index, seed] of seedDocuments(uiLanguage()).entries()) {
-      await store.put({...seed, updated: new Date(at + index).toISOString()});
+      const time = new Date(at + index).toISOString();
+      await store.put({...seed, created: time, updated: time});
     }
     pages = await store.list();
   }
@@ -158,10 +263,37 @@ async function start() {
     event.preventDefault();
     void openPage((event as CustomEvent<{id: string}>).detail.id);
   });
-  $('#overlay').addEventListener('sf-composition-overlay-select', (event) => {
-    state.selected = (event as CustomEvent<{id: string | null}>).detail.id;
-    showProperties();
+  const overlay = $<Overlay>('#overlay');
+  overlay.addEventListener('sf-composition-overlay-select', (event) => select((event as CustomEvent<{id: string | null}>).detail.id));
+  overlay.addEventListener('sf-composition-overlay-apply', (event) => {
+    const {action, ids} = (event as CustomEvent<{action: string; ids: string[]}>).detail;
+    if (ids[0]) apply(action, ids[0]);
   });
+  overlay.addEventListener('sf-composition-overlay-move', (event) => {
+    const {id, parent, position, slot} = (event as CustomEvent<{id: string; parent: string; position: number; slot?: string}>).detail;
+    const current = page();
+    if (current) void change(move(current.document, id, parent, slot ?? locate(current.document.root, id)?.slot ?? 'default', position), id);
+  });
+  overlay.addEventListener('sf-composition-overlay-insert', (event) => {
+    const {parent, slot, index} = (event as CustomEvent<{parent: string; slot: string; index: number}>).detail;
+    offerTypes({parent_id: parent, slot, index});
+  });
+  // The action keys (⌥↑ ⌥↓ ⌘D ⌫) work while focus is in the overlay's tree or
+  // toolbar; a click on a block leaves it on the canvas scroller. Until the
+  // overlay takes them there too (docs/GAPS.md, G-09), the scroller hands such
+  // a key to the tree, and the overlay decides whether it is an action's.
+  $('#layout-view').addEventListener('keydown', (event) => {
+    if (!state.selected || overlay.contains(event.target as Node)) return;
+    if (!(event.altKey || event.metaKey || event.ctrlKey || event.key === 'Backspace' || event.key === 'Delete')) return;
+    const tree = overlay.querySelector('[role="tree"]');
+    const {key, code, altKey, metaKey, ctrlKey, shiftKey} = event;
+    if (tree && !tree.dispatchEvent(new KeyboardEvent('keydown', {key, code, altKey, metaKey, ctrlKey, shiftKey, bubbles: true, cancelable: true}))) event.preventDefault();
+  });
+  const menu = $('#insert-menu');
+  menu.addEventListener('sf-context-menu-select', (event) => insertType((event as CustomEvent<{id: (typeof STARTER_TYPES)[number]}>).detail.id));
+  // The list closes on a choice too, maybe before its select event: the place
+  // stays in state.inserting until a choice or the next +.
+  menu.addEventListener('sf-context-menu-close', () => overlay.setInsertionTarget(null));
   // A panel that resizes, opens or closes moves the canvas: the overlay measures again.
   new ResizeObserver(() => $<Overlay>('#overlay').refresh()).observe($('.canvas-area'));
 
@@ -174,4 +306,4 @@ async function start() {
 void start();
 
 // For the end-to-end runs and the console: the state, read only.
-(globalThis as {uiEditor?: unknown}).uiEditor = {state, openPage, setMode};
+(globalThis as {uiEditor?: unknown}).uiEditor = {state, openPage, setMode, offerTypes};

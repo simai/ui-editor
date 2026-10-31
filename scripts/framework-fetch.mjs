@@ -104,6 +104,7 @@ check('package receipt sha256', digest('sha256', receiptBytes) === componentPack
 const receipt = JSON.parse(receiptBytes.toString('utf8'));
 check('package is built for this pair', receipt.framework?.release === lock.pair, receipt.framework?.release);
 check('package is built from the pinned Framework source', receipt.framework?.source?.revision === lock.ui_source.commit, receipt.framework?.source?.revision);
+check('package tar is the one its receipt names', receipt.output?.archive_sha256 === componentPackage.tar_sha256, receipt.output?.archive_sha256);
 check('package comes from the pinned source', receipt.package_source?.revision === componentPackage.source.commit && receipt.package_source?.repository === componentPackage.source.repository);
 extract(join(packageDir, 'package.tar'), join(packageDir, 'x'), false);
 check('package holds its rule file', existsSync(join(packageDir, 'x', 'smart', 'rule.js')));

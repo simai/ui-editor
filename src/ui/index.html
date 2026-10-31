@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="sf-release" content="ui-2194bce0e673">
+  <meta name="sf-release" content="ui-a7c68408a293">
   <title>SIMAI — редактор страниц</title>
   <link rel="stylesheet" href="fw/core/css/core.css">
   <link rel="stylesheet" href="app.css">
@@ -28,7 +28,7 @@
 
   <div id="storage-state" class="storage-state p-x-1 p-y-1/2 text-1/2" role="status" data-t="storage.unavailable" hidden></div>
 
-  <main id="editor" class="editor" data-sf-drawer-dock-host data-sf-overlay-container>
+  <main id="editor" class="editor" data-sf-drawer-dock-host>
     <sf-drawer id="left-panel" docked open show-close="false" gutter="var(--sf-space-1)" placement="inline-start" width="var(--pages-width, var(--sf-f8))" data-t-attr="label:panel.pages" label="Страницы">
       <div id="pages-pane" class="flex flex-col gap-1/2">
         <h2 class="pane-title m-0" data-t="panel.pages">Страницы</h2>
@@ -42,6 +42,9 @@
 
     <div class="canvas-area">
       <section id="layout-view" class="canvas-scroll" tabindex="0" data-t-attr="aria-label:canvas.label" aria-label="Холст страницы">
+        <!-- Before the canvas, in its scroller: the tree comes first in the Tab
+             order, and the frames and the toolbar scroll with the blocks. -->
+        <sf-composition-overlay id="overlay" for="canvas" placement="top" data-t-attr="label:canvas.tree" label="Структура страницы"></sf-composition-overlay>
         <div id="canvas" class="canvas"></div>
         <p id="canvas-problems" class="problems text-1/2" role="alert" hidden></p>
       </section>
@@ -63,7 +66,7 @@
       <sf-resizer id="resizer-right" edge="inline-start" data-t-attr="label:panel.resizeProperties" label="Ширина панели свойств" target=".sf-drawer-panel" min="var(--sf-f6)" max="var(--sf-g5)" property="--props-width" storage-key="ui-editor.props"></sf-resizer>
     </sf-drawer>
 
-    <sf-composition-overlay id="overlay" for="canvas" data-t-attr="label:canvas.tree" label="Структура страницы"></sf-composition-overlay>
+    <sf-context-menu id="insert-menu" popup size="1/2" data-t-attr="aria-label:insert.label" aria-label="Что вставить"></sf-context-menu>
   </main>
   <script type="module" src="app.js"></script>
 </body>

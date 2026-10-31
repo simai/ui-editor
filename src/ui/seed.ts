@@ -52,3 +52,14 @@ export function seedDocuments(language: Language): {id: string; title: string; d
 export function blankDocument(id: string, title: string, language: Language): CompositionDocument {
   return {schema: 'simai.composition.document.v1', id, profile: 'ui-layout', locale: language, root: section(`${id}-root`, [heading(`${id}-title`, 1, title)])};
 }
+
+/** The types the Layout mode's simple list offers, until ui-pro's block picker (plan step 5). */
+export const STARTER_TYPES = ['content.heading', 'content.paragraph', 'layout.section'] as const;
+
+/** A new node of one of STARTER_TYPES, with words in the page's language. */
+export function starterNode(type: (typeof STARTER_TYPES)[number], id: (base: string) => string, language: Language): CompositionNode {
+  const s = (key: string) => seedText(language, key);
+  if (type === 'content.heading') return heading(id('heading'), 2, s('starter.heading'));
+  if (type === 'content.paragraph') return paragraph(id('paragraph'), s('starter.paragraph'));
+  return section(id('section'), [paragraph(id('paragraph'), s('starter.paragraph'))]);
+}
