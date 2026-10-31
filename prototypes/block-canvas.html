@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Холст блоков: прототип</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block">
+<style>
+/* Prototype for approval (2026-10-31): how a block is hovered, selected, moved
+   and added, and how the side panels resize and close. It tests behaviour; the
+   port goes to sf-composition-overlay and sf-resizer. Sizes follow the
+   Framework's ladder (24/32/40/48) and colours its role names. */
+:root {
+  color-scheme: light;
+  --surface-0: #fbf8ff; --surface-1: #f5f2fa; --surface-3: #ffffff;
+  --on-surface: #1b1b21; --on-variant: #5d5d68; --outline-variant: #e0dee8;
+  --primary: #2156c1; --on-primary: #ffffff; --primary-soft: rgba(33,86,193,.12);
+  --state-hover: rgba(27,27,33,.05); --state-press: rgba(27,27,33,.1);
+  --error: #ba1a1a;
+  --canvas: #f0eef5;
+  --shadow: 0 1px 2px rgba(0,0,0,.08), 0 6px 20px rgba(0,0,0,.1);
+  --ease: cubic-bezier(.2,0,0,1);
+  --dur: 180ms;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #121318; --surface-1: #1a1b21; --surface-3: #2a2a31;
+  --on-surface: #e3e1e9; --on-variant: #a6a5b0; --outline-variant: #34343c;
+  --primary: #b3c5ff; --on-primary: #002b75; --primary-soft: rgba(179,197,255,.16);
+  --state-hover: rgba(227,225,233,.06); --state-press: rgba(227,225,233,.12);
+  --error: #ffb4ab;
+  --canvas: #0d0e12;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.4);
+}
+@media (prefers-reduced-motion: reduce) { :root { --dur: 0ms; } }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--surface-0); color: var(--on-surface);
+  font: 14px/20px Inter, -apple-system, system-ui, sans-serif;
+  display: grid; grid-template-rows: 48px 1fr; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+.ic { font-family: 'Material Symbols Outlined'; font-size: 20px; line-height: 1; font-weight: 400; font-variation-settings: 'opsz' 20; user-select: none; display: block; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+/* A quiet icon button, 32px: size 1/2 of the ladder. */
+.ib { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; color: var(--on-variant); position: relative; flex: none; }
+.ib:hover { background: var(--state-hover); color: var(--on-surface); }
+.ib:active { background: var(--state-press); }
+.ib[disabled] { opacity: .32; pointer-events: none; }
+.ib[aria-pressed="true"] { color: var(--primary); }
+.ib.danger:hover { color: var(--error); }
+[data-tip]::after {
+  content: attr(data-tip); position: absolute; z-index: 30; white-space: nowrap; pointer-events: none;
+  background: var(--on-surface); color: var(--surface-0); font-size: 12px; line-height: 16px; padding: 4px 8px; border-radius: 6px;
+  opacity: 0; transition: opacity 100ms; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+}
+[data-tip]:hover::after, [data-tip]:focus-visible::after { opacity: 1; transition-delay: 500ms; }
+[data-tip-side="end"]::after { top: 50%; left: calc(100% + 8px); transform: translateY(-50%); }
+[data-tip-side="start"]::after { top: 100%; left: auto; right: 0; transform: none; margin-top: 6px; }
+
+/* The top bar */
+.bar { display: flex; align-items: center; gap: 4px; padding: 0 8px; border-bottom: 1px solid var(--outline-variant); min-width: 0; }
+.bar .doc { display: flex; align-items: baseline; gap: 8px; margin-inline: 8px; min-width: 0; white-space: nowrap; }
+.bar .doc b { font-weight: 500; }
+.bar .doc span { color: var(--on-variant); font-size: 12px; }
+.bar .grow { flex: 1; }
+.seg { display: inline-flex; height: 32px; padding: 2px; border-radius: 8px; background: var(--state-hover); }
+.seg button { padding: 0 10px; border-radius: 6px; display: flex; align-items: center; gap: 6px; color: var(--on-variant); font-size: 13px; white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--surface-3); color: var(--on-surface); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.seg .ic { font-size: 18px; }
+.tag { font-size: 12px; color: var(--on-variant); margin-inline: 8px 4px; white-space: nowrap; }
+.btn { height: 32px; padding: 0 12px; border-radius: 8px; background: var(--primary); color: var(--on-primary); font-weight: 500; display: flex; align-items: center; gap: 6px; margin-left: 4px; }
+.btn .ic { font-size: 18px; }
+
+/* The three columns. Each panel's inside keeps its width, so closing one slides it away without rewrapping its text. */
+.work { display: grid; grid-template-columns: var(--left, 264px) minmax(0, 1fr) var(--right, 300px); grid-template-rows: minmax(0, 1fr); min-height: 0; transition: grid-template-columns var(--dur) var(--ease); }
+.work.resizing { transition: none; user-select: none; cursor: col-resize; }
+.panel { overflow: hidden; position: relative; background: var(--surface-0); min-width: 0; }
+.panel > .in { height: 100%; overflow-y: auto; }
+.panel.l > .in { width: var(--left-open, 264px); }
+.panel.r > .in { width: var(--right-open, 300px); float: right; }
+.split { position: relative; width: 0; z-index: 8; }
+.split i { position: absolute; top: 0; bottom: 0; left: -5px; width: 9px; cursor: col-resize; display: block; }
+.split i::before { content: ''; position: absolute; top: 0; bottom: 0; left: 4px; width: 1px; background: var(--outline-variant); transition: background 100ms; }
+.split i:hover::before, .split i:focus-visible::before, .resizing .split i.on::before { left: 3px; width: 3px; background: var(--primary); transition-delay: 120ms; }
+.split i:focus-visible { outline: 0; }
+.split[hidden] { display: none; }
+.mid { position: relative; min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.mid > .split-l { position: absolute; left: 0; top: 0; bottom: 0; }
+.mid > .split-r { position: absolute; right: 0; top: 0; bottom: 0; }
+
+/* Left panel */
+.head { position: sticky; top: 0; background: var(--surface-0); padding: 8px; z-index: 1; }
+.head .seg { display: flex; }
+.head .seg button { flex: 1; justify-content: center; }
+.rows { list-style: none; margin: 0; padding: 0 8px 16px; }
+.row { display: flex; align-items: center; gap: 8px; width: 100%; height: 32px; padding: 0 8px; border-radius: 8px; text-align: left; color: var(--on-surface); }
+.row .ic { color: var(--on-variant); font-size: 18px; }
+.row:hover { background: var(--state-hover); }
+.row[aria-current="true"] { background: var(--primary-soft); color: var(--primary); font-weight: 500; }
+.row[aria-current="true"] .ic { color: var(--primary); }
+.row span.t { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.row .pin { font-size: 14px; opacity: .6; }
+.rows h3 { font-size: 12px; font-weight: 500; line-height: 16px; color: var(--on-variant); margin: 12px 8px 4px; }
+
+/* Right panel */
+.insp { padding: 12px 16px 24px; display: grid; gap: 12px; }
+.insp h2 { font-size: 15px; line-height: 20px; font-weight: 600; margin: 0 0 4px; }
+.insp label { display: grid; gap: 4px; font-size: 12px; line-height: 16px; color: var(--on-variant); }
+.insp input, .insp textarea {
+  font: 14px/20px Inter, -apple-system, system-ui, sans-serif; color: var(--on-surface); background: var(--surface-0);
+  border: 1px solid var(--outline-variant); border-radius: 8px; padding: 5px 10px; width: 100%; resize: vertical; min-height: 32px;
+}
+.insp input:focus, .insp textarea:focus { outline: 2px solid var(--primary); outline-offset: -1px; border-color: transparent; }
+.insp p { margin: 0; color: var(--on-variant); font-size: 13px; }
+.insp kbd { font: 12px/16px Inter, sans-serif; background: var(--state-hover); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
+.keys { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; font-size: 13px; color: var(--on-variant); align-items: baseline; }
+
+/* The canvas. The overlay sits inside the scrolled content, so frames and
+   toolbars travel with the letter on scroll: no script, nothing to lag. */
+.scroll { overflow: auto; background: var(--canvas); padding: 24px 16px 96px; position: relative; min-width: 0; min-height: 0; }
+.stage { position: relative; margin-inline: auto; width: var(--paper, 600px); transition: width var(--dur) var(--ease); }
+.stage iframe { display: block; width: 100%; border: 0; background: #fff; border-radius: 4px; box-shadow: var(--shadow); }
+.over { position: absolute; inset: 0; pointer-events: none; }
+.frame { position: absolute; left: 0; right: 0; pointer-events: none; }
+.frame.hover { box-shadow: inset 0 0 0 1px var(--primary); opacity: .5; }
+.frame.sel { box-shadow: inset 0 0 0 2px #2156c1; }
+.go .frame.sel { transition: top var(--dur) var(--ease), height var(--dur) var(--ease); }
+.go .rail { transition: top var(--dur) var(--ease), height var(--dur) var(--ease); }
+
+/* The action toolbar: icons only, in a rail that holds it beside the block. */
+.rail { position: absolute; left: calc(100% + 12px); width: 40px; pointer-events: none; }
+.tools { position: sticky; top: 12px; pointer-events: auto; display: flex; flex-direction: column; gap: 0; padding: 4px; width: 40px; background: var(--surface-3); border-radius: 12px; box-shadow: var(--shadow); }
+.tools hr { border: 0; height: 1px; width: 20px; background: var(--outline-variant); margin: 4px auto; }
+.tools .grip { cursor: grab; }
+.tools .grip:active { cursor: grabbing; }
+.top .rail { left: 0; width: auto; right: 0; display: flex; justify-content: flex-end; padding-right: 8px; }
+.top .tools { flex-direction: row; width: auto; top: 8px; right: 8px; align-self: flex-start; }
+.top .tools hr { width: 1px; height: 20px; margin: auto 4px; }
+
+/* Where a block can be added: one thin line and one button, only under the pointer. */
+.gap { position: absolute; left: 0; right: 0; height: 0; pointer-events: none; opacity: 0; transition: opacity 80ms; }
+.gap.on { opacity: 1; }
+.gap::before { content: ''; position: absolute; left: 0; right: 0; top: -1px; height: 2px; background: #2156c1; }
+.gap button { position: absolute; left: 50%; top: -12px; margin-left: -12px; width: 24px; height: 24px; border-radius: 50%; background: #2156c1; color: #fff; display: none; place-items: center; pointer-events: auto; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.gap.on button { display: grid; }
+.gap button .ic { font-size: 16px; }
+.gap button:hover { transform: scale(1.12); }
+.gap.drop button { display: none; }
+
+/* Quick insert */
+.pop { position: absolute; z-index: 20; width: 264px; background: var(--surface-3); border-radius: 12px; box-shadow: var(--shadow); padding: 4px; pointer-events: auto; }
+.pop[hidden] { display: none; }
+.pop input { width: 100%; height: 32px; border: 0; background: var(--state-hover); border-radius: 8px; padding: 0 10px; font: inherit; color: inherit; margin-bottom: 4px; }
+.pop input:focus { outline: 0; }
+.pop .row.active { background: var(--state-hover); }
+.pop .none { padding: 8px; color: var(--on-variant); }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 8px); background: var(--on-surface); color: var(--surface-0); border-radius: 10px; padding: 8px 8px 8px 14px; display: flex; gap: 12px; align-items: center; opacity: 0; pointer-events: none; transition: opacity var(--dur), transform var(--dur) var(--ease); z-index: 40; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.toast button { color: inherit; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+.toast button:hover { background: rgba(127,127,127,.25); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+</style>
+</head>
+<body>
+<header class="bar">
+  <button class="ib" id="toggle-left" aria-pressed="true" aria-controls="left" data-tip="Панель блоков  ⌘\" data-tip-side="end" aria-label="Панель блоков"><span class="ic">left_panel_close</span></button>
+  <div class="doc"><b>Новое письмо</b><span id="saved">Сохранено</span></div>
+  <button class="ib" id="undo" aria-label="Отменить" data-tip="Отменить  ⌘Z" disabled><span class="ic">undo</span></button>
+  <button class="ib" id="redo" aria-label="Повторить" data-tip="Повторить  ⇧⌘Z" disabled><span class="ic">redo</span></button>
+  <div class="grow"></div>
+  <div class="seg" role="group" aria-label="Ширина письма" id="widths">
+    <button data-w="600" aria-pressed="true"><span class="ic">desktop_windows</span>600</button>
+    <button data-w="375" aria-pressed="false"><span class="ic">smartphone</span>375</button>
+    <button data-w="320" aria-pressed="false"><span class="ic">phone_iphone</span>320</button>
+  </div>
+  <div class="grow"></div>
+  <span class="tag">Прототип: действия</span>
+  <div class="seg" role="group" aria-label="Где панель действий" id="place">
+    <button data-p="side" aria-pressed="false">Сбоку</button>
+    <button data-p="top" aria-pressed="true">Сверху</button>
+  </div>
+  <button class="ib" id="theme" aria-label="Тема" data-tip="Светлая или тёмная" data-tip-side="start"><span class="ic">dark_mode</span></button>
+  <button class="btn"><span class="ic">download</span>Экспорт</button>
+  <button class="ib" id="toggle-right" aria-pressed="true" aria-controls="right" data-tip="Панель свойств  ⌥⌘\" data-tip-side="start" aria-label="Панель свойств"><span class="ic">right_panel_close</span></button>
+</header>
+
+<div class="work" id="work">
+  <aside class="panel l" id="left" aria-label="Блоки"><div class="in">
+    <div class="head"><div class="seg" role="group" id="tabs">
+      <button data-tab="tree" aria-pressed="true">Структура</button>
+      <button data-tab="lib" aria-pressed="false">Библиотека</button>
+    </div></div>
+    <ul class="rows" id="rows"></ul>
+  </div></aside>
+
+  <main class="mid">
+    <div class="split split-l"><i id="split-l" role="separator" aria-orientation="vertical" aria-label="Ширина панели блоков" tabindex="0"></i></div>
+    <div class="scroll" id="scroll">
+      <div class="stage" id="stage">
+        <iframe id="letter" title="Письмо" scrolling="no" tabindex="-1" sandbox="allow-same-origin"></iframe>
+        <div class="over" id="over">
+          <div class="frame hover" id="f-hover" hidden></div>
+          <div class="frame sel" id="f-sel" hidden></div>
+          <div class="rail" id="rail" hidden>
+            <div class="tools" id="tools" role="toolbar" aria-label="Действия с блоком" aria-orientation="vertical"></div>
+          </div>
+          <div class="gap" id="gap"><button id="gap-add" aria-label="Добавить блок здесь"><span class="ic">add</span></button></div>
+          <div class="pop" id="pop" hidden role="dialog" aria-label="Добавить блок">
+            <input id="pop-q" placeholder="Найти блок" aria-label="Найти блок">
+            <div id="pop-list" role="listbox"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="split split-r"><i id="split-r" role="separator" aria-orientation="vertical" aria-label="Ширина панели свойств" tabindex="0"></i></div>
+  </main>
+
+  <aside class="panel r" id="right" aria-label="Свойства"><div class="in"><div class="insp" id="insp"></div></div></aside>
+</div>
+<div class="toast" id="toast" role="status"><span id="toast-t"></span><button id="toast-u">Отменить</button></div>
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const store = {get(k) { try { return localStorage.getItem('block-canvas.' + k); } catch { return null; } }, set(k, v) { try { localStorage.setItem('block-canvas.' + k, v); } catch {} }};
+
+/* The block kinds. The letter's own look is a stand-in for the real renderer. */
+const KINDS = {
+  header: {label: 'Шапка', icon: 'web_asset', pinned: true, fields: [['name', 'Название']], html: (d) => `<div class="pad head"><span class="logo">▣</span> <b data-edit="name">${esc(d.name)}</b></div>`},
+  hero: {label: 'Главное сообщение', icon: 'campaign', fields: [['title', 'Заголовок'], ['text', 'Текст', 1]], html: (d) => `<div class="pad"><h1 data-edit="title">${esc(d.title)}</h1><p data-edit="text">${esc(d.text)}</p></div>`},
+  text: {label: 'Текст', icon: 'notes', fields: [['text', 'Текст', 1]], html: (d) => `<div class="pad"><p data-edit="text">${esc(d.text)}</p></div>`},
+  button: {label: 'Кнопка', icon: 'smart_button', fields: [['label', 'Надпись']], html: (d) => `<div class="pad"><a class="cta" href="#" data-edit="label">${esc(d.label)}</a></div>`},
+  image: {label: 'Картинка', icon: 'image', fields: [['caption', 'Подпись']], html: (d) => `<div class="pad"><div class="img"></div><p class="cap" data-edit="caption">${esc(d.caption)}</p></div>`},
+  schedule: {label: 'Программа', icon: 'event_note', fields: [['title', 'Заголовок'], ['t1', 'Время 1'], ['h1', 'Пункт 1'], ['t2', 'Время 2'], ['h2', 'Пункт 2']], html: (d) => `<div class="pad tint"><h2 data-edit="title">${esc(d.title)}</h2><table><tr><td class="time" data-edit="t1">${esc(d.t1)}</td><td><b data-edit="h1">${esc(d.h1)}</b></td></tr><tr><td class="time" data-edit="t2">${esc(d.t2)}</td><td><b data-edit="h2">${esc(d.h2)}</b></td></tr></table></div>`},
+  footer: {label: 'Подвал', icon: 'call_to_action', pinned: true, fields: [['reason', 'Почему пришло письмо', 1]], html: (d) => `<div class="pad foot"><p data-edit="reason">${esc(d.reason)}</p><a href="#">Отписаться от рассылки</a></div>`},
+};
+const NEW = {
+  hero: {title: 'Главное сообщение', text: 'Одна мысль, ради которой написано письмо.'},
+  text: {text: 'Короткий абзац: что важно знать читателю.'},
+  button: {label: 'Подробнее'},
+  image: {caption: 'Подпись к картинке'},
+  schedule: {title: 'Программа', t1: '10:00–11:00', h1: 'Первый пункт', t2: '11:00–12:00', h2: 'Второй пункт'},
+};
+let uid = 10;
+let blocks = [
+  {id: 'b1', kind: 'header', d: {name: 'Example Studio'}},
+  {id: 'b2', kind: 'hero', d: {title: 'Открытая встреча 14 ноября', text: 'Расскажем, что нового в продукте, и ответим на вопросы. Участие бесплатное, нужна регистрация.'}},
+  {id: 'b3', kind: 'image', d: {caption: 'Прошлая встреча, весна'}},
+  {id: 'b4', kind: 'schedule', d: {title: 'Программа', t1: '10:00–11:00 по Москве', h1: 'Что нового в продукте', t2: '11:00–12:00 по Москве', h2: 'Ответы на вопросы'}},
+  {id: 'b5', kind: 'button', d: {label: 'Зарегистрироваться'}},
+  {id: 'b6', kind: 'text', d: {text: 'Запись пришлём всем, кто зарегистрировался. Если вопрос срочный, просто ответьте на это письмо.'}},
+  {id: 'b7', kind: 'footer', d: {reason: 'Вы получили это письмо, потому что подписались на новости Example Studio.'}},
+];
+let selected = null, hovered = null, editing = null, placement = 'top', tab = 'tree';
+const undoStack = [], redoStack = [];
+
+const LETTER_CSS = `
+  html,body{margin:0;background:#fff;color:#1f1f1f;font:16px/24px Arial,Helvetica,sans-serif;overflow:hidden}
+  [data-b]{position:relative;cursor:default;background:#fff}
+  .pad{padding:20px 40px}
+  .head{border-bottom:1px solid #e3e5e7;font-size:17px}.logo{font-size:22px}
+  h1{font-size:30px;line-height:36px;margin:8px 0 12px}h2{font-size:22px;line-height:28px;margin:0 0 12px}p{margin:0}
+  .cta{display:inline-block;background:#2156c1;color:#fff;text-decoration:none;font-weight:700;padding:12px 24px;border-radius:6px}
+  .img{height:200px;border-radius:6px;background:linear-gradient(135deg,#c9d6f5,#e8d9f1 60%,#f7e3d0)}.cap{font-size:13px;color:#696969;margin-top:8px}
+  .tint{background:#eef2fc}table{border-collapse:collapse;width:100%}td{padding:12px 0;border-top:1px solid #d9dee8;vertical-align:top}.time{width:34%;color:#696969;padding-right:16px;font-size:14px}
+  .foot{border-top:1px solid #e3e5e7;font-size:13px;line-height:20px;color:#696969}.foot a{color:#2156c1;display:inline-block;margin-top:8px}
+  [contenteditable]{outline:2px solid #2156c1;outline-offset:2px;border-radius:2px;cursor:text}
+  @media (max-width:620px){.pad{padding:16px 20px}h1{font-size:25px;line-height:30px}.time{width:40%}}`;
+
+const frame = $('letter');
+let doc;
+function boot() {
+  frame.srcdoc = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>${LETTER_CSS}</style></head><body></body></html>`;
+  frame.addEventListener('load', () => {
+    doc = frame.contentDocument;
+    wireLetter();
+    patch();
+    new ResizeObserver(fit).observe(doc.body);
+    fit();
+    renderRows();
+    renderInsp();
+  }, {once: true});
+}
+
+/* The letter is patched block by block and never reloaded: this is what stops the flicker. */
+function patch() {
+  const seen = new Set();
+  let cursor = doc.body.firstElementChild;
+  for (const b of blocks) {
+    seen.add(b.id);
+    let el = doc.querySelector(`[data-b="${b.id}"]`);
+    if (!el) { el = doc.createElement('div'); el.dataset.b = b.id; el.dataset.fresh = '1'; }
+    if (el !== cursor) doc.body.insertBefore(el, cursor); else cursor = cursor.nextElementSibling;
+    const html = KINDS[b.kind].html(b.d);
+    if (el.dataset.src !== html && !(editing && editing.id === b.id)) { el.innerHTML = html; el.dataset.src = html; }
+  }
+  for (const el of [...doc.querySelectorAll('[data-b]')]) if (!seen.has(el.dataset.b)) el.remove();
+}
+const blockEl = (id) => doc.querySelector(`[data-b="${id}"]`);
+const find = (id) => blocks.find((b) => b.id === id);
+const isPinned = (b) => KINDS[b.kind].pinned;
+const movable = () => { const first = blocks.findIndex((b) => !isPinned(b)); let last = blocks.length - 1; while (last >= 0 && isPinned(blocks[last])) last--; return [first, last]; };
+
+function fit() {
+  frame.style.height = doc.documentElement.offsetHeight + 'px';
+  place();
+}
+function place() {
+  if (!doc) return;
+  const put = (node, id) => {
+    const el = id && blockEl(id);
+    node.hidden = !el;
+    if (el) { node.style.top = el.offsetTop + 'px'; node.style.height = el.offsetHeight + 'px'; }
+  };
+  put($('f-sel'), selected);
+  put($('f-hover'), hovered && hovered !== selected ? hovered : null);
+  const rail = $('rail');
+  rail.hidden = !selected || !blockEl(selected);
+  if (!rail.hidden) {
+    const el = blockEl(selected);
+    const lift = usesTop() ? 44 : 0;
+    const need = usesTop() ? 40 : $('tools').offsetHeight;
+    const top = Math.max(0, el.offsetTop - lift);
+    rail.style.top = top + 'px';
+    rail.style.height = Math.max(el.offsetHeight + lift, need) + 'px';
+  }
+  $('over').classList.toggle('top', usesTop());
+}
+/* With no room beside the letter, the toolbar goes above the block by itself. */
+function usesTop() {
+  if (placement === 'top') return true;
+  const room = ($('scroll').clientWidth - $('stage').offsetWidth) / 2;
+  return room < 60;
+}
+
+/* Blocks glide to their new place; the selection frame travels with them. */
+function withGlide(change) {
+  const before = new Map([...doc.querySelectorAll('[data-b]')].map((el) => [el.dataset.b, el.getBoundingClientRect().top]));
+  const scrollBefore = $('scroll').scrollTop;
+  $('over').classList.add('go');
+  change();
+  frame.style.height = doc.documentElement.offsetHeight + 'px';
+  const motion = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 180;
+  for (const el of doc.querySelectorAll('[data-b]')) {
+    const was = before.get(el.dataset.b);
+    if (el.dataset.fresh) { delete el.dataset.fresh; if (motion) el.animate([{opacity: 0}, {opacity: 1}], {duration: motion, easing: 'ease-out'}); continue; }
+    const d = was - el.getBoundingClientRect().top;
+    if (d && motion) el.animate([{transform: `translateY(${d}px)`}, {transform: 'none'}], {duration: motion, easing: 'cubic-bezier(.2,0,0,1)'});
+  }
+  $('scroll').scrollTop = scrollBefore;
+  place();
+  setTimeout(() => $('over').classList.remove('go'), motion + 40);
+}
+
+function commit(label) { undoStack.push({blocks: JSON.stringify(blocks), selected}); redoStack.length = 0; if (undoStack.length > 100) undoStack.shift(); syncHistory(); }
+function syncHistory() {
+  $('undo').disabled = !undoStack.length; $('redo').disabled = !redoStack.length;
+  $('saved').textContent = 'Сохранено';
+}
+function restore(from, to) {
+  const s = from.pop(); if (!s) return;
+  to.push({blocks: JSON.stringify(blocks), selected});
+  withGlide(() => { blocks = JSON.parse(s.blocks); patch(); });
+  select(s.selected, {keepScroll: true}); syncHistory(); renderRows();
+}
+
+function select(id, {reveal, keepScroll} = {}) {
+  selected = id && find(id) ? id : null;
+  hideGap();
+  renderTools(); place(); renderRows(); renderInsp();
+  if (selected) say(KINDS[find(selected).kind].label);
+  if (selected && reveal) revealBlock(selected);
+}
+function revealBlock(id) {
+  const el = blockEl(id), sc = $('scroll'); if (!el) return;
+  const top = frame.getBoundingClientRect().top + el.offsetTop, h = el.offsetHeight, box = sc.getBoundingClientRect();
+  if (top < box.top + 12) sc.scrollBy({top: top - box.top - 12, behavior: 'smooth'});
+  else if (top + h > box.bottom - 12) sc.scrollBy({top: Math.min(top - box.top - 12, top + h - box.bottom + 12), behavior: 'smooth'});
+}
+const say = (t) => { $('live').textContent = t; };
+
+/* The toolbar's buttons stay where they are: an unavailable one dims, it never disappears. */
+function renderTools() {
+  const t = $('tools');
+  const b = selected && find(selected);
+  if (!b) { t.innerHTML = ''; return; }
+  const i = blocks.indexOf(b), [first, last] = movable();
+  const side = usesTop() ? '' : 'data-tip-side="end"';
+  const btn = (act, icon, tip, opts = '') => `<button class="ib ${opts.includes('danger') ? 'danger' : ''} ${act === 'grip' ? 'grip' : ''}" data-act="${act}" aria-label="${tip.split('  ')[0]}" data-tip="${tip}" ${side} ${opts.includes('off') ? 'disabled' : ''}><span class="ic">${icon}</span></button>`;
+  if (isPinned(b)) {
+    t.innerHTML = btn('variant', 'swap_horiz', 'Другой вариант');
+  } else {
+    t.innerHTML = btn('grip', 'drag_indicator', 'Перетащить')
+      + btn('up', 'arrow_upward', 'Выше  ⌥↑', i <= first ? 'off' : '')
+      + btn('down', 'arrow_downward', 'Ниже  ⌥↓', i >= last ? 'off' : '')
+      + btn('dup', 'content_copy', 'Дублировать  ⌘D')
+      + '<hr>' + btn('del', 'delete', 'Удалить  ⌫', 'danger');
+  }
+  t.setAttribute('aria-orientation', usesTop() ? 'horizontal' : 'vertical');
+}
+function act(name) {
+  const b = find(selected); if (!b) return;
+  const i = blocks.indexOf(b), [first, last] = movable();
+  if (name === 'up' && i > first) moveTo(i, i - 1);
+  if (name === 'down' && i < last) moveTo(i, i + 1);
+  if (name === 'dup' && !isPinned(b)) {
+    commit();
+    const copy = {id: 'n' + ++uid, kind: b.kind, d: {...b.d}};
+    withGlide(() => { blocks.splice(i + 1, 0, copy); patch(); });
+    select(copy.id, {reveal: true});
+  }
+  if (name === 'del' && !isPinned(b)) {
+    commit();
+    const label = KINDS[b.kind].label;
+    const next = blocks[i + 1] && !isPinned(blocks[i + 1]) ? blocks[i + 1].id : (blocks[i - 1] && !isPinned(blocks[i - 1]) ? blocks[i - 1].id : null);
+    withGlide(() => { blocks.splice(i, 1); patch(); });
+    select(next);
+    toast(`Удалено: ${label}`);
+  }
+  if (name === 'variant') toast('В редакторе здесь откроется выбор варианта', false);
+}
+function moveTo(from, to) {
+  if (from === to) return;
+  commit();
+  withGlide(() => { const [b] = blocks.splice(from, 1); blocks.splice(to, 0, b); patch(); });
+  renderTools(); renderRows(); revealBlock(selected);
+  say(`Перемещено, позиция ${to}`);
+}
+let toastTimer;
+function toast(text, undoable = true) {
+  $('toast-t').textContent = text; $('toast-u').hidden = !undoable; $('toast').classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('on'), 6000);
+}
+$('toast-u').onclick = () => { restore(undoStack, redoStack); $('toast').classList.remove('on'); };
+$('undo').onclick = () => restore(undoStack, redoStack);
+$('redo').onclick = () => restore(redoStack, undoStack);
+
+$('tools').addEventListener('click', (e) => { const a = e.target.closest('[data-act]')?.dataset.act; if (a && a !== 'grip') act(a); });
+
+/* Dragging by the grip */
+$('tools').addEventListener('pointerdown', (e) => {
+  const grip = e.target.closest('.grip'); if (!grip) return;
+  e.preventDefault(); grip.setPointerCapture(e.pointerId);
+  const b = find(selected), el = blockEl(selected), from = blocks.indexOf(b), [first, last] = movable();
+  let moved = false, dest = from, raf;
+  let lastY = e.clientY;
+  const step = () => {
+    const box = $('scroll').getBoundingClientRect(), edge = 48;
+    if (lastY < box.top + edge) $('scroll').scrollTop -= 10; else if (lastY > box.bottom - edge) $('scroll').scrollTop += 10;
+    if (moved) track(lastY);
+    raf = requestAnimationFrame(step);
+  };
+  const track = (cy) => {
+    const y = cy - frame.getBoundingClientRect().top;
+    let best = from, bestD = Infinity;
+    for (let k = first; k <= last + 1; k++) {
+      const edgeEl = blocks[k] ? blockEl(blocks[k].id) : null;
+      const at = k <= last ? edgeEl.offsetTop : blockEl(blocks[last].id).offsetTop + blockEl(blocks[last].id).offsetHeight;
+      const d = Math.abs(y - at);
+      if (d < bestD) { bestD = d; best = k; }
+    }
+    dest = best;
+    const at = best <= last ? blockEl(blocks[best].id).offsetTop : blockEl(blocks[last].id).offsetTop + blockEl(blocks[last].id).offsetHeight;
+    const g = $('gap'); g.classList.add('on', 'drop'); g.style.top = at + 'px';
+  };
+  const onMove = (m) => { lastY = m.clientY; if (!moved && Math.abs(m.clientY - e.clientY) > 4) { moved = true; el.style.opacity = .35; raf = requestAnimationFrame(step); } };
+  const done = (drop) => {
+    cancelAnimationFrame(raf); grip.removeEventListener('pointermove', onMove); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', cancel); document.removeEventListener('keydown', key, true);
+    el.style.opacity = ''; const g = $('gap'); g.classList.remove('on', 'drop');
+    if (drop && moved) { const to = dest > from ? dest - 1 : dest; moveTo(from, to); }
+  };
+  const up = () => done(true), cancel = () => done(false);
+  const key = (k) => { if (k.key === 'Escape') { k.stopPropagation(); done(false); } };
+  grip.addEventListener('pointermove', onMove); grip.addEventListener('pointerup', up); grip.addEventListener('pointercancel', cancel); document.addEventListener('keydown', key, true);
+});
+
+/* Hover and the place to add: read from the letter itself */
+let leaveTimer, gapIndex = null;
+function wireLetter() {
+  doc.addEventListener('mousemove', (e) => {
+    clearTimeout(leaveTimer);
+    if (editing) return;
+    const el = e.target.closest?.('[data-b]');
+    const id = el?.dataset.b ?? null;
+    if (id !== hovered) { hovered = id; place(); }
+    const y = e.clientY + (doc.documentElement.scrollTop || 0);
+    showGapNear(y);
+  });
+  doc.addEventListener('mouseleave', () => { leaveTimer = setTimeout(() => { hovered = null; place(); hideGap(); }, 140); });
+  doc.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (editing && e.target.closest?.('[contenteditable]')) return;
+    const id = e.target.closest?.('[data-b]')?.dataset.b;
+    if (id) select(id);
+  });
+  doc.addEventListener('dblclick', (e) => {
+    const f = e.target.closest?.('[data-edit]'), id = e.target.closest?.('[data-b]')?.dataset.b;
+    if (f && id) startEdit(id, f);
+  });
+  doc.addEventListener('keydown', onKey);
+}
+function showGapNear(y) {
+  if ($('pop').hidden === false) return;
+  const [first, last] = movable();
+  let found = null;
+  for (let k = first; k <= last + 1; k++) {
+    const at = k <= last ? blockEl(blocks[k].id).offsetTop : blockEl(blocks[last].id).offsetTop + blockEl(blocks[last].id).offsetHeight;
+    if (Math.abs(y - at) <= 10) { found = {k, at}; break; }
+  }
+  const g = $('gap');
+  if (found) { gapIndex = found.k; g.style.top = found.at + 'px'; g.classList.add('on'); } else hideGap();
+}
+function hideGap() { if ($('gap').classList.contains('drop')) return; $('gap').classList.remove('on'); gapIndex = null; }
+$('gap-add').addEventListener('mouseenter', () => clearTimeout(leaveTimer));
+$('gap').addEventListener('mouseleave', () => { leaveTimer = setTimeout(hideGap, 140); });
+$('gap-add').addEventListener('click', () => openPop(gapIndex, parseFloat($('gap').style.top)));
+
+/* Quick insert: the same blocks as the Library, one key away */
+let popIndex = null, popActive = 0;
+function kindsFor(q) { const s = q.trim().toLowerCase(); return Object.keys(NEW).filter((k) => !s || KINDS[k].label.toLowerCase().includes(s)); }
+function renderPop() {
+  const list = kindsFor($('pop-q').value);
+  popActive = Math.min(popActive, Math.max(0, list.length - 1));
+  $('pop-list').innerHTML = list.length ? list.map((k, i) => `<button class="row ${i === popActive ? 'active' : ''}" data-k="${k}" role="option" aria-selected="${i === popActive}"><span class="ic">${KINDS[k].icon}</span><span class="t">${KINDS[k].label}</span></button>`).join('') : '<div class="none">Ничего не найдено</div>';
+}
+function openPop(index, top) {
+  popIndex = index; popActive = 0; $('pop-q').value = '';
+  const p = $('pop'); p.hidden = false; renderPop();
+  p.style.left = ($('stage').offsetWidth - 264) / 2 + 'px';
+  p.style.top = top + 16 + 'px';
+  $('pop-q').focus();
+}
+function closePop() { $('pop').hidden = true; }
+function insert(kind, index) {
+  commit();
+  const b = {id: 'n' + ++uid, kind, d: {...NEW[kind]}};
+  withGlide(() => { blocks.splice(index, 0, b); patch(); });
+  select(b.id, {reveal: true});
+}
+$('pop-q').addEventListener('input', () => { popActive = 0; renderPop(); });
+$('pop-q').addEventListener('keydown', (e) => {
+  const list = kindsFor($('pop-q').value);
+  if (e.key === 'ArrowDown') { popActive = (popActive + 1) % list.length; renderPop(); e.preventDefault(); }
+  if (e.key === 'ArrowUp') { popActive = (popActive - 1 + list.length) % list.length; renderPop(); e.preventDefault(); }
+  if (e.key === 'Enter' && list[popActive]) { closePop(); insert(list[popActive], popIndex); }
+  if (e.key === 'Escape') { closePop(); e.stopPropagation(); }
+});
+$('pop-list').addEventListener('click', (e) => { const k = e.target.closest('[data-k]')?.dataset.k; if (k) { closePop(); insert(k, popIndex); } });
+document.addEventListener('pointerdown', (e) => { if (!$('pop').hidden && !$('pop').contains(e.target)) closePop(); });
+
+/* Editing in place */
+function startEdit(id, node) {
+  if (editing) stopEdit();
+  commit();
+  editing = {id, node, key: node.dataset.edit, before: node.textContent};
+  select(id);
+  node.contentEditable = 'plaintext-only';
+  node.focus();
+  node.addEventListener('input', onEditInput);
+  node.addEventListener('blur', stopEdit, {once: true});
+}
+function onEditInput() { find(editing.id).d[editing.key] = editing.node.textContent; syncField(editing.key, editing.node.textContent); renderRows(); }
+function stopEdit(cancel) {
+  if (!editing) return;
+  const {id, node, key, before} = editing;
+  node.removeEventListener('input', onEditInput);
+  node.removeAttribute('contenteditable');
+  if (cancel === true) { node.textContent = before; find(id).d[key] = before; undoStack.pop(); syncHistory(); }
+  editing = null;
+  patch(); renderInsp();
+}
+
+/* Keys */
+function onKey(e) {
+  const inField = e.target.closest?.('input, textarea, [contenteditable]');
+  const mod = e.metaKey || e.ctrlKey;
+  if (editing) {
+    if (e.key === 'Escape') { e.preventDefault(); stopEdit(true); }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); editing.node.blur(); }
+    return;
+  }
+  if (mod && e.key === '\\') { e.preventDefault(); togglePanel(e.altKey ? 'right' : 'left'); return; }
+  if (inField) return;
+  if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? restore(redoStack, undoStack) : restore(undoStack, redoStack); return; }
+  if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); act('dup'); return; }
+  const i = blocks.findIndex((b) => b.id === selected);
+  if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); act('up'); return; }
+  if (e.altKey && e.key === 'ArrowDown') { e.preventDefault(); act('down'); return; }
+  if (e.key === 'ArrowDown' && !e.target.closest?.('#rows,button')) { e.preventDefault(); select(blocks[Math.min(i + 1, blocks.length - 1)].id, {reveal: true}); }
+  if (e.key === 'ArrowUp' && !e.target.closest?.('#rows,button')) { e.preventDefault(); select(blocks[Math.max(i - 1, 0)].id, {reveal: true}); }
+  if ((e.key === 'Backspace' || e.key === 'Delete') && selected) { e.preventDefault(); act('del'); }
+  if (e.key === 'Escape') { select(null); closePop(); }
+  if (e.key === 'Enter' && selected && !e.target.closest?.('button')) { const f = blockEl(selected).querySelector('[data-edit]'); if (f) { e.preventDefault(); startEdit(selected, f); } }
+}
+document.addEventListener('keydown', onKey);
+$('scroll').addEventListener('click', (e) => { if (e.target === $('scroll') || e.target === $('stage')) select(null); });
+
+/* Left panel */
+function renderRows() {
+  const ul = $('rows');
+  if (tab === 'tree') {
+    ul.innerHTML = blocks.map((b) => {
+      const k = KINDS[b.kind];
+      const sub = b.d.title || b.d.label || b.d.text || b.d.caption || '';
+      const text = isPinned(b) || !sub ? k.label : sub;
+      return `<li><button class="row" data-id="${b.id}" aria-current="${b.id === selected}"><span class="ic">${k.icon}</span><span class="t">${esc(text)}</span>${isPinned(b) ? '<span class="ic pin" title="Закреплён">push_pin</span>' : ''}</button></li>`;
+    }).join('');
+  } else {
+    ul.innerHTML = Object.keys(NEW).map((k) => `<li><button class="row" data-add="${k}"><span class="ic">${KINDS[k].icon}</span><span class="t">${KINDS[k].label}</span><span class="ic pin">add</span></button></li>`).join('');
+  }
+}
+$('rows').addEventListener('click', (e) => {
+  const id = e.target.closest('[data-id]')?.dataset.id;
+  if (id) select(id, {reveal: true});
+  const add = e.target.closest('[data-add]')?.dataset.add;
+  if (add) { const [, last] = movable(); const i = selected ? blocks.indexOf(find(selected)) : last; insert(add, Math.min(Math.max(i, movable()[0] - 1) + 1, last + 1)); }
+});
+$('tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (!b) return; tab = b.dataset.tab; for (const x of $('tabs').children) x.setAttribute('aria-pressed', x === b); renderRows(); });
+
+/* Right panel */
+function renderInsp() {
+  const box = $('insp'), b = selected && find(selected);
+  if (!b) {
+    box.innerHTML = `<h2>Параметры письма</h2><label>Тема письма<input value="Открытая встреча 14 ноября"></label><label>Прехедер<input></label>
+      <p style="margin-top:8px">Как пробовать</p><div class="keys">
+      <kbd>Наведите</kbd><span>тонкая рамка; у стыка блоков появится «+»</span><kbd>Щёлкните</kbd><span>выбор и панель действий сбоку</span><kbd>Дважды</kbd><span>правка текста прямо в письме</span>
+      <kbd>↑ ↓</kbd><span>соседний блок</span><kbd>⌥↑ ⌥↓</kbd><span>двигать блок</span><kbd>⌘D</kbd><span>дублировать</span><kbd>⌫</kbd><span>удалить</span><kbd>⌘Z</kbd><span>отменить</span><kbd>⌘\\</kbd><span>левая панель</span><kbd>⌥⌘\\</kbd><span>правая панель</span></div>`;
+    return;
+  }
+  const k = KINDS[b.kind];
+  box.innerHTML = `<h2>${k.label}</h2>` + k.fields.map(([key, label, multi]) => `<label>${label}${multi ? `<textarea data-f="${key}" rows="4">${esc(b.d[key])}</textarea>` : `<input data-f="${key}" value="${esc(b.d[key])}">`}</label>`).join('');
+}
+function syncField(key, value) { const f = $('insp').querySelector(`[data-f="${key}"]`); if (f && document.activeElement !== f) f.value = value; }
+$('insp').addEventListener('focusin', (e) => { if (e.target.dataset.f) commit(); });
+$('insp').addEventListener('input', (e) => {
+  const key = e.target.dataset.f; if (!key) return;
+  find(selected).d[key] = e.target.value; patch(); renderRows();
+});
+
+/* Panels: drag the edge, arrows on the edge, double-click for the default width, or close */
+const LIMITS = {left: [200, 420, 264], right: [240, 460, 300]};
+const open = {left: true, right: true}, width = {left: +store.get('left') || 264, right: +store.get('right') || 300};
+function applyPanels() {
+  const w = $('work');
+  w.style.setProperty('--left-open', width.left + 'px'); w.style.setProperty('--right-open', width.right + 'px');
+  w.style.setProperty('--left', open.left ? width.left + 'px' : '0px'); w.style.setProperty('--right', open.right ? width.right + 'px' : '0px');
+  $('split-l').parentElement.hidden = !open.left; $('split-r').parentElement.hidden = !open.right;
+  for (const side of ['left', 'right']) {
+    const b = $('toggle-' + side), name = side === 'left' ? 'left_panel' : 'right_panel';
+    b.firstElementChild.textContent = `${name}_${open[side] ? 'close' : 'open'}`;
+    b.setAttribute('aria-pressed', open[side]);
+    $(side).inert = !open[side];
+    const sep = $(side === 'left' ? 'split-l' : 'split-r');
+    sep.setAttribute('aria-valuemin', LIMITS[side][0]); sep.setAttribute('aria-valuemax', LIMITS[side][1]); sep.setAttribute('aria-valuenow', width[side]);
+  }
+}
+function togglePanel(side) {
+  open[side] = !open[side]; store.set(side + '-open', open[side] ? '1' : '0'); applyPanels();
+  setTimeout(() => { renderTools(); place(); }, 220);
+}
+$('toggle-left').onclick = () => togglePanel('left');
+$('toggle-right').onclick = () => togglePanel('right');
+function setWidth(side, v) { const [a, b] = LIMITS[side]; width[side] = Math.round(Math.min(b, Math.max(a, v))); store.set(side, width[side]); applyPanels(); }
+function wireSplit(sep, side) {
+  sep.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); sep.setPointerCapture(e.pointerId);
+    const x0 = e.clientX, w0 = width[side], sign = side === 'left' ? 1 : -1;
+    $('work').classList.add('resizing'); sep.classList.add('on');
+    const move = (m) => { setWidth(side, w0 + (m.clientX - x0) * sign); renderTools(); place(); };
+    const up = () => { sep.removeEventListener('pointermove', move); sep.removeEventListener('pointerup', up); $('work').classList.remove('resizing'); sep.classList.remove('on'); };
+    sep.addEventListener('pointermove', move); sep.addEventListener('pointerup', up);
+  });
+  sep.addEventListener('dblclick', () => setWidth(side, LIMITS[side][2]));
+  sep.addEventListener('keydown', (e) => {
+    const sign = side === 'left' ? 1 : -1;
+    if (e.key === 'ArrowLeft') { setWidth(side, width[side] - 16 * sign); e.preventDefault(); e.stopPropagation(); }
+    if (e.key === 'ArrowRight') { setWidth(side, width[side] + 16 * sign); e.preventDefault(); e.stopPropagation(); }
+    if (e.key === 'Enter') { togglePanel(side); e.preventDefault(); e.stopPropagation(); }
+  });
+}
+wireSplit($('split-l'), 'left'); wireSplit($('split-r'), 'right');
+open.left = store.get('left-open') !== '0';
+open.right = store.get('right-open') !== '0' && innerWidth >= 1200;
+applyPanels();
+
+/* The rest of the bar */
+$('widths').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-w]'); if (!b) return;
+  for (const x of $('widths').children) x.setAttribute('aria-pressed', x === b);
+  $('stage').style.setProperty('--paper', b.dataset.w + 'px');
+  setTimeout(() => { renderTools(); place(); }, 220);
+});
+$('place').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-p]'); if (!b) return;
+  placement = b.dataset.p; for (const x of $('place').children) x.setAttribute('aria-pressed', x === b);
+  renderTools(); place();
+});
+const setTheme = (t) => { document.documentElement.dataset.theme = t; $('theme').firstElementChild.textContent = t === 'dark' ? 'light_mode' : 'dark_mode'; store.set('theme', t); };
+setTheme(store.get('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+$('theme').onclick = () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+new ResizeObserver(() => { if (doc) { renderTools(); place(); } }).observe($('scroll'));
+
+boot();
+</script>
+</body>
+</html>

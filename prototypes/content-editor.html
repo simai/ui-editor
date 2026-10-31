@@ -1,0 +1,1133 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Редактор контента: прототип</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block">
+<style>
+/* Prototype for approval (2026-10-31): the content mode of the editor, a flow
+   of typing in the manner of Editor.js. It tests behaviour; the port goes to a
+   Smart component. Sizes follow the Framework's ladder, colours its role names. */
+:root {
+  color-scheme: light;
+  --surface-0: #ffffff; --surface-1: #f7f6fa; --surface-3: #ffffff;
+  --on-surface: #1b1b21; --on-variant: #66666f; --faint: #9c9ca6; --outline-variant: #e6e4ec;
+  --primary: #2156c1; --on-primary: #fff; --primary-soft: rgba(33,86,193,.14);
+  --state-hover: rgba(27,27,33,.05); --state-press: rgba(27,27,33,.1);
+  --error: #ba1a1a; --code: #f4f3f8; --callout: #f1f4fd;
+  --shadow: 0 1px 2px rgba(0,0,0,.08), 0 6px 24px rgba(0,0,0,.12);
+  --ease: cubic-bezier(.2,0,0,1); --dur: 160ms;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #141519; --surface-1: #1a1b21; --surface-3: #2a2a31;
+  --on-surface: #e6e4ec; --on-variant: #a6a5b0; --faint: #6f6f7a; --outline-variant: #30303a;
+  --primary: #b3c5ff; --on-primary: #002b75; --primary-soft: rgba(179,197,255,.18);
+  --state-hover: rgba(227,225,233,.06); --state-press: rgba(227,225,233,.12);
+  --error: #ffb4ab; --code: #1f2027; --callout: #1e2230;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 24px rgba(0,0,0,.45);
+}
+@media (prefers-reduced-motion: reduce) { :root { --dur: 0ms; } }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--surface-0); color: var(--on-surface); font: 16px/26px Inter, -apple-system, system-ui, sans-serif; display: grid; grid-template-rows: 48px minmax(0, 1fr); overflow: hidden; -webkit-font-smoothing: antialiased; }
+.ic { font-family: 'Material Symbols Outlined'; font-size: 20px; line-height: 1; font-variation-settings: 'opsz' 20; user-select: none; display: block; font-weight: 400; font-style: normal; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.ib { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; color: var(--on-variant); flex: none; }
+.ib:hover { background: var(--state-hover); color: var(--on-surface); }
+.ib[disabled] { opacity: .32; pointer-events: none; }
+.bar { display: flex; align-items: center; gap: 4px; padding: 0 8px; border-bottom: 1px solid var(--outline-variant); font-size: 14px; line-height: 20px; }
+.bar .doc { margin-inline: 8px; display: flex; gap: 8px; align-items: baseline; white-space: nowrap; min-width: 0; }
+.bar .doc span { color: var(--on-variant); font-size: 12px; }
+.grow { flex: 1; }
+.work { display: grid; grid-template-columns: var(--left, 240px) minmax(0, 1fr) var(--right, 340px); grid-template-rows: minmax(0, 1fr); transition: grid-template-columns var(--dur) var(--ease); min-height: 0; }
+.panel { overflow: hidden; min-width: 0; font-size: 14px; line-height: 20px; }
+.panel.l { border-right: 1px solid var(--outline-variant); }
+.panel.r { border-left: 1px solid var(--outline-variant); }
+.panel > .in { height: 100%; overflow: auto; }
+.panel.l > .in { width: 240px; padding: 12px 8px; }
+.panel.r > .in { width: 340px; float: right; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+.panel h3 { font-size: 12px; font-weight: 500; line-height: 16px; color: var(--on-variant); margin: 4px 8px 8px; }
+.toc a { display: block; padding: 5px 8px; border-radius: 8px; color: var(--on-surface); text-decoration: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.toc a:hover { background: var(--state-hover); }
+.toc a.h3 { padding-left: 22px; color: var(--on-variant); }
+.toc .none { padding: 5px 8px; color: var(--faint); }
+.seg { display: flex; height: 32px; padding: 2px; border-radius: 8px; background: var(--state-hover); margin: 8px; }
+.seg button { min-width: 0; }
+.seg button { flex: 1; border-radius: 6px; color: var(--on-variant); font-size: 13px; }
+.seg button[aria-pressed="true"] { background: var(--surface-3); color: var(--on-surface); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+#trip { padding: 8px 16px; font-size: 12px; line-height: 16px; color: var(--on-variant); border-top: 1px solid var(--outline-variant); }
+#trip b { font-weight: 600; } #trip .ok { color: #1a7f4b; } #trip .no { color: #a86500; }
+#out { margin: 0; padding: 4px 16px 24px; font: 12px/18px ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; word-break: break-word; color: var(--on-variant); overflow: auto; }
+
+/* The sheet: no frames, no boxes. Text is the interface. */
+.scroll { overflow: auto; position: relative; }
+.sheet { position: relative; max-width: 720px; margin: 0 auto; padding: 56px 64px 40vh; }
+.title { font-size: 34px; line-height: 42px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 16px; outline: 0; }
+.e { outline: 0; min-height: 1em; }
+[data-ph]:empty::before, [data-ph].blank::before { content: attr(data-ph); color: var(--faint); pointer-events: none; }
+.b { position: relative; border-radius: 6px; margin: 2px -8px; padding: 2px 8px; transition: background 80ms; }
+.b.on { background: var(--primary-soft); }
+.b.dragging { opacity: .35; }
+.b p, .b h2, .b h3, .b blockquote, .b ul, .b ol, .b pre, .b figure, .b table { margin: 0; }
+.b h2 { font-size: 24px; line-height: 32px; font-weight: 600; margin-top: 18px; }
+.b h3 { font-size: 19px; line-height: 28px; font-weight: 600; margin-top: 12px; }
+.b blockquote { border-left: 3px solid var(--outline-variant); padding-left: 16px; color: var(--on-variant); }
+.b .callout { --tone: var(--primary); background: var(--callout); border-radius: 10px; padding: 12px 16px; display: flex; gap: 12px; }
+.b .callout .ic { color: var(--tone); margin-top: 3px; }
+.b .callout .e { flex: 1; }
+.b .callout[data-type="success"] { --tone: #1a7f4b; } .b .callout[data-type="warning"] { --tone: #a86500; } .b .callout[data-type="danger"] { --tone: var(--error); } .b .callout[data-type="clear"] { --tone: var(--on-variant); }
+.b .callout:not([data-type="info"]) { background: color-mix(in srgb, var(--tone) 9%, transparent); }
+.b .callout[data-variant="flat"] { background: none; padding-inline: 0; }
+.b .callout[data-variant="outlined"] { background: none; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 45%, transparent); }
+.b .det { border-radius: 10px; background: var(--surface-1); padding: 10px 14px; }
+.b .det[data-layout="lines"] { background: none; border-radius: 0; padding: 8px 0; border-block: 1px solid var(--outline-variant); }
+.b .det > header { display: flex; gap: 8px; align-items: flex-start; font-weight: 600; }
+.b .det > header button { color: var(--on-variant); margin-top: 3px; transition: transform var(--dur) var(--ease); }
+.b .det:not(.show) > header button { transform: rotate(-90deg); }
+.b .det > header .e { flex: 1; }
+.b .det .body { margin: 6px 0 0 28px; }
+.b .det:not(.show) .body { display: none; }
+.b ol.steps { list-style: none; padding: 0; counter-reset: st; }
+.b ol.steps li { counter-increment: st; position: relative; padding: 2px 0 12px 40px; }
+.b ol.steps li::before { content: counter(st); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 600; background: var(--state-hover); color: var(--on-variant); }
+.b ol.steps li.now::before { background: var(--primary); color: var(--on-primary); }
+.b ol.steps[data-layout="timeline"] li:not(:last-child)::after { content: ''; position: absolute; left: 13.5px; top: 30px; bottom: 2px; width: 1px; background: var(--outline-variant); }
+.b .cw { background: var(--code); border-radius: 10px; overflow: hidden; }
+.b .cw > header { display: flex; justify-content: space-between; gap: 12px; padding: 7px 16px; font-size: 12px; line-height: 16px; color: var(--on-variant); border-bottom: 1px solid var(--outline-variant); }
+.b .cw[data-layout="terminal"] { background: #16171c; color: #e6e4ec; }
+.b .cw[data-layout="terminal"] pre { color: #e6e4ec; }
+.b .cw .rows { display: flex; }
+.b .cw .nums { padding: 12px 0 12px 14px; font: 14px/22px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--faint); text-align: right; user-select: none; white-space: pre; }
+.b .cw pre { flex: 1; background: none; min-width: 0; }
+.b figure .frame { overflow: hidden; border-radius: 10px; }
+.b figure .frame img { width: 100%; height: 100%; border-radius: 0; }
+.b .rawb { background: var(--surface-1); border-radius: 10px; overflow: hidden; }
+.b .rawb > header { display: flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 12px; line-height: 16px; color: var(--on-variant); }
+.b .rawb > header .ic { font-size: 16px; }
+.b .rawb pre { background: none; padding-top: 0; font-size: 13px; line-height: 20px; }
+.ptag { position: absolute; top: 4px; right: 8px; display: flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: 6px; background: var(--surface-3); box-shadow: 0 1px 3px rgba(0,0,0,.14); font-size: 12px; line-height: 16px; color: var(--on-variant); opacity: 0; pointer-events: none; transition: opacity 80ms; z-index: 2; white-space: nowrap; }
+.ptag .ic { font-size: 14px; }
+.b:hover > .ptag, .b:focus-within > .ptag, .ptag:focus-visible { opacity: 1; pointer-events: auto; }
+.ptag:hover { color: var(--on-surface); }
+.b ul, .b ol { padding-left: 24px; }
+.b li { padding: 1px 0; }
+.b pre { background: var(--code); border-radius: 10px; padding: 12px 16px; font: 14px/22px ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; tab-size: 2; }
+.b hr { border: 0; height: 1px; background: var(--outline-variant); margin: 14px 0; }
+.b a { color: var(--primary); }
+.b code { background: var(--code); border-radius: 4px; padding: 1px 5px; font: .9em ui-monospace, SFMono-Regular, Menlo, monospace; }
+.b figure img { display: block; max-width: 100%; border-radius: 10px; }
+.b figure .pick { display: flex; align-items: center; justify-content: center; gap: 8px; height: 120px; width: 100%; background: var(--surface-1); border-radius: 10px; color: var(--on-variant); font-size: 14px; }
+.b figure .pick:hover { background: var(--state-hover); }
+.b figcaption { font-size: 14px; line-height: 20px; color: var(--on-variant); margin-top: 6px; }
+.b table { border-collapse: collapse; width: 100%; font-size: 15px; line-height: 22px; }
+.b td { border: 1px solid var(--outline-variant); padding: 6px 10px; vertical-align: top; min-width: 60px; }
+.b table:not(.nohead) tr:first-child td { font-weight: 600; background: var(--surface-1); }
+.b td:focus-within { box-shadow: inset 0 0 0 2px var(--primary); }
+
+/* The gutter: two quiet buttons beside the line under the pointer; gone while you type. */
+.gut { position: absolute; left: 16px; display: flex; gap: 0; opacity: 0; pointer-events: none; transition: opacity 80ms; z-index: 5; }
+.gut.on { opacity: 1; pointer-events: auto; }
+.gut button { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; color: var(--faint); }
+.gut button:hover { background: var(--state-hover); color: var(--on-surface); }
+.gut .ic { font-size: 18px; }
+#grip { cursor: grab; touch-action: none; }
+.dropline { position: absolute; height: 2px; background: var(--primary); left: 56px; right: 56px; border-radius: 1px; display: none; z-index: 5; }
+
+/* Menus */
+.menu { position: fixed; z-index: 30; width: 264px; max-height: 460px; overflow: auto; background: var(--surface-3); border-radius: 12px; box-shadow: var(--shadow); padding: 4px; font-size: 14px; line-height: 20px; }
+.menu[hidden] { display: none; }
+.menu h4 { margin: 6px 8px 4px; font-size: 12px; font-weight: 500; line-height: 16px; color: var(--on-variant); }
+.menu .row { display: flex; width: 100%; align-items: center; gap: 10px; height: 32px; padding: 0 8px; border-radius: 8px; text-align: left; }
+.menu .row .ic { font-size: 18px; color: var(--on-variant); }
+.menu .row small { margin-left: auto; color: var(--faint); font-size: 12px; }
+.menu .row:hover, .menu .row.active { background: var(--state-hover); }
+.menu .row.danger:hover { color: var(--error); }
+.menu .row.danger:hover .ic { color: var(--error); }
+.menu .row[aria-current="true"] .ic { color: var(--primary); }
+.menu .par { display: grid; gap: 4px; padding: 4px 8px 8px; font-size: 12px; line-height: 16px; color: var(--on-variant); }
+.menu .par.line { grid-template-columns: 1fr auto; align-items: center; }
+.menu .par input[type=text], .menu .par input[type=number], .menu .par select { height: 32px; width: 100%; border: 1px solid var(--outline-variant); border-radius: 8px; padding: 0 8px; background: var(--surface-0); color: var(--on-surface); font: 14px/20px Inter, -apple-system, system-ui, sans-serif; }
+.menu .par .seg { margin: 0; }
+.menu .par .seg button { font-size: 12px; padding: 0 6px; white-space: nowrap; }
+.sw { appearance: none; width: 32px; height: 20px; border-radius: 10px; background: var(--state-press); position: relative; margin: 0; cursor: pointer; transition: background var(--dur); }
+.sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: transform var(--dur) var(--ease); }
+.sw:checked { background: var(--primary); }
+.sw:checked::after { transform: translateX(12px); }
+.menu hr { border: 0; height: 1px; background: var(--outline-variant); margin: 4px 8px; }
+.menu .none { padding: 6px 8px; color: var(--on-variant); }
+
+/* The bar over a text selection */
+.inl { position: fixed; z-index: 30; display: flex; align-items: center; padding: 4px; gap: 0; background: var(--surface-3); border-radius: 10px; box-shadow: var(--shadow); font-size: 14px; line-height: 20px; }
+.inl[hidden] { display: none; }
+.inl .ib[aria-pressed="true"] { color: var(--primary); background: var(--primary-soft); }
+.inl input { height: 32px; width: 220px; border: 0; background: transparent; color: inherit; font: inherit; padding: 0 8px; outline: 0; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 8px); background: var(--on-surface); color: var(--surface-0); border-radius: 10px; padding: 8px 14px; font-size: 14px; line-height: 20px; opacity: 0; pointer-events: none; transition: opacity var(--dur), transform var(--dur) var(--ease); z-index: 40; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 720px) { .sheet { padding: 32px 40px 40vh; } .gut { left: 0; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <button class="ib" id="t-left" aria-label="Оглавление" title="Оглавление"><span class="ic">left_panel_close</span></button>
+  <div class="doc"><b style="font-weight:500">Страница</b><span id="saved">Сохранено</span></div>
+  <button class="ib" id="undo" aria-label="Отменить" title="Отменить  ⌘Z" disabled><span class="ic">undo</span></button>
+  <button class="ib" id="redo" aria-label="Повторить" title="Повторить  ⇧⌘Z" disabled><span class="ic">redo</span></button>
+  <div class="grow"></div>
+   <button class="ib" id="file-btn" aria-label="Сохранить или открыть" title="Сохранить или открыть"><span class="ic">save</span></button>
+  <button class="ib" id="reset" aria-label="Вернуть образец" title="Вернуть образец"><span class="ic">restart_alt</span></button>
+  <button class="ib" id="theme" aria-label="Тема" title="Светлая или тёмная"><span class="ic">dark_mode</span></button>
+  <button class="ib" id="t-right" aria-label="Что сохраняется" title="Что сохраняется"><span class="ic">right_panel_close</span></button>
+</header>
+<div class="work" id="work">
+  <aside class="panel l" id="left"><div class="in"><h3>Оглавление</h3><nav class="toc" id="toc"></nav></div></aside>
+  <main class="scroll" id="scroll">
+    <div class="sheet" id="sheet">
+      <h1 class="title" id="title" contenteditable="plaintext-only" data-ph="Без названия" role="textbox" aria-label="Заголовок страницы"></h1>
+      <div id="doc"></div>
+      <div class="gut" id="gut"><button id="plus" aria-label="Добавить блок" title="Добавить блок"><span class="ic">add</span></button><button id="grip" aria-label="Действия с блоком" title="Щелчок: меню. Потянуть: перенести"><span class="ic">drag_indicator</span></button></div>
+      <div class="dropline" id="drop"></div>
+    </div>
+  </main>
+  <aside class="panel r" id="right"><div class="in">
+    <div class="seg" id="tabs"><button data-t="json" aria-pressed="true">JSON</button><button data-t="md" aria-pressed="false">Markdown</button><button data-t="html" aria-pressed="false">HTML</button></div>
+    <pre id="out"></pre>
+    <div id="trip"></div>
+  </div></aside>
+</div>
+<div class="menu" id="menu" hidden></div>
+<div class="inl" id="inl" hidden></div>
+<input type="file" id="file" accept="image/*" hidden>
+<input type="file" id="open-file" accept=".md,.markdown,.json,text/markdown,application/json" hidden>
+<div class="toast" id="toast" role="status"></div>
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const store = {get(k) { try { return localStorage.getItem('content-editor.' + k); } catch { return null; } }, set(k, v) { try { localStorage.setItem('content-editor.' + k, v); } catch {} }};
+let uid = 100; const nid = () => 'c' + ++uid;
+
+const TYPES = [
+  {t: 'p', label: 'Текст', icon: 'notes', find: 'абзац текст'},
+  {t: 'h2', label: 'Заголовок', icon: 'title', hint: '##', find: 'заголовок h2'},
+  {t: 'h3', label: 'Подзаголовок', icon: 'text_fields', hint: '###', find: 'подзаголовок h3'},
+  {t: 'ul', label: 'Список', icon: 'format_list_bulleted', hint: '-', find: 'список маркированный'},
+  {t: 'ol', label: 'Нумерованный список', icon: 'format_list_numbered', hint: '1.', find: 'список нумерованный'},
+  {t: 'quote', label: 'Цитата', icon: 'format_quote', hint: '>', find: 'цитата'},
+  {t: 'alert', label: 'Заметка', icon: 'info', find: 'заметка важно предупреждение alert'},
+  {t: 'details', label: 'Раскрывающийся блок', icon: 'expand_circle_down', find: 'раскрывающийся details спойлер вопрос'},
+  {t: 'steps', label: 'Шаги', icon: 'format_list_numbered_rtl', find: 'шаги инструкция steps'},
+  {t: 'table', label: 'Таблица', icon: 'table', find: 'таблица'},
+  {t: 'image', label: 'Картинка', icon: 'image', find: 'картинка изображение фото'},
+  {t: 'code', label: 'Код', icon: 'code', hint: '```', find: 'код'},
+  {t: 'hr', label: 'Разделитель', icon: 'horizontal_rule', hint: '---', find: 'разделитель линия'},
+];
+const TEXTY = new Set(['p', 'h2', 'h3', 'quote', 'alert']);
+const LISTY = new Set(['ul', 'ol', 'steps']);
+/* A block's parameters are data, in the shape of the Composition editor manifest:
+   the form is built from this, nothing is drawn by hand per block. Names and values
+   are Docara's catalog where it has the block. */
+const PARAMS = {
+  alert: [{k: 'type', label: 'Вид', values: [['info', 'Сведения'], ['success', 'Успех'], ['warning', 'Внимание'], ['danger', 'Опасность'], ['clear', 'Обычная']], def: 'info'}, {k: 'variant', label: 'Оформление', values: [['default', 'Заливка'], ['flat', 'Плоско'], ['outlined', 'Рамка']], def: 'default'}],
+  details: [{k: 'open', label: 'Открыт сразу', bool: true, def: false}, {k: 'layout', label: 'Оформление', values: [['surface', 'Заливка'], ['lines', 'Линии']], def: 'surface'}],
+  image: [{k: 'ratio', label: 'Пропорции', values: [['auto', 'Как есть'], ['1/1', '1:1'], ['4/3', '4:3'], ['3/2', '3:2'], ['16/9', '16:9'], ['21/9', '21:9']], def: 'auto'}, {k: 'fit', label: 'Вписать', values: [['cover', 'Заполнить'], ['contain', 'Целиком']], def: 'cover'}],
+  code: [{k: 'lang', label: 'Язык', text: true, def: 'text'}, {k: 'title', label: 'Подпись', text: true, def: ''}, {k: 'numbers', label: 'Номера строк', bool: true, def: false}, {k: 'layout', label: 'Оформление', values: [['default', 'Обычный'], ['terminal', 'Терминал']], def: 'default'}],
+  steps: [{k: 'layout', label: 'Оформление', values: [['timeline', 'Линия'], ['list', 'Список']], def: 'timeline'}, {k: 'current', label: 'Текущий шаг', int: true, def: 1}],
+  table: [{k: 'header', label: 'Строка заголовка', bool: true, def: true}],
+};
+const propsFor = (type) => Object.fromEntries((PARAMS[type] || []).map((p) => [p.k, p.def]));
+const prop = (b, k) => (b.props && k in b.props ? b.props[k] : (PARAMS[b.type] || []).find((p) => p.k === k)?.def);
+const nonDefault = (b) => (PARAMS[b.type] || []).filter((p) => prop(b, p.k) !== p.def);
+const SAMPLE_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600'%3E%3Cdefs%3E%3ClinearGradient id='g' x2='1' y2='1'%3E%3Cstop stop-color='%23c9d6f5'/%3E%3Cstop offset='.6' stop-color='%23e8d9f1'/%3E%3Cstop offset='1' stop-color='%23f7e3d0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='600' fill='url%28%23g%29'/%3E%3C/svg%3E";
+const typeOf = (t) => TYPES.find((x) => x.t === t);
+
+const SAMPLE = {
+  title: 'Как подготовить письмо к рассылке',
+  blocks: [
+    {id: nid(), type: 'p', html: 'Эта страница написана в режиме контента. Просто печатайте: <strong>Enter</strong> создаёт новый блок, а косая черта в пустой строке открывает меню.'},
+    {id: nid(), type: 'h2', html: 'Что проверить перед отправкой'},
+    {id: nid(), type: 'ul', items: ['Согласие получателей и работу ссылки отписки', 'Тему письма и первые слова после неё', 'Вид на телефоне и в тёмной теме']},
+    {id: nid(), type: 'alert', props: {type: 'warning', variant: 'default'}, html: 'Наведите на этот блок: справа вверху появится кнопка параметров. Там же, в меню ручки слева.'},
+    {id: nid(), type: 'details', props: {open: true, layout: 'surface'}, summary: 'Зачем нужны параметры', html: 'У блока могут быть настройки: вид заметки, пропорции картинки, язык кода. Они хранятся рядом с содержимым и попадают и в JSON, и в Markdown.'},
+    {id: nid(), type: 'image', props: {ratio: '21/9', fit: 'cover'}, src: SAMPLE_IMG, caption: 'Картинка с пропорциями 21:9'},
+    {id: nid(), type: 'code', props: {lang: 'bash', title: 'Сборка', numbers: true, layout: 'default'}, text: 'npm ci\nnpm run build'},
+    {id: nid(), type: 'steps', props: {layout: 'timeline', current: 2}, items: ['Напишите текст', 'Проверьте вид на телефоне', 'Отправьте на проверку']},
+    {id: nid(), type: 'h2', html: 'Сроки'},
+    {id: nid(), type: 'table', rows: [['Этап', 'Кто', 'Срок'], ['Текст', 'Автор', '3 дня'], ['Вёрстка', 'Редактор', '1 день']]},
+    {id: nid(), type: 'quote', html: 'Письмо хорошо, когда из него нечего убрать.'},
+    {id: nid(), type: 'p', html: ''},
+  ],
+};
+let saved = null; try { saved = JSON.parse(store.get('doc2')); } catch {}
+let doc = saved && Array.isArray(saved.blocks) ? saved : structuredClone(SAMPLE);
+for (const b of doc.blocks) { const n = +String(b.id).slice(1); if (n > uid) uid = n; }
+
+/* Only the inline marks survive, as in sf-rich-text; everything else keeps its text. */
+const SAFE_URL = (u) => { const s = String(u).replace(/[\u0000- ]/g, ''); return /^(https:|http:|mailto:|tel:)/i.test(s) || /^\/(?![/\\])/.test(s) ? s : null; };
+function clean(html) {
+  const box = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html').body;
+  const walk = (node) => {
+    let out = '';
+    for (const n of node.childNodes) {
+      if (n.nodeType === 3) { out += esc(n.nodeValue.replace(/ /g, ' ').replace(/\s*\n\s*/g, ' ')); continue; }
+      if (n.nodeType !== 1) continue;
+      const tag = n.tagName.toLowerCase(), inner = walk(n), st = n.getAttribute('style') || '';
+      if (['script', 'style', 'meta', 'link', 'title'].includes(tag)) continue;
+      if (tag === 'br') { out += '<br>'; continue; }
+      if (!inner) continue;
+      if (tag === 'b' || tag === 'strong' || /font-weight:\s*(bold|[6-9]00)/i.test(st)) out += `<strong>${inner}</strong>`;
+      else if (tag === 'i' || tag === 'em' || /font-style:\s*italic/i.test(st)) out += `<em>${inner}</em>`;
+      else if (tag === 'code') out += `<code>${inner}</code>`;
+      else if (tag === 'a') { const u = SAFE_URL(n.getAttribute('href') || ''); out += u ? `<a href="${esc(u)}">${inner}</a>` : inner; }
+      else out += inner;
+    }
+    return out;
+  };
+  return walk(box).replace(/(<br>)+$/, '');
+}
+const textOf = (html) => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent; };
+
+/* ------- Drawing ------- */
+const root = $('doc');
+function inner(b) {
+  const ph = (s) => `data-ph="${esc(s)}"`;
+  switch (b.type) {
+    case 'p': return `<p class="e" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Текст" ${ph('Напишите текст или нажмите /')}>${b.html}</p>`;
+    case 'h2': return `<h2 class="e" contenteditable="true" role="textbox" aria-label="Заголовок" ${ph('Заголовок')}>${b.html}</h2>`;
+    case 'h3': return `<h3 class="e" contenteditable="true" role="textbox" aria-label="Подзаголовок" ${ph('Подзаголовок')}>${b.html}</h3>`;
+    case 'quote': return `<blockquote class="e" contenteditable="true" role="textbox" aria-label="Цитата" ${ph('Цитата')}>${b.html}</blockquote>`;
+    case 'alert': { const ty = prop(b, 'type'), ic = {info: 'info', success: 'check_circle', warning: 'warning', danger: 'error', clear: 'notes'}[ty]; return `<div class="callout" data-type="${ty}" data-variant="${prop(b, 'variant')}"><span class="ic">${ic}</span><div class="e" contenteditable="true" role="textbox" aria-label="Заметка" ${ph('Заметка')}>${b.html}</div></div>`; }
+    case 'details': return `<div class="det ${prop(b, 'open') ? 'show' : ''}" data-layout="${prop(b, 'layout')}"><header><button data-fold="1" aria-label="Свернуть или развернуть" aria-expanded="${!!prop(b, 'open')}"><span class="ic">expand_more</span></button><div class="e" contenteditable="true" role="textbox" aria-label="Вопрос или заголовок" data-f="summary" ${ph('Заголовок')}>${b.summary}</div></header><div class="body e" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Содержимое" data-f="html" ${ph('Что внутри')}>${b.html}</div></div>`;
+    case 'ul': case 'ol': return `<${b.type}>${b.items.map((h, i) => `<li><div class="e" contenteditable="true" role="textbox" aria-label="Пункт списка" data-i="${i}" ${ph('Пункт')}>${h}</div></li>`).join('')}</${b.type}>`;
+    case 'steps': return `<ol class="steps" data-layout="${prop(b, 'layout')}">${b.items.map((h, i) => `<li class="${i + 1 === +prop(b, 'current') ? 'now' : ''}"><div class="e" contenteditable="true" role="textbox" aria-label="Шаг ${i + 1}" data-i="${i}" ${ph('Шаг')}>${h}</div></li>`).join('')}</ol>`;
+    case 'code': { const head = prop(b, 'title') || prop(b, 'lang') !== 'text' ? `<header><span>${esc(prop(b, 'title'))}</span><span>${prop(b, 'lang') !== 'text' ? esc(prop(b, 'lang')) : ''}</span></header>` : ''; const nums = prop(b, 'numbers') ? `<div class="nums" aria-hidden="true">${b.text.split('\n').map((_, i) => i + 1).join('\n')}</div>` : ''; return `<div class="cw" data-layout="${prop(b, 'layout')}">${head}<div class="rows">${nums}<pre class="e" contenteditable="plaintext-only" role="textbox" aria-label="Код" spellcheck="false" ${ph('Код')}>${esc(b.text)}</pre></div></div>`; }
+    case 'raw': return `<div class="rawb"><header><span class="ic">extension</span>Блок, которого редактор не знает: хранится как есть</header><pre class="e" contenteditable="plaintext-only" role="textbox" aria-label="Исходный текст блока" spellcheck="false">${esc(b.text)}</pre></div>`;
+    case 'hr': return '<hr>';
+    case 'image': { const r = prop(b, 'ratio'), style = r === 'auto' ? '' : `aspect-ratio:${r};`; return `<figure>${b.src ? `<div class="frame" style="${style}"><img src="${esc(b.src)}" alt="${esc(textOf(b.caption || ''))}" style="object-fit:${prop(b, 'fit')};${r === 'auto' ? 'height:auto;' : ''}"></div>` : `<button class="pick" data-pick="1" style="${style}${r === 'auto' ? '' : 'height:auto;'}"><span class="ic">image</span>Выбрать картинку</button>`}<figcaption class="e" contenteditable="true" role="textbox" aria-label="Подпись" data-cap="1" ${ph('Подпись')}>${b.caption || ''}</figcaption></figure>`; }
+    case 'table': return `<table class="${prop(b, 'header') ? '' : 'nohead'}"><tbody>${b.rows.map((r, ri) => `<tr>${r.map((c, ci) => `<td><div class="e" contenteditable="true" role="textbox" aria-label="Ячейка" data-r="${ri}" data-c="${ci}">${c}</div></td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  }
+  return '';
+}
+/* The block's parameters, quietly, where the pointer already is. */
+function ptag(b) {
+  if (!PARAMS[b.type]) return '';
+  const words = nonDefault(b).map((p) => { const v = prop(b, p.k); return p.values ? p.values.find((x) => x[0] === v)?.[1] : p.bool ? (v ? p.label : 'без: ' + p.label.toLowerCase()) : String(v); }).filter(Boolean);
+  return `<button class="ptag" contenteditable="false" data-tune="1" aria-label="Параметры блока"><span class="ic">tune</span>${esc(words.slice(0, 2).join(' · ') || 'Параметры')}</button>`;
+}
+const blockHtml = (b) => inner(b) + ptag(b);
+function draw(b) { const el = root.querySelector(`:scope > [data-id="${b.id}"]`); if (el) { el.innerHTML = blockHtml(b); mark(el); } return el; }
+function mark(scope) { for (const e of scope.querySelectorAll('.e[data-ph]')) e.classList.toggle('blank', !e.textContent && !e.querySelector('img')); }
+function renderAll() {
+  $('title').textContent = doc.title || '';
+  root.innerHTML = doc.blocks.map((b) => `<div class="b" data-id="${b.id}">${blockHtml(b)}</div>`).join('');
+  mark(root); changed(true);
+}
+/* Structure changes keep the other blocks' nodes, and they glide to their place. */
+function reconcile(glide = true) {
+  const before = glide ? new Map([...root.children].map((el) => [el.dataset.id, el.getBoundingClientRect().top])) : null;
+  const seen = new Set();
+  let cursor = root.firstElementChild;
+  for (const b of doc.blocks) {
+    seen.add(b.id);
+    let el = root.querySelector(`:scope > [data-id="${b.id}"]`);
+    if (!el) { el = document.createElement('div'); el.className = 'b'; el.dataset.id = b.id; el.innerHTML = blockHtml(b); mark(el); }
+    if (el === cursor) cursor = cursor.nextElementSibling; else root.insertBefore(el, cursor);
+  }
+  for (const el of [...root.children]) if (!seen.has(el.dataset.id)) el.remove();
+  if (glide && !matchMedia('(prefers-reduced-motion: reduce)').matches) for (const el of root.children) {
+    const was = before.get(el.dataset.id); if (was === undefined) { el.animate([{opacity: 0}, {opacity: 1}], {duration: 160, easing: 'ease-out'}); continue; }
+    const d = was - el.getBoundingClientRect().top;
+    if (d) el.animate([{transform: `translateY(${d}px)`}, {transform: 'none'}], {duration: 160, easing: 'cubic-bezier(.2,0,0,1)'});
+  }
+}
+const elOf = (id) => root.querySelector(`:scope > [data-id="${id}"]`);
+const blockAt = (id) => doc.blocks.find((b) => b.id === id);
+const indexOf = (id) => doc.blocks.findIndex((b) => b.id === id);
+const blockFromNode = (n) => { const el = n?.closest?.('.b'); return el && blockAt(el.dataset.id); };
+const firstEdit = (el) => el?.querySelector('.e');
+const lastEdit = (el) => { const all = el?.querySelectorAll('.e'); return all?.length ? all[all.length - 1] : null; };
+
+/* ------- Caret ------- */
+function caretOffset(el) {
+  const s = getSelection(); if (!s.rangeCount || !el.contains(s.anchorNode)) return 0;
+  const r = document.createRange(); r.selectNodeContents(el); r.setEnd(s.anchorNode, s.anchorOffset); return r.toString().length;
+}
+function placeCaret(el, offset = 'end') {
+  if (!el) return;
+  el.focus({preventScroll: false});
+  const s = getSelection(), r = document.createRange();
+  if (offset === 'end') { r.selectNodeContents(el); r.collapse(false); s.removeAllRanges(); s.addRange(r); return; }
+  let left = offset; const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  let n; while ((n = walker.nextNode())) { if (left <= n.length) { r.setStart(n, left); r.collapse(true); s.removeAllRanges(); s.addRange(r); return; } left -= n.length; }
+  r.selectNodeContents(el); r.collapse(false); s.removeAllRanges(); s.addRange(r);
+}
+const atStart = (el) => { const s = getSelection(); return s.isCollapsed && caretOffset(el) === 0; };
+const atEnd = (el) => { const s = getSelection(); return s.isCollapsed && caretOffset(el) === el.textContent.length; };
+function splitHtml(el) {
+  const s = getSelection(), r = s.getRangeAt(0); r.deleteContents();
+  const after = document.createRange(); after.selectNodeContents(el); after.setStart(r.endContainer, r.endOffset);
+  const tail = document.createElement('div'); tail.appendChild(after.cloneContents());
+  const before = document.createRange(); before.selectNodeContents(el); before.setEnd(r.endContainer, r.endOffset);
+  const head = document.createElement('div'); head.appendChild(before.cloneContents());
+  return [clean(head.innerHTML), clean(tail.innerHTML)];
+}
+function onEdge(el, up) {
+  const s = getSelection(); if (!s.rangeCount || !s.isCollapsed) return false;
+  const r = s.getRangeAt(0).cloneRange(); let rect = r.getClientRects()[0];
+  if (!rect) return true;
+  const box = el.getBoundingClientRect(), lh = parseFloat(getComputedStyle(el).lineHeight) || 24;
+  return up ? rect.top - box.top < lh * .8 : box.bottom - rect.bottom < lh * .8;
+}
+
+/* ------- History ------- */
+const undoS = [], redoS = []; let typingTimer = null, typingOpen = false;
+const snap = () => JSON.stringify(doc);
+function focusState() { const a = document.activeElement; if (!a?.classList?.contains('e')) return null; const b = blockFromNode(a); return b && {id: b.id, i: a.dataset.i, r: a.dataset.r, c: a.dataset.c, cap: a.dataset.cap, off: caretOffset(a)}; }
+function push() { undoS.push({doc: snap(), focus: focusState()}); if (undoS.length > 200) undoS.shift(); redoS.length = 0; typingOpen = false; syncHist(); }
+function pushTyping() { if (!typingOpen) { undoS.push({doc: lastSnap, focus: lastFocus}); redoS.length = 0; typingOpen = true; syncHist(); } clearTimeout(typingTimer); typingTimer = setTimeout(() => { typingOpen = false; }, 700); }
+let lastSnap = snap(), lastFocus = null;
+function syncHist() { $('undo').disabled = !undoS.length; $('redo').disabled = !redoS.length; }
+function restore(from, to) {
+  const s = from.pop(); if (!s) return;
+  to.push({doc: snap(), focus: focusState()}); typingOpen = false;
+  doc = JSON.parse(s.doc); renderAll(); clearSel();
+  if (s.focus) { const el = elOf(s.focus.id); const sel = s.focus.i !== undefined ? `.e[data-i="${s.focus.i}"]` : s.focus.r !== undefined ? `.e[data-r="${s.focus.r}"][data-c="${s.focus.c}"]` : s.focus.cap ? '.e[data-cap]' : '.e'; placeCaret(el?.querySelector(sel), s.focus.off); }
+  syncHist();
+}
+$('undo').onclick = () => restore(undoS, redoS);
+$('redo').onclick = () => restore(redoS, undoS);
+
+/* ------- Output ------- */
+function toHtml() {
+  const out = doc.title ? [`<h1>${esc(doc.title)}</h1>`] : [];
+  for (const b of doc.blocks) {
+    if (b.type === 'p') { if (b.html) out.push(`<p>${b.html}</p>`); }
+    else if (b.type === 'h2' || b.type === 'h3') out.push(`<${b.type}>${b.html}</${b.type}>`);
+    else if (b.type === 'quote') out.push(`<blockquote>${b.html}</blockquote>`);
+    else if (b.type === 'alert') out.push(`<div role="note" data-type="${prop(b, 'type')}">${b.html}</div>`);
+    else if (b.type === 'details') out.push(`<details${prop(b, 'open') ? ' open' : ''}><summary>${b.summary}</summary>${b.html}</details>`);
+    else if (b.type === 'raw') out.push(`<!-- block source kept as is -->\n<pre>${esc(b.text)}</pre>`);
+    else if (LISTY.has(b.type)) { const t = b.type === 'steps' ? 'ol' : b.type; out.push(`<${t}>\n${b.items.map((h) => `  <li>${h}</li>`).join('\n')}\n</${t}>`); }
+    else if (b.type === 'code') out.push(`<pre><code class="language-${esc(prop(b, 'lang'))}">${esc(b.text)}</code></pre>`);
+    else if (b.type === 'hr') out.push('<hr>');
+    else if (b.type === 'image') out.push(`<figure><img src="${b.src ? (b.src.startsWith('data:') ? '…' : esc(b.src)) : ''}" alt="">${b.caption ? `<figcaption>${b.caption}</figcaption>` : ''}</figure>`);
+    else if (b.type === 'table') out.push(`<table>\n${b.rows.map((r) => `  <tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('\n')}\n</table>`);
+  }
+  return out.join('\n');
+}
+/* JSON: a Composition Document, profile structured-content. Each block is a node
+   {id, type, data, props}: the call of a component with its parameters. */
+function runs(html) {
+  const box = document.createElement('div'); box.innerHTML = html; const out = [];
+  const walk = (node, marks, into) => {
+    for (const n of node.childNodes) {
+      if (n.nodeType === 3) { if (n.nodeValue) into.push(marks.length ? {type: 'text', value: n.nodeValue, marks} : {type: 'text', value: n.nodeValue}); continue; }
+      const tag = n.tagName?.toLowerCase();
+      if (tag === 'br') into.push({type: 'text', value: '\n'});
+      else if (tag === 'strong' || tag === 'em' || tag === 'code') walk(n, [...marks, tag], into);
+      else if (tag === 'a') { const children = []; walk(n, marks, children); into.push({type: 'link', href: n.getAttribute('href'), children}); }
+      else walk(n, marks, into);
+    }
+  };
+  walk(box, [], out); return out;
+}
+const NODE = {p: 'content.paragraph', h2: 'content.heading', h3: 'content.heading', quote: 'content.quote', alert: 'content.alert', details: 'content.details', ul: 'content.list', ol: 'content.list', steps: 'content.steps', code: 'content.code', hr: 'content.divider', image: 'content.figure', table: 'content.table', raw: 'content.source'};
+function toNode(b) {
+  const data = {};
+  if (b.type === 'h2' || b.type === 'h3') { data.level = b.type === 'h2' ? 2 : 3; data.content = runs(b.html); }
+  else if (TEXTY.has(b.type)) data.content = runs(b.html);
+  else if (b.type === 'details') { data.summary = runs(b.summary); data.content = runs(b.html); }
+  else if (LISTY.has(b.type)) { data.items = b.items.map((h) => ({content: runs(h)})); if (b.type === 'ol') data.ordered = true; }
+  else if (b.type === 'code' || b.type === 'raw') data.text = b.text;
+  else if (b.type === 'image') { data.src = b.src; data.caption = runs(b.caption || ''); }
+  else if (b.type === 'table') data.rows = b.rows.map((r) => r.map((c) => ({content: runs(c)})));
+  const node = {id: b.id, type: NODE[b.type]};
+  if (Object.keys(data).length) node.data = data;
+  const props = Object.fromEntries(nonDefault(b).map((q) => [q.k, prop(b, q.k)]));
+  if (Object.keys(props).length) node.props = props;
+  return node;
+}
+const toDocument = () => ({schema: 'simai.composition.document', schema_version: 1, id: 'page', profile: 'structured-content', root: {id: 'root', type: 'content.document', data: {title: doc.title || ''}, slots: {default: doc.blocks.map(toNode)}}});
+
+/* Markdown: Docara's own syntax, native Markdown first and :::blocks with {parameters}. */
+const mdEscape = (t) => t.replace(/([\\`*_\[\]])/g, '\\$1');
+function inlineMd(html) {
+  const box = document.createElement('div'); box.innerHTML = html;
+  const walk = (node) => [...node.childNodes].map((n) => {
+    if (n.nodeType === 3) return mdEscape(n.nodeValue);
+    const tag = n.tagName?.toLowerCase(), t = walk(n);
+    if (tag === 'strong') return `**${t}**`; if (tag === 'em') return `*${t}*`;
+    if (tag === 'code') return '`' + n.textContent + '`'; if (tag === 'br') return '\\\n';
+    if (tag === 'a') return `[${t}](${n.getAttribute('href')})`;
+    return t;
+  }).join('');
+  return walk(box);
+}
+function attrs(b) {
+  const a = nonDefault(b).map((q) => { const v = prop(b, q.k); return `${q.k}=${/[\s"]/.test(String(v)) || v === '' ? JSON.stringify(String(v)) : v}`; });
+  return a.length ? ` {${a.join(' ')}}` : '';
+}
+const FENCE = (t) => { const longest = Math.max(2, ...(t.match(/`+/g) || []).map((x) => x.length)); return '`'.repeat(longest + 1); };
+function blockMd(b) {
+  switch (b.type) {
+    case 'p': return inlineMd(b.html);
+    case 'h2': return '## ' + inlineMd(b.html);
+    case 'h3': return '### ' + inlineMd(b.html);
+    case 'quote': return inlineMd(b.html).split('\n').map((l) => '> ' + l).join('\n');
+    case 'alert': return `:::alert${attrs(b)}\n${inlineMd(b.html)}\n:::`;
+    case 'details': return `:::details${attrs(b)}\n### ${inlineMd(b.summary)}\n\n${b.html.split(/<br>/).map(inlineMd).join('\n')}\n:::`;
+    case 'ul': return b.items.map((h) => '- ' + inlineMd(h)).join('\n');
+    case 'ol': return b.items.map((h, i) => `${i + 1}. ${inlineMd(h)}`).join('\n');
+    case 'steps': return `:::steps${attrs(b)}\n${b.items.map((h, i) => `${i + 1}. ${inlineMd(h)}`).join('\n')}\n:::`;
+    case 'code': {
+      const f = FENCE(b.text), lang = prop(b, 'lang') === 'text' ? '' : prop(b, 'lang'), fence = `${f}${lang}\n${b.text}\n${f}`;
+      const rest = nonDefault(b).filter((q) => q.k !== 'lang');
+      return rest.length ? `:::code${attrs(b)}\n${fence}\n:::` : fence;
+    }
+    case 'hr': return '---';
+    case 'raw': return b.text;
+    case 'image': return `:::figure${attrs(b)}\n![${mdEscape(textOf(b.caption || ''))}](${(b.src || '').replace(/\(/g, '%28').replace(/\)/g, '%29')})${b.caption ? `\n\n${inlineMd(b.caption)}` : ''}\n:::`;
+    case 'table': { const cell = (c) => inlineMd(c).replace(/\|/g, '\\|').replace(/\\\n/g, ' '), row = (r) => `| ${r.map(cell).join(' | ')} |`; return [row(b.rows[0]), `| ${b.rows[0].map(() => '---').join(' | ')} |`, ...b.rows.slice(1).map(row)].join('\n'); }
+  }
+  return '';
+}
+function toMarkdown(d = doc) {
+  const front = d.title ? `---\ntitle: ${JSON.stringify(d.title)}\n---\n\n` : '';
+  return front + d.blocks.filter((b) => !(b.type === 'p' && !b.html)).map(blockMd).join('\n\n') + '\n';
+}
+function mdInline(t) {
+  const hold = []; const put = (h) => { hold.push(h); return `\u0000${hold.length - 1}\u0000`; };
+  let s = t.replace(/\\\n/g, () => put('<br>')).replace(/\\([\\`*_\[\]|])/g, (_, c) => put(esc(c)));
+  s = s.replace(/`([^`]+)`/g, (_, c) => put(`<code>${esc(c)}</code>`));
+  s = s.replace(/\[([^\]]*)\]\(([^)\s]+)\)/g, (_, x, u) => { const safe = SAFE_URL(u); return safe ? `\u0001${put(`<a href="${esc(safe)}">`)}${x}${put('</a>')}\u0001` : x; });
+  s = esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  return s.replace(/\u0001/g, '').replace(/\u0000(\d+)\u0000/g, (_, i) => hold[+i]);
+}
+function parseAttrs(t) {
+  const out = {}; const re = /([a-z_-]+)=("(?:[^"\\]|\\.)*"|[^\s}]+)/gi; let m;
+  while ((m = re.exec(t || ''))) { const raw = m[2]; out[m[1]] = raw.startsWith('"') ? JSON.parse(raw) : raw; }
+  return out;
+}
+function toProps(type, a) {
+  const props = propsFor(type); let known = true;
+  for (const [k, v] of Object.entries(a)) {
+    const q = (PARAMS[type] || []).find((x) => x.k === k);
+    if (!q) { known = false; continue; }
+    if (q.values && !q.values.some((x) => x[0] === v)) { known = false; continue; }
+    props[k] = q.bool ? v === 'true' : q.int ? +v : v;
+  }
+  return {props, known};
+}
+/* What this reader does not fully understand stays one opaque block, byte for byte:
+   it is never rewritten as a paragraph (Docara's condition, 2026-10-31). */
+function fromMarkdown(src) {
+  const text = src.replace(/\r\n/g, '\n'); const lines = text.split('\n'); let i = 0, title = '';
+  if (lines[0] === '---') { let j = 1; while (j < lines.length && lines[j] !== '---') { const m = lines[j].match(/^title:\s*(.*)$/); if (m) { try { title = JSON.parse(m[1]); } catch { title = m[1].replace(/^['"]|['"]$/g, ''); } } j++; } i = j + 1; }
+  const out = [], raw = (t) => out.push({id: nid(), type: 'raw', text: t});
+  const plain = (body) => body.every((l) => l === '' || !/^(#{1,6} |[-*] |\d+[.)] |> |:{3,}|`{3,}|\|)/.test(l));
+  while (i < lines.length) {
+    const l = lines[i];
+    if (!l.trim()) { i++; continue; }
+    const fence = l.match(/^(`{3,})(\S*)\s*$/);
+    if (fence) { let j = i + 1; while (j < lines.length && lines[j] !== fence[1]) j++; const a = {lang: fence[2] || 'text'}; out.push({id: nid(), type: 'code', props: toProps('code', a).props, text: lines.slice(i + 1, j).join('\n')}); i = j + 1; continue; }
+    const dir = l.match(/^(:{3,})([a-z_.-]+)\s*(\{.*\})?\s*$/i);
+    if (dir) {
+      const close = dir[1]; let j = i + 1; while (j < lines.length && lines[j] !== close) j++;
+      const whole = lines.slice(i, j + 1).join('\n'), body = lines.slice(i + 1, j), name = dir[2], a = parseAttrs(dir[3]), {props, known} = toProps(name === 'figure' ? 'image' : name, a);
+      i = j + 1;
+      let done = false;
+      if (known && close === ':::') {
+        if (name === 'alert' && plain(body) && !body.includes('')) { out.push({id: nid(), type: 'alert', props, html: mdInline(body.join('\n'))}); done = true; }
+        else if (name === 'details' && /^#{2,4} /.test(body[0] || '') && body[1] === '' && plain(body.slice(2)) && !body.slice(2).includes('')) { out.push({id: nid(), type: 'details', props, summary: mdInline(body[0].replace(/^#+ /, '')), html: body.slice(2).map(mdInline).join('<br>')}); done = true; }
+        else if (name === 'steps' && body.length && body.every((x) => /^\d+\. /.test(x))) { out.push({id: nid(), type: 'steps', props, items: body.map((x) => mdInline(x.replace(/^\d+\. /, '')))}); done = true; }
+        else if (name === 'figure') { const m = (body[0] || '').match(/^!\[[^\]]*\]\(([^)]*)\)$/); if (m && (body.length === 1 || (body[1] === '' && body.length === 3))) { out.push({id: nid(), type: 'image', props, src: m[1], caption: body[2] ? mdInline(body[2]) : ''}); done = true; } }
+        else if (name === 'code') { const f = (body[0] || '').match(/^(`{3,})(\S*)$/); if (f && body[body.length - 1] === f[1] && body.length >= 2) { props.lang = f[2] || props.lang; out.push({id: nid(), type: 'code', props, text: body.slice(1, -1).join('\n')}); done = true; } }
+      }
+      if (!done) raw(whole);
+      continue;
+    }
+    if (/^---+\s*$/.test(l)) { out.push({id: nid(), type: 'hr'}); i++; continue; }
+    const h = l.match(/^(#{1,3}) (.*)$/);
+    if (h) { out.push({id: nid(), type: h[1].length === 3 ? 'h3' : 'h2', html: mdInline(h[2])}); i++; continue; }
+    if (/^\|/.test(l) && /^\|[\s:|-]+\|$/.test(lines[i + 1] || '')) {
+      const rows = []; let j = i; while (j < lines.length && /^\|/.test(lines[j])) { if (j !== i + 1) rows.push(lines[j].replace(/^\|\s?|\s?\|$/g, '').split(/(?<!\\)\s\|\s/).map(mdInline)); j++; }
+      out.push({id: nid(), type: 'table', props: propsFor('table'), rows}); i = j; continue;
+    }
+    const take = (re) => { const got = []; while (i < lines.length && re.test(lines[i])) got.push(lines[i++]); return got; };
+    if (/^[-*] /.test(l)) { out.push({id: nid(), type: 'ul', items: take(/^[-*] /).map((x) => mdInline(x.slice(2)))}); continue; }
+    if (/^\d+\. /.test(l)) { out.push({id: nid(), type: 'ol', items: take(/^\d+\. /).map((x) => mdInline(x.replace(/^\d+\. /, '')))}); continue; }
+    if (/^> /.test(l)) { out.push({id: nid(), type: 'quote', html: mdInline(take(/^> /).map((x) => x.slice(2)).join('\n'))}); continue; }
+    const para = []; while (i < lines.length && lines[i].trim() && !/^(#{1,3} |[-*] |\d+\. |> |:{3,}|`{3,}|---+\s*$|\|)/.test(lines[i])) para.push(lines[i++]);
+    if (!para.length) { raw(lines[i++]); continue; }
+    out.push({id: nid(), type: 'p', html: mdInline(para.join('\n'))});
+  }
+  return {title, blocks: out};
+}
+const norm = (d) => JSON.stringify(d.blocks.filter((b) => !(b.type === 'p' && !b.html)).map((b) => { const c = {...b, props: b.props ? Object.fromEntries(nonDefault(b).map((q) => [q.k, prop(b, q.k)])) : undefined}; delete c.id; if (c.props && !Object.keys(c.props).length) delete c.props; return c; }));
+/* Does Markdown hold everything? Say so out loud, and name what it loses. */
+function tripReport() {
+  const md = toMarkdown(), back = fromMarkdown(md), a = doc.blocks.filter((b) => !(b.type === 'p' && !b.html)), c = back.blocks;
+  const lost = [];
+  a.forEach((b, i) => { const x = c[i]; if (!x || norm({blocks: [b]}) !== norm({blocks: [x]})) lost.push(typeOf(b.type)?.label || b.type); });
+  const same = toMarkdown(back) === md;
+  $('trip').innerHTML = !lost.length && same ? '<b class="ok">Markdown туда и обратно: всё сохраняется.</b>' : `<b class="no">Markdown туда и обратно теряет:</b> ${esc([...new Set(lost)].join(', ') || 'порядок текста')}.`;
+}
+function download(name, text, type) { const u = URL.createObjectURL(new Blob([text], {type})); const a = document.createElement('a'); a.href = u; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); }
+$('file-btn').addEventListener('click', () => {
+  menuMode = 'file'; menuBlock = null;
+  const row = (a, icon, label, hint) => `<button class="row" data-file="${a}"><span class="ic">${icon}</span>${label}<small>${hint}</small></button>`;
+  $('menu').innerHTML = '<h4>Сохранить как</h4>' + row('json', 'data_object', 'JSON', 'основной') + row('md', 'markdown', 'Markdown', 'для Докары') + row('html', 'html', 'HTML', 'результат') + '<hr>' + row('open', 'folder_open', 'Открыть файл', '.md .json');
+  const r = $('file-btn').getBoundingClientRect(); placeMenu(r.right - 264, r.bottom + 6);
+});
+$('menu').addEventListener('click', (e) => {
+  const f = e.target.closest('[data-file]')?.dataset.file; if (!f) return;
+  closeMenu();
+  const base = (doc.title || 'page').replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase();
+  if (f === 'json') download(base + '.json', JSON.stringify(toDocument(), null, 2), 'application/json');
+  if (f === 'md') download(base + '.md', toMarkdown(), 'text/markdown');
+  if (f === 'html') download(base + '.html', toHtml(), 'text/html');
+  if (f === 'open') $('open-file').click();
+});
+$('open-file').addEventListener('change', async () => {
+  const file = $('open-file').files[0]; $('open-file').value = ''; if (!file) return;
+  const text = await file.text();
+  if (/\.json$/i.test(file.name)) { toast('В прототипе JSON только сохраняется, открывается Markdown'); return; }
+  push(); doc = fromMarkdown(text); if (!doc.blocks.length) doc.blocks.push(newBlock('p')); renderAll(); toast('Открыто. Что редактор не знает, показано как есть');
+});
+let outTab = 'json', outTimer;
+function changed(now) {
+  clearTimeout(outTimer);
+  const run = () => {
+    const short = (t) => t.replace(/data:[^)"\s]{40,}/g, 'data:…');
+    $('out').textContent = short(outTab === 'json' ? JSON.stringify(toDocument(), null, 2) : outTab === 'md' ? toMarkdown() : toHtml());
+    tripReport();
+    const heads = doc.blocks.filter((b) => b.type === 'h2' || b.type === 'h3');
+    $('toc').innerHTML = heads.length ? heads.map((b) => `<a href="#" data-to="${b.id}" class="${b.type}">${esc(textOf(b.html)) || 'Без названия'}</a>`).join('') : '<div class="none">Заголовки появятся здесь</div>';
+    store.set('doc2', snap());
+    lastSnap = snap(); lastFocus = focusState();
+  };
+  if (now) run(); else outTimer = setTimeout(run, 120);
+}
+$('tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-t]'); if (!b) return; outTab = b.dataset.t; for (const x of $('tabs').children) x.setAttribute('aria-pressed', x === b); changed(true); });
+$('toc').addEventListener('click', (e) => { const a = e.target.closest('[data-to]'); if (!a) return; e.preventDefault(); elOf(a.dataset.to).scrollIntoView({behavior: 'smooth', block: 'center'}); placeCaret(firstEdit(elOf(a.dataset.to))); });
+
+/* ------- Reading what was typed ------- */
+function readEdit(el) {
+  const b = blockFromNode(el); if (!b) return;
+  if (b.type === 'code' || b.type === 'raw') b.text = el.textContent;
+  else if (b.type === 'details') b[el.dataset.f] = clean(el.innerHTML);
+  else if (LISTY.has(b.type)) b.items[+el.dataset.i] = clean(el.innerHTML);
+  else if (b.type === 'table') b.rows[+el.dataset.r][+el.dataset.c] = clean(el.innerHTML);
+  else if (b.type === 'image') b.caption = clean(el.innerHTML);
+  else b.html = clean(el.innerHTML);
+  if (el.hasAttribute('data-ph')) el.classList.toggle('blank', !el.textContent);
+}
+function newBlock(type, seed = '') {
+  const id = nid();
+  const props = PARAMS[type] ? {props: propsFor(type)} : {};
+  if (TEXTY.has(type)) return {id, type, ...props, html: seed};
+  if (LISTY.has(type)) return {id, type, ...props, items: [seed]};
+  if (type === 'details') return {id, type, props: {...props.props, open: true}, summary: seed, html: ''};
+  if (type === 'code') return {id, type, ...props, text: textOf(seed)};
+  if (type === 'table') return {id, type, ...props, rows: [['', '', ''], ['', '', ''], ['', '', '']]};
+  if (type === 'image') return {id, type, ...props, src: '', caption: ''};
+  return {id, type};
+}
+/* Keep the words when a block changes kind. */
+function convert(b, type) {
+  if (b.type === type) return;
+  push();
+  const words = LISTY.has(b.type) ? b.items : b.type === 'table' ? b.rows.flat() : b.type === 'code' ? b.text.split('\n').map(esc) : b.type === 'details' ? [b.summary, b.html] : [b.html ?? b.caption ?? ''];
+  const joined = words.filter(Boolean).join('<br>');
+  for (const k of ['html', 'items', 'rows', 'text', 'src', 'caption', 'summary', 'props']) delete b[k];
+  const fresh = newBlock(type, '');
+  Object.assign(b, {...fresh, id: b.id, type});
+  if (TEXTY.has(type)) b.html = joined;
+  else if (type === 'details') { b.summary = words[0] || ''; b.html = words.slice(1).filter(Boolean).join('<br>'); }
+  else if (LISTY.has(type)) b.items = words.length ? words.map((w) => w || '') : [''];
+  else if (type === 'code') b.text = textOf(joined.replace(/<br>/g, '\n'));
+  draw(b); changed(); say(`Теперь это: ${typeOf(type).label}`);
+  const el = elOf(b.id); const ed = type === 'table' || type === 'details' ? firstEdit(el) : lastEdit(el);
+  if (ed) placeCaret(ed); else { const i = indexOf(b.id); ensureAfter(i); placeCaret(firstEdit(elOf(doc.blocks[i + 1].id)), 0); }
+  if (type === 'image') $('file').dataset.for = b.id, $('file').click();
+}
+function ensureAfter(i) { if (!doc.blocks[i + 1]) { doc.blocks.push(newBlock('p')); reconcile(false); } }
+
+/* ------- Typing keys ------- */
+$('title').addEventListener('input', () => { doc.title = $('title').textContent; $('title').classList.toggle('blank', !doc.title); changed(); pushTyping(); });
+$('title').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || (e.key === 'ArrowDown' && onEdge($('title'), false))) { e.preventDefault(); if (!doc.blocks.length) { doc.blocks.push(newBlock('p')); reconcile(false); } placeCaret(firstEdit(elOf(doc.blocks[0].id)), 0); }
+});
+root.addEventListener('input', (e) => {
+  const el = e.target.closest('.e'); if (!el) return;
+  const b = blockFromNode(el);
+  pushTyping(); readEdit(el); changed();
+  hideGutter();
+  if (b.type === 'code' && prop(b, 'numbers')) { const n = elOf(b.id).querySelector('.nums'); if (n) n.textContent = b.text.split('\n').map((_, i) => i + 1).join('\n'); }
+  if (b.type === 'p') markdown(b, el);
+  slashWatch(b, el);
+});
+function markdown(b, el) {
+  const t = el.textContent.replace(/ /g, ' ');
+  const rule = [[/^#{1,2} $/, 'h2'], [/^### $/, 'h3'], [/^[-*] $/, 'ul'], [/^1[.)] $/, 'ol'], [/^> $/, 'quote'], [/^```$/, 'code'], [/^---$/, 'hr']].find(([re]) => re.test(t));
+  if (rule) { b.html = ''; convert(b, rule[1]); }
+}
+root.addEventListener('keydown', (e) => {
+  const el = e.target.closest?.('.e'); if (!el) return;
+  const b = blockFromNode(el), i = indexOf(b.id), mod = e.metaKey || e.ctrlKey;
+  if (!$('menu').hidden && menuMode === 'slash' && handleMenuKey(e)) return;
+  if (mod && e.key.toLowerCase() === 'k' && b.type !== 'code') { e.preventDefault(); linkMode(); return; }
+  if (mod && e.key.toLowerCase() === 'e') { e.preventDefault(); wrapCode(); return; }
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); el.blur(); selectBlocks([b.id]); return; }
+  if (b.type === 'details') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (el.dataset.f === 'summary') { el.closest('.det').classList.add('show'); placeCaret(el.closest('.det').querySelector('.body'), 'end'); return; }
+      document.execCommand('insertLineBreak'); return;
+    }
+    if (e.key === 'Backspace' && el.dataset.f === 'summary' && !el.textContent && !b.html) { e.preventDefault(); removeBlock(b, 'prev'); }
+    return;
+  }
+  if (b.type === 'code' || b.type === 'raw') {
+    if (e.key === 'Tab') { e.preventDefault(); document.execCommand('insertText', false, '  '); }
+    if (e.key === 'Enter' && mod) { e.preventDefault(); push(); const n = newBlock('p'); doc.blocks.splice(i + 1, 0, n); reconcile(); placeCaret(firstEdit(elOf(n.id)), 0); }
+    if (e.key === 'Backspace' && !el.textContent) { e.preventDefault(); removeBlock(b, 'prev'); }
+    return;
+  }
+  if (b.type === 'table') { tableKey(e, b, el); return; }
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault(); push();
+    if (el.dataset.cap) { ensureAfter(i); placeCaret(firstEdit(elOf(doc.blocks[i + 1].id)), 0); return; }
+    if (LISTY.has(b.type)) { listEnter(b, el, i); return; }
+    const [head, tail] = splitHtml(el);
+    b.html = head; el.innerHTML = head; readEdit(el);
+    /* Enter after a heading or a note continues as plain text. */
+    const n = newBlock('p', tail); doc.blocks.splice(i + 1, 0, n); reconcile(); changed();
+    placeCaret(firstEdit(elOf(n.id)), 0); return;
+  }
+  if (e.key === 'Backspace' && atStart(el)) {
+    if (el.dataset.cap) return;
+    e.preventDefault();
+    if (LISTY.has(b.type)) { listBack(b, el, i); return; }
+    if (b.type !== 'p') { convert(b, 'p'); placeCaret(firstEdit(elOf(b.id)), 0); return; }
+    mergeUp(b, el, i); return;
+  }
+  if (e.key === 'Delete' && atEnd(el) && TEXTY.has(b.type)) {
+    const next = doc.blocks[i + 1];
+    if (next && TEXTY.has(next.type)) { e.preventDefault(); push(); const off = el.textContent.length; b.html += next.html; doc.blocks.splice(i + 1, 1); draw(b); reconcile(); changed(); placeCaret(firstEdit(elOf(b.id)), off); }
+    return;
+  }
+  if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); const off = caretOffset(el); moveBlock(b.id, e.key === 'ArrowUp' ? -1 : 1); placeCaret(firstEdit(elOf(b.id)), off); return; }
+  if (e.key === 'ArrowUp' && onEdge(el, true)) { const eds = [...$('sheet').querySelectorAll('.title,.e')], k = eds.indexOf(el); if (eds[k - 1]) { e.preventDefault(); placeCaret(eds[k - 1]); } return; }
+  if (e.key === 'ArrowDown' && onEdge(el, false)) { const eds = [...$('sheet').querySelectorAll('.e')], k = eds.indexOf(el); if (eds[k + 1]) { e.preventDefault(); placeCaret(eds[k + 1], 0); } return; }
+  if (mod && e.key.toLowerCase() === 'a' && el.textContent && getSelection().toString().length >= el.textContent.length) { e.preventDefault(); e.stopPropagation(); el.blur(); selectBlocks(doc.blocks.map((x) => x.id)); say('Выбраны все блоки'); }
+});
+function mergeUp(b, el, i) {
+  const prev = doc.blocks[i - 1];
+  if (!prev) return;
+  if (prev.type === 'hr') { push(); doc.blocks.splice(i - 1, 1); reconcile(); changed(); placeCaret(el, 0); return; }
+  if (TEXTY.has(prev.type)) {
+    push(); const off = textOf(prev.html).length; prev.html += b.html; doc.blocks.splice(i, 1);
+    draw(prev); reconcile(); changed(); placeCaret(firstEdit(elOf(prev.id)), off); return;
+  }
+  if (LISTY.has(prev.type) && b.html) {
+    push(); const li = prev.items.length - 1, off = textOf(prev.items[li]).length; prev.items[li] += b.html; doc.blocks.splice(i, 1);
+    draw(prev); reconcile(); changed(); placeCaret(elOf(prev.id).querySelector(`.e[data-i="${li}"]`), off); return;
+  }
+  if (!b.html) { removeBlock(b, 'prev'); return; }
+  placeCaret(lastEdit(elOf(prev.id)));
+}
+function removeBlock(b, go) {
+  push(); const i = indexOf(b.id); doc.blocks.splice(i, 1);
+  if (!doc.blocks.length) doc.blocks.push(newBlock('p'));
+  reconcile(); changed();
+  const to = go === 'prev' ? doc.blocks[Math.max(0, i - 1)] : doc.blocks[Math.min(i, doc.blocks.length - 1)];
+  placeCaret(lastEdit(elOf(to.id)));
+}
+function listEnter(b, el, i) {
+  const k = +el.dataset.i;
+  if (!el.textContent) {
+    /* Enter on an empty item leaves the list. */
+    b.items.splice(k, 1);
+    const tail = b.items.splice(k);
+    const n = newBlock('p'); const add = [n]; if (tail.length) add.push({id: nid(), type: b.type, items: tail});
+    doc.blocks.splice(i + 1, 0, ...add);
+    if (!b.items.length) doc.blocks.splice(i, 1); else draw(b);
+    reconcile(); changed(); placeCaret(firstEdit(elOf(n.id)), 0); return;
+  }
+  const [head, tail] = splitHtml(el);
+  b.items[k] = head; b.items.splice(k + 1, 0, tail); draw(b); changed();
+  placeCaret(elOf(b.id).querySelector(`.e[data-i="${k + 1}"]`), 0);
+}
+function listBack(b, el, i) {
+  const k = +el.dataset.i; push();
+  if (k > 0) { const off = textOf(b.items[k - 1]).length; b.items[k - 1] += b.items[k]; b.items.splice(k, 1); draw(b); changed(); placeCaret(elOf(b.id).querySelector(`.e[data-i="${k - 1}"]`), off); return; }
+  const head = b.items.shift(); const n = newBlock('p', head);
+  if (b.items.length) { doc.blocks.splice(i, 0, n); draw(b); } else doc.blocks.splice(i, 1, n);
+  reconcile(); changed(); placeCaret(firstEdit(elOf(n.id)), 0);
+}
+function tableKey(e, b, el) {
+  const r = +el.dataset.r, c = +el.dataset.c, cols = b.rows[0].length, rows = b.rows.length;
+  const go = (rr, cc) => placeCaret(elOf(b.id).querySelector(`.e[data-r="${rr}"][data-c="${cc}"]`));
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    let nr = r, nc = c + (e.shiftKey ? -1 : 1);
+    if (nc >= cols) { nc = 0; nr++; } if (nc < 0) { nc = cols - 1; nr--; }
+    if (nr >= rows) { push(); b.rows.push(Array(cols).fill('')); draw(b); changed(); }
+    if (nr >= 0) go(nr, nc);
+  } else if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (r + 1 < rows) go(r + 1, c); else { const i = indexOf(b.id); ensureAfter(i); placeCaret(firstEdit(elOf(doc.blocks[i + 1].id)), 0); }
+  } else if (e.key === 'ArrowUp' && onEdge(el, true) && r > 0) { e.preventDefault(); go(r - 1, c); }
+  else if (e.key === 'ArrowDown' && onEdge(el, false) && r + 1 < rows) { e.preventDefault(); go(r + 1, c); }
+}
+function moveBlock(id, d) {
+  const i = indexOf(id), j = i + d; if (j < 0 || j >= doc.blocks.length) return;
+  push(); const [b] = doc.blocks.splice(i, 1); doc.blocks.splice(j, 0, b); reconcile(); changed(); say(`Позиция ${j + 1}`);
+}
+
+/* ------- Blocks as a selection: Esc, then arrows ------- */
+let picked = [];
+function selectBlocks(ids) { picked = ids; for (const el of root.children) el.classList.toggle('on', ids.includes(el.dataset.id)); if (ids.length) { getSelection().removeAllRanges(); document.activeElement?.blur?.(); } }
+const clearSel = () => selectBlocks([]);
+document.addEventListener('keydown', (e) => {
+  const mod = e.metaKey || e.ctrlKey;
+  if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? restore(redoS, undoS) : restore(undoS, redoS); return; }
+  if (!picked.length) return;
+  const idx = picked.map(indexOf).sort((a, b) => a - b), first = idx[0], last = idx[idx.length - 1];
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault(); const d = e.key === 'ArrowDown' ? 1 : -1;
+    if (e.altKey) { if (picked.length === 1) moveBlock(picked[0], d); return; }
+    if (e.shiftKey) { const t = d > 0 ? last + 1 : first - 1; if (doc.blocks[t]) selectBlocks([...picked, doc.blocks[t].id]); return; }
+    const t = doc.blocks[(d > 0 ? last : first) + d]; if (t) { selectBlocks([t.id]); elOf(t.id).scrollIntoView({block: 'nearest'}); } return;
+  }
+  if (e.key === 'Enter') { e.preventDefault(); const id = picked[0]; clearSel(); const ed = firstEdit(elOf(id)); if (ed) placeCaret(ed); return; }
+  if (e.key === 'Escape') { clearSel(); return; }
+  if (e.key === 'Backspace' || e.key === 'Delete') {
+    e.preventDefault(); push();
+    doc.blocks = doc.blocks.filter((b) => !picked.includes(b.id)); if (!doc.blocks.length) doc.blocks.push(newBlock('p'));
+    const to = doc.blocks[Math.min(first, doc.blocks.length - 1)]; clearSel(); reconcile(); changed(); selectBlocks([to.id]); toast('Удалено. ⌘Z вернёт'); return;
+  }
+  if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicate(picked[picked.length - 1]); return; }
+  if (mod && (e.key.toLowerCase() === 'c' || e.key.toLowerCase() === 'x')) {
+    const blocks = doc.blocks.filter((b) => picked.includes(b.id));
+    const keep = doc; doc = {title: '', blocks}; const html = toHtml(); doc = keep;
+    navigator.clipboard?.write?.([new ClipboardItem({'text/html': new Blob([html], {type: 'text/html'}), 'text/plain': new Blob([textOf(html)], {type: 'text/plain'})})]).catch(() => {});
+    e.preventDefault();
+    if (e.key.toLowerCase() === 'x') { push(); doc.blocks = doc.blocks.filter((b) => !picked.includes(b.id)); if (!doc.blocks.length) doc.blocks.push(newBlock('p')); clearSel(); reconcile(); changed(); }
+    toast('Скопировано'); return;
+  }
+  if (mod && e.key.toLowerCase() === 'a') { e.preventDefault(); selectBlocks(doc.blocks.map((b) => b.id)); return; }
+  if (e.key.length === 1 && !mod) { clearSel(); }
+});
+root.addEventListener('pointerdown', (e) => { if (picked.length) clearSel(); });
+function duplicate(id) { push(); const i = indexOf(id), copy = {...structuredClone(doc.blocks[i]), id: nid()}; doc.blocks.splice(i + 1, 0, copy); reconcile(); changed(); return copy; }
+$('sheet').addEventListener('click', (e) => { if (e.target === $('sheet') || e.target === root) { const last = doc.blocks[doc.blocks.length - 1]; if (e.clientY > elOf(last.id).getBoundingClientRect().bottom) { if (last.type === 'p' && !last.html) placeCaret(firstEdit(elOf(last.id))); else { push(); const n = newBlock('p'); doc.blocks.push(n); reconcile(false); changed(); placeCaret(firstEdit(elOf(n.id))); } } } });
+
+/* ------- Menus ------- */
+let menuMode = null, menuIndex = 0, menuBlock = null, menuItems = [];
+function placeMenu(x, y) {
+  const m = $('menu'); m.hidden = false; m.style.left = '0'; m.style.top = '0';
+  const r = m.getBoundingClientRect();
+  m.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';
+  m.style.top = (y + r.height + 8 > innerHeight ? Math.max(8, y - r.height - 32) : y) + 'px';
+}
+function closeMenu() { $('menu').hidden = true; menuMode = null; }
+function caretPoint() { const s = getSelection(); const r = s.rangeCount && s.getRangeAt(0).getClientRects()[0]; if (r) return [r.left, r.bottom + 6]; const a = document.activeElement.getBoundingClientRect(); return [a.left, a.bottom + 6]; }
+function renderTypeMenu(q) {
+  const s = q.toLowerCase();
+  menuItems = TYPES.filter((t) => !s || t.label.toLowerCase().includes(s) || t.find.includes(s));
+  menuIndex = Math.min(menuIndex, Math.max(0, menuItems.length - 1));
+  $('menu').innerHTML = menuItems.length ? menuItems.map((t, i) => `<button class="row ${i === menuIndex ? 'active' : ''}" data-k="${t.t}"><span class="ic">${t.icon}</span>${t.label}${t.hint ? `<small>${esc(t.hint)}</small>` : ''}</button>`).join('') : '<div class="none">Ничего не найдено</div>';
+  $('menu').querySelector('.active')?.scrollIntoView({block: 'nearest'});
+}
+function slashWatch(b, el) {
+  if (!TEXTY.has(b.type) && !(menuMode === 'slash')) return;
+  const t = el.textContent;
+  if (b.type === 'p' && /^\/[^\s/]*$/.test(t)) {
+    if (menuMode !== 'slash') menuIndex = 0;
+    menuMode = 'slash'; menuBlock = b.id; renderTypeMenu(t.slice(1)); placeMenu(...caretPoint());
+  } else if (menuMode === 'slash') closeMenu();
+}
+function handleMenuKey(e) {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = menuItems.length; if (n) { menuIndex = (menuIndex + (e.key === 'ArrowDown' ? 1 : n - 1)) % n; renderTypeMenu(blockAt(menuBlock).html.slice(1)); } return true; }
+  if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); if (menuItems[menuIndex]) applyType(menuItems[menuIndex].t); else closeMenu(); return true; }
+  if (e.key === 'Escape') { e.preventDefault(); closeMenu(); return true; }
+  return false;
+}
+function applyType(type) {
+  const b = blockAt(menuBlock); const mode = menuMode; closeMenu(); if (!b) return;
+  if (mode === 'slash') { b.html = ''; convert(b, type); return; }
+  if (mode === 'plus') {
+    if (TEXTY.has(b.type) && !b.html) { convert(b, type); return; }
+    push(); const n = newBlock(type); doc.blocks.splice(indexOf(b.id) + 1, 0, n); reconcile(); changed();
+    const ed = firstEdit(elOf(n.id)); if (type === 'image') { $('file').dataset.for = n.id; $('file').click(); } else if (ed) placeCaret(ed, 0); else { const i = indexOf(n.id); ensureAfter(i); placeCaret(firstEdit(elOf(doc.blocks[i + 1].id)), 0); }
+    return;
+  }
+  convert(b, type);
+}
+$('menu').addEventListener('mousedown', (e) => { if (!e.target.closest('input, select')) e.preventDefault(); });
+$('menu').addEventListener('click', (e) => {
+  const k = e.target.closest('[data-k]')?.dataset.k; if (k) { applyType(k); return; }
+  const a = e.target.closest('[data-a]')?.dataset.a; if (!a) return;
+  const b = blockAt(menuBlock); closeMenu(); if (!b) return;
+  if (a === 'up') moveBlock(b.id, -1);
+  if (a === 'down') moveBlock(b.id, 1);
+  if (a === 'dup') { const c = duplicate(b.id); selectBlocks([c.id]); }
+  if (a === 'del') { removeBlock(b); toast('Удалено. ⌘Z вернёт'); }
+  if (a === 'row+') { push(); b.rows.push(Array(b.rows[0].length).fill('')); draw(b); changed(); }
+  if (a === 'col+') { push(); b.rows.forEach((r) => r.push('')); draw(b); changed(); }
+  if (a === 'row-' && b.rows.length > 1) { push(); b.rows.pop(); draw(b); changed(); }
+  if (a === 'col-' && b.rows[0].length > 1) { push(); b.rows.forEach((r) => r.pop()); draw(b); changed(); }
+});
+document.addEventListener('pointerdown', (e) => { if (!$('menu').hidden && !$('menu').contains(e.target) && !e.target.closest('#gut, [data-tune], #file-btn')) closeMenu(); });
+
+/* ------- Gutter ------- */
+let gutBlock = null;
+function showGutter(b) {
+  const el = elOf(b.id); if (!el) return; gutBlock = b.id;
+  const lh = parseFloat(getComputedStyle(firstEdit(el) || el).lineHeight) || 26, pad = b.type === 'hr' ? 2 : 2;
+  const g = $('gut'), top = el.offsetTop + pad + Math.max(0, (Math.min(lh, el.offsetHeight) - 24) / 2) + (b.type === 'h2' ? 18 : b.type === 'h3' ? 12 : b.type === 'alert' || b.type === 'code' || b.type === 'details' ? 12 : 0);
+  g.style.top = top + 'px'; g.classList.add('on');
+}
+function hideGutter() { $('gut').classList.remove('on'); }
+root.addEventListener('mouseover', (e) => { const b = blockFromNode(e.target); if (b) showGutter(b); });
+$('sheet').addEventListener('mouseleave', hideGutter);
+root.addEventListener('mousemove', (e) => { if (!$('gut').classList.contains('on')) { const b = blockFromNode(e.target); if (b) showGutter(b); } });
+$('plus').addEventListener('click', () => {
+  menuBlock = gutBlock; menuMode = 'plus'; menuIndex = 0; renderTypeMenu('');
+  const r = $('plus').getBoundingClientRect(); placeMenu(r.left, r.bottom + 6);
+});
+function blockMenu() {
+  const b = blockAt(gutBlock); if (!b) return; menuBlock = b.id; menuMode = 'block';
+  const i = indexOf(b.id), convertible = [...TEXTY, ...LISTY, 'code', 'details'];
+  const row = (a, icon, label, hint = '', cls = '') => `<button class="row ${cls}" data-a="${a}"><span class="ic">${icon}</span>${label}${hint ? `<small>${hint}</small>` : ''}</button>`;
+  let html = '';
+  if (PARAMS[b.type]) html += '<h4>Параметры</h4>' + paramForm(b) + '<hr>';
+  if (convertible.includes(b.type)) html += '<h4>Превратить в</h4>' + TYPES.filter((t) => convertible.includes(t.t)).map((t) => `<button class="row" data-k="${t.t}" aria-current="${t.t === b.type}"><span class="ic">${t.icon}</span>${t.label}</button>`).join('') + '<hr>';
+  if (b.type === 'table') html += row('row+', 'add', 'Добавить строку') + row('col+', 'add', 'Добавить столбец') + row('row-', 'remove', 'Убрать строку') + row('col-', 'remove', 'Убрать столбец') + '<hr>';
+  html += (i > 0 ? row('up', 'arrow_upward', 'Выше', '⌥↑') : '') + (i < doc.blocks.length - 1 ? row('down', 'arrow_downward', 'Ниже', '⌥↓') : '') + row('dup', 'content_copy', 'Дублировать', '⌘D') + row('del', 'delete', 'Удалить', '⌫', 'danger');
+  $('menu').innerHTML = html;
+  const r = $('grip').getBoundingClientRect(); placeMenu(r.left, r.bottom + 6);
+}
+function paramForm(b) {
+  return PARAMS[b.type].map((p) => {
+    const v = prop(b, p.k), id = `par-${p.k}`;
+    if (p.bool) return `<label class="par line" for="${id}">${p.label}<input class="sw" type="checkbox" role="switch" id="${id}" data-par="${p.k}" ${v ? 'checked' : ''}></label>`;
+    if (p.text) return `<label class="par" for="${id}">${p.label}<input type="text" id="${id}" data-par="${p.k}" value="${esc(v)}"></label>`;
+    if (p.int) return `<label class="par" for="${id}">${p.label}<input type="number" min="1" id="${id}" data-par="${p.k}" value="${esc(v)}"></label>`;
+    if (p.values.length <= 3) return `<div class="par">${p.label}<div class="seg" role="group" aria-label="${p.label}">${p.values.map(([val, l]) => `<button type="button" data-par="${p.k}" data-val="${esc(val)}" aria-pressed="${val === v}">${l}</button>`).join('')}</div></div>`;
+    return `<label class="par" for="${id}">${p.label}<select id="${id}" data-par="${p.k}">${p.values.map(([val, l]) => `<option value="${esc(val)}" ${val === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`;
+  }).join('');
+}
+function setParam(k, v) {
+  const b = blockAt(menuBlock); if (!b) return;
+  push(); b.props = {...propsFor(b.type), ...b.props, [k]: v}; draw(b); changed(); say('Параметр изменён');
+}
+$('menu').addEventListener('change', (e) => {
+  const k = e.target.dataset?.par; if (!k) return;
+  const b = blockAt(menuBlock), def = PARAMS[b.type].find((p) => p.k === k);
+  setParam(k, def.bool ? e.target.checked : def.int ? Math.max(1, +e.target.value || 1) : e.target.value);
+});
+$('menu').addEventListener('click', (e) => {
+  const seg = e.target.closest('button[data-par]'); if (!seg) return;
+  setParam(seg.dataset.par, seg.dataset.val);
+  for (const x of seg.parentElement.children) x.setAttribute('aria-pressed', x === seg);
+});
+root.addEventListener('click', (e) => {
+  const fold = e.target.closest('[data-fold]');
+  if (fold) { const on = fold.closest('.det').classList.toggle('show'); fold.setAttribute('aria-expanded', on); return; }
+  const tag = e.target.closest('[data-tune]');
+  if (tag) { gutBlock = blockFromNode(tag).id; blockMenu(); const r = tag.getBoundingClientRect(); placeMenu(r.right - 264, r.bottom + 6); }
+});
+/* The grip: a click opens the menu, a pull moves the block. */
+$('grip').addEventListener('pointerdown', (e) => {
+  e.preventDefault(); const grip = $('grip'); grip.setPointerCapture(e.pointerId);
+  const id = gutBlock, el = elOf(id); let moved = false, dest = indexOf(id), lastY = e.clientY, raf;
+  const seats = () => { const xs = doc.blocks.map((b) => elOf(b.id).offsetTop); const l = doc.blocks[doc.blocks.length - 1]; xs.push(elOf(l.id).offsetTop + elOf(l.id).offsetHeight); return xs; };
+  const tick = () => {
+    const box = $('scroll').getBoundingClientRect(); if (lastY < box.top + 48) $('scroll').scrollTop -= 10; else if (lastY > box.bottom - 48) $('scroll').scrollTop += 10;
+    const y = lastY - $('sheet').getBoundingClientRect().top, xs = seats(); let best = 0, d = Infinity; xs.forEach((v, k) => { const a = Math.abs(v - y); if (a < d) { d = a; best = k; } });
+    dest = best; const line = $('drop'); line.style.display = 'block'; line.style.top = xs[best] - 1 + 'px';
+    raf = requestAnimationFrame(tick);
+  };
+  const move = (m) => { lastY = m.clientY; if (!moved && Math.abs(m.clientY - e.clientY) > 4) { moved = true; el.classList.add('dragging'); raf = requestAnimationFrame(tick); } };
+  const end = (drop) => {
+    cancelAnimationFrame(raf); grip.removeEventListener('pointermove', move); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', cancel); document.removeEventListener('keydown', key, true);
+    $('drop').style.display = 'none'; el.classList.remove('dragging');
+    if (!moved) { if (drop) blockMenu(); return; }
+    if (drop) { const from = indexOf(id), to = dest > from ? dest - 1 : dest; if (to !== from) { push(); const [b] = doc.blocks.splice(from, 1); doc.blocks.splice(to, 0, b); reconcile(); changed(); } }
+  };
+  const up = () => end(true), cancel = () => end(false), key = (k) => { if (k.key === 'Escape') { k.stopPropagation(); end(false); } };
+  grip.addEventListener('pointermove', move); grip.addEventListener('pointerup', up); grip.addEventListener('pointercancel', cancel); document.addEventListener('keydown', key, true);
+});
+
+/* ------- The bar over a selection ------- */
+const inl = $('inl'); let linkRange = null;
+function inlineBar() {
+  const s = getSelection();
+  if (document.activeElement?.closest?.('.inl')) return;
+  const a = s.anchorNode && (s.anchorNode.nodeType === 1 ? s.anchorNode : s.anchorNode.parentElement);
+  const ed = a?.closest?.('.e');
+  if (s.isCollapsed || !ed || !root.contains(ed) || ed.tagName === 'PRE' || !s.toString().trim()) { inl.hidden = true; return; }
+  const q = (c) => document.queryCommandState(c);
+  inl.innerHTML = `<button class="ib" data-c="bold" aria-pressed="${q('bold')}" aria-label="Жирный" title="Жирный  ⌘B"><span class="ic">format_bold</span></button><button class="ib" data-c="italic" aria-pressed="${q('italic')}" aria-label="Курсив" title="Курсив  ⌘I"><span class="ic">format_italic</span></button><button class="ib" data-c="code" aria-label="Код" title="Код  ⌘E"><span class="ic">code</span></button><button class="ib" data-c="link" aria-pressed="${!!a.closest('a')}" aria-label="Ссылка" title="Ссылка  ⌘K"><span class="ic">link</span></button>`;
+  positionInl(s.getRangeAt(0).getBoundingClientRect());
+}
+function positionInl(r) {
+  inl.hidden = false; const w = inl.offsetWidth, h = inl.offsetHeight;
+  inl.style.left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8)) + 'px';
+  inl.style.top = (r.top - h - 8 < 56 ? r.bottom + 8 : r.top - h - 8) + 'px';
+}
+document.addEventListener('selectionchange', () => { if (!linkRange) inlineBar(); });
+inl.addEventListener('mousedown', (e) => { if (e.target.tagName !== 'INPUT') e.preventDefault(); });
+inl.addEventListener('click', (e) => {
+  const c = e.target.closest('[data-c]')?.dataset.c; if (!c) return;
+  if (c === 'link') { linkMode(); return; }
+  if (c === 'code') { wrapCode(); return; }
+  document.execCommand(c); afterMark(); inlineBar();
+});
+function afterMark() { const ed = document.activeElement?.closest?.('.e'); if (ed) { pushTyping(); readEdit(ed); changed(); } }
+function wrapCode() {
+  const s = getSelection(); if (s.isCollapsed) return; const r = s.getRangeAt(0), a = r.commonAncestorContainer, inCode = (a.nodeType === 1 ? a : a.parentElement).closest('code');
+  if (inCode) { inCode.replaceWith(...inCode.childNodes); } else { const c = document.createElement('code'); c.appendChild(r.extractContents()); r.insertNode(c); s.selectAllChildren(c); }
+  afterMark(); inlineBar();
+}
+function linkMode() {
+  const s = getSelection(); if (s.isCollapsed) return;
+  const a = (s.anchorNode.nodeType === 1 ? s.anchorNode : s.anchorNode.parentElement).closest('a');
+  linkRange = s.getRangeAt(0).cloneRange(); const rect = linkRange.getBoundingClientRect();
+  inl.innerHTML = `<input id="lk" placeholder="https://" aria-label="Адрес ссылки" value="${esc(a?.getAttribute('href') || '')}">${a ? '<button class="ib" id="lk-x" aria-label="Убрать ссылку" title="Убрать ссылку"><span class="ic">link_off</span></button>' : ''}`;
+  positionInl(rect); const input = $('lk'); input.focus(); input.select();
+  const done = (apply) => {
+    const v = input.value.trim(), r = linkRange; linkRange = null; inl.hidden = true;
+    const ed = (r.commonAncestorContainer.nodeType === 1 ? r.commonAncestorContainer : r.commonAncestorContainer.parentElement).closest('.e');
+    ed?.focus(); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    if (apply === 'off') document.execCommand('unlink');
+    else if (apply) {
+      const url = SAFE_URL(/^[\w.-]+\.[a-zа-я]{2,}/i.test(v) && !/^[a-z]+:/i.test(v) ? 'https://' + v : v);
+      if (url) document.execCommand('createLink', false, url); else if (v) toast('Такой адрес не подходит');
+    }
+    afterMark();
+  };
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); done(true); } if (e.key === 'Escape') { e.preventDefault(); done(false); } });
+  $('lk-x')?.addEventListener('click', () => done('off'));
+}
+
+/* ------- Paste: Word, a site or plain text becomes blocks; never its styles ------- */
+function blocksFromHtml(html) {
+  const body = new DOMParser().parseFromString(html, 'text/html').body, out = [];
+  const flushText = (h) => { const c = clean(h).trim(); if (c) out.push({id: nid(), type: 'p', html: c}); };
+  const walk = (parent) => {
+    let inline = '', msoList = null;
+    const flush = () => { if (inline) flushText(inline); inline = ''; };
+    for (const n of parent.childNodes) {
+      if (n.nodeType === 3) { if (n.nodeValue.trim()) inline += esc(n.nodeValue); continue; }
+      if (n.nodeType !== 1) continue;
+      const tag = n.tagName.toLowerCase();
+      const isMso = /MsoList/i.test(n.className || '') || /mso-list/i.test(n.getAttribute('style') || '');
+      if (isMso) {
+        flush(); const text = clean(n.innerHTML).replace(/^(?:[·•o§▪-]|\d+[.)])(?:\s|&nbsp;)+/, '');
+        const ordered = /^\s*\d+[.)]/.test(n.textContent);
+        if (!msoList) { msoList = {id: nid(), type: ordered ? 'ol' : 'ul', items: []}; out.push(msoList); }
+        msoList.items.push(text); continue;
+      }
+      msoList = null;
+      if (/^h[1-2]$/.test(tag)) { flush(); out.push({id: nid(), type: 'h2', html: clean(n.innerHTML)}); }
+      else if (/^h[3-6]$/.test(tag)) { flush(); out.push({id: nid(), type: 'h3', html: clean(n.innerHTML)}); }
+      else if (tag === 'ul' || tag === 'ol') { flush(); out.push({id: nid(), type: tag, items: [...n.children].filter((c) => c.tagName === 'LI').map((li) => clean(li.innerHTML))}); }
+      else if (tag === 'blockquote') { flush(); out.push({id: nid(), type: 'quote', html: clean(n.innerHTML)}); }
+      else if (tag === 'pre') { flush(); out.push({id: nid(), type: 'code', text: n.textContent}); }
+      else if (tag === 'hr') { flush(); out.push({id: nid(), type: 'hr'}); }
+      else if (tag === 'table') {
+        flush(); const rows = [...n.querySelectorAll('tr')].map((tr) => [...tr.children].map((td) => clean(td.innerHTML)));
+        const w = Math.max(...rows.map((r) => r.length), 1); if (rows.length) out.push({id: nid(), type: 'table', rows: rows.map((r) => [...r, ...Array(w - r.length).fill('')])});
+      }
+      else if (tag === 'img') { flush(); const u = SAFE_URL(n.getAttribute('src') || ''); if (u) out.push({id: nid(), type: 'image', src: u, caption: ''}); }
+      else if (['p', 'div', 'section', 'article', 'main', 'header', 'footer', 'aside', 'figure', 'center'].includes(tag)) {
+        flush();
+        if (n.querySelector('h1,h2,h3,h4,h5,h6,ul,ol,table,blockquote,pre,hr,p,div')) walk(n); else flushText(n.innerHTML);
+      } else if (['script', 'style', 'meta', 'link', 'title', 'o:p'].includes(tag)) continue;
+      else inline += n.outerHTML;
+    }
+    flush();
+  };
+  walk(body);
+  return out;
+}
+function blocksFromText(t) {
+  const parts = t.replace(/\r/g, '').split(/\n{2,}/).map((x) => x.trim()).filter(Boolean), out = [];
+  for (const part of parts) {
+    const lines = part.split('\n');
+    if (lines.every((l) => /^\s*[-*•]\s+/.test(l))) out.push({id: nid(), type: 'ul', items: lines.map((l) => esc(l.replace(/^\s*[-*•]\s+/, '')))});
+    else if (lines.every((l) => /^\s*\d+[.)]\s+/.test(l))) out.push({id: nid(), type: 'ol', items: lines.map((l) => esc(l.replace(/^\s*\d+[.)]\s+/, '')))});
+    else if (/^#{1,2} /.test(part)) out.push({id: nid(), type: 'h2', html: esc(part.replace(/^#+ /, ''))});
+    else if (/^#{3,} /.test(part)) out.push({id: nid(), type: 'h3', html: esc(part.replace(/^#+ /, ''))});
+    else out.push({id: nid(), type: 'p', html: lines.map(esc).join('<br>')});
+  }
+  return out;
+}
+root.addEventListener('paste', (e) => {
+  const el = e.target.closest('.e'); if (!el) return;
+  const b = blockFromNode(el), cd = e.clipboardData;
+  e.preventDefault();
+  if (b.type === 'code') { document.execCommand('insertText', false, cd.getData('text/plain')); return; }
+  const file = [...cd.files].find((f) => f.type.startsWith('image/'));
+  if (file) { push(); const n = newBlock('image'); doc.blocks.splice(indexOf(b.id) + 1, 0, n); reconcile(); loadImage(n.id, file); return; }
+  const html = cd.getData('text/html'), text = cd.getData('text/plain');
+  const blocks = html ? blocksFromHtml(html) : blocksFromText(text);
+  if (!blocks.length) return;
+  /* One line goes into the caret; several become blocks. In a table cell it stays text. */
+  if ((blocks.length === 1 && TEXTY.has(blocks[0].type)) || b.type === 'table' || LISTY.has(b.type) || el.dataset.cap) {
+    const inlineHtml = blocks.length === 1 && TEXTY.has(blocks[0].type) ? blocks[0].html : esc(text.replace(/\s*\n\s*/g, ' '));
+    pushTyping(); document.execCommand('insertHTML', false, inlineHtml); readEdit(el); changed(); return;
+  }
+  push(); const i = indexOf(b.id), [head, tail] = TEXTY.has(b.type) ? splitHtml(el) : [b.html, ''];
+  const add = [...blocks]; if (tail) add.push({id: nid(), type: 'p', html: tail});
+  if (TEXTY.has(b.type)) { b.html = head; draw(b); }
+  if (TEXTY.has(b.type) && !head && b.type === 'p') doc.blocks.splice(i, 1, ...add); else doc.blocks.splice(i + 1, 0, ...add);
+  reconcile(); changed();
+  const lastAdded = elOf(add[add.length - 1].id); placeCaret(lastEdit(lastAdded)); say(`Вставлено блоков: ${add.length}`);
+});
+
+/* ------- Images ------- */
+function loadImage(id, file) {
+  if (file.size > 3 * 1024 * 1024) { toast('В прототипе картинки до 3 МБ'); return; }
+  const r = new FileReader(); r.onload = () => { const b = blockAt(id); if (!b) return; b.src = r.result; draw(b); changed(); }; r.readAsDataURL(file);
+}
+root.addEventListener('click', (e) => { const p = e.target.closest('[data-pick]'); if (p) { const b = blockFromNode(p); $('file').dataset.for = b.id; $('file').click(); } });
+$('file').addEventListener('change', () => { const f = $('file').files[0], id = $('file').dataset.for; if (f && id) { push(); loadImage(id, f); } $('file').value = ''; });
+root.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
+root.addEventListener('drop', (e) => { const f = [...e.dataTransfer.files].find((x) => x.type.startsWith('image/')); if (!f) return; e.preventDefault(); const b = blockFromNode(e.target) || doc.blocks[doc.blocks.length - 1]; push(); const n = newBlock('image'); doc.blocks.splice(indexOf(b.id) + 1, 0, n); reconcile(); loadImage(n.id, f); });
+root.addEventListener('click', (e) => { if (e.target.closest('a') && !(e.metaKey || e.ctrlKey)) e.preventDefault(); });
+
+/* ------- The bar ------- */
+let toastTimer; function toast(t) { $('toast').textContent = t; $('toast').classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('on'), 3000); }
+const say = (t) => { $('live').textContent = t; };
+const open = {left: store.get('left') !== '0' && innerWidth >= 1100, right: store.get('right') !== '0' && innerWidth >= 1280};
+function panels() {
+  const w = $('work'); w.style.setProperty('--left', open.left ? '240px' : '0px'); w.style.setProperty('--right', open.right ? '340px' : '0px');
+  $('t-left').firstElementChild.textContent = open.left ? 'left_panel_close' : 'left_panel_open';
+  $('t-right').firstElementChild.textContent = open.right ? 'right_panel_close' : 'right_panel_open';
+  $('left').inert = !open.left; $('right').inert = !open.right;
+}
+$('t-left').onclick = () => { open.left = !open.left; store.set('left', open.left ? '1' : '0'); panels(); };
+$('t-right').onclick = () => { open.right = !open.right; store.set('right', open.right ? '1' : '0'); panels(); };
+document.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.code === 'Backslash') { e.preventDefault(); (e.altKey ? $('t-right') : $('t-left')).click(); } });
+panels();
+const setTheme = (t) => { document.documentElement.dataset.theme = t; $('theme').firstElementChild.textContent = t === 'dark' ? 'light_mode' : 'dark_mode'; store.set('theme', t); };
+setTheme(store.get('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+$('theme').onclick = () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+$('reset').onclick = () => { push(); doc = structuredClone(SAMPLE); renderAll(); toast('Образец возвращён. ⌘Z вернёт ваш текст'); };
+
+renderAll();
+$('title').classList.toggle('blank', !doc.title);
+</script>
+</body>
+</html>
