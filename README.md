@@ -6,7 +6,7 @@ pages before products take them: the email editor (`simai/ui-mail`), Larena's
 layout editor and documentation editing in Docara.
 
 **Status: step 5, the Content mode, built 2026-11-01** on Framework
-`ui-3b75bb31a203` and Pro `larena-27366c53cfdf`: a page is a layout with one
+`ui-a823cf887c20` and Pro `larena-779d07ef29e3`: a page is a layout with one
 content outlet and its content; the Layout mode selects, moves, copies, deletes
 and inserts blocks, and the outlet opens SIMAI Pro's `sf-content-editor` for
 typing (a double click or Enter; Esc twice returns). Blocks are inserted at the

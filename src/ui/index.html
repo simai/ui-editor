@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="sf-release" content="ui-3b75bb31a203">
+  <meta name="sf-release" content="ui-a823cf887c20">
   <title>SIMAI — редактор страниц</title>
   <link rel="stylesheet" href="fw/core/css/core.css">
   <link rel="stylesheet" href="app.css">
@@ -49,7 +49,7 @@
         <p id="canvas-problems" class="problems text-1/2" role="alert" hidden></p>
       </section>
       <section id="content-view" class="canvas-scroll">
-        <sf-content-editor id="content-editor" class="canvas" data-t-attr="label:content.label" label="Содержимое страницы"></sf-content-editor>
+        <sf-content-editor id="content-editor" class="canvas" parameters="host" data-t-attr="label:content.label" label="Содержимое страницы"></sf-content-editor>
       </section>
     </div>
 
@@ -61,7 +61,11 @@
           <dt data-t="props.type">Тип</dt><dd id="props-type"></dd>
           <dt data-t="props.id">Идентификатор</dt><dd id="props-id"></dd>
         </dl>
-        <p class="muted text-1/2 m-0" data-t="props.later"></p>
+        <p id="props-later" class="muted text-1/2 m-0" data-t="props.later"></p>
+        <div id="props-block" class="flex flex-col gap-1/2" hidden>
+          <p id="props-block-type" class="text-1/2 m-0"></p>
+          <div id="props-fields" class="flex flex-col gap-1/2"></div>
+        </div>
       </div>
       <sf-resizer id="resizer-right" edge="inline-start" data-t-attr="label:panel.resizeProperties" label="Ширина панели свойств" target=".sf-drawer-panel" min="var(--sf-f6)" max="var(--sf-g5)" property="--props-width" storage-key="ui-editor.props"></sf-resizer>
     </sf-drawer>

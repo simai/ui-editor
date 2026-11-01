@@ -6,14 +6,17 @@
 // it again. The Content mode is SIMAI Pro's sf-content-editor over the page's
 // content: it sends the changed content, the editor saves it. A double click or
 // Enter on the outlet opens the Content mode; Esc twice there brings the
-// layout back with the outlet selected. Everything on screen is a Framework or
-// Pro component; this file only wires them.
+// layout back with the outlet selected. In the Content mode the Properties
+// panel holds the chosen block's parameters, which the editor sends, and the
+// pictures put on the page are kept by the editor's media store (src/ui/media.ts).
+// Everything on screen is a Framework or Pro component; this file only wires them.
 
 import {onUiLanguage, preferredLanguage, setUiLanguage, t, translate, uiLanguage, type Language} from './i18n.ts';
+import {isMedia, openMediaStore, type MediaStore} from './media.ts';
 import {openPageStore, type Page, type PageStore} from './pages.ts';
 import {abilities, duplicate, freshId, locate, move, neighbour, remove, shift, insert} from './document.ts';
 import {blankPage, seedDocuments, starterNode, STARTER_TYPES, type CompositionDocument, type CompositionNode} from './seed.ts';
-import {startShell} from './shell.ts';
+import {startShell, type Shell} from './shell.ts';
 
 type Mode = 'layout' | 'content';
 interface TypeManifest {
@@ -47,7 +50,25 @@ interface Overlay extends HTMLElement {
 }
 interface ContentEditor extends HTMLElement {
   document: CompositionDocument;
+  sources: Record<string, string>;
   edit(params?: {id?: string}): {outcome: string};
+  setParameter(params: {id: string; key: string; value?: string}): {outcome: string};
+  answerFile(params: {block: string; value?: string; href?: string; reason?: string}): {outcome: string};
+}
+/** A block's parameter as sf-content-editor describes it (its `params` event). */
+interface ParamField {
+  key: string;
+  kind: string;
+  label: string;
+  value: unknown;
+  choices?: {value: string; label: string}[];
+  warning?: string;
+}
+interface BlockParams {
+  id: string;
+  label: string;
+  fields: ParamField[];
+  open: boolean;
 }
 interface ContextMenu extends HTMLElement {
   entries: unknown[];
@@ -58,14 +79,17 @@ const USED = ['sf-composition-overlay', 'sf-context-menu', 'sf-menu', 'sf-button
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const sf = () => (globalThis as unknown as {SF: {Composition: Composition}}).SF;
 
-const state: {store: PageStore | null; pages: Page[]; current: string | null; mode: Mode; selected: string | null; inserting: InsertTarget | null} = {
+const state: {store: PageStore | null; media: MediaStore | null; pages: Page[]; current: string | null; mode: Mode; selected: string | null; inserting: InsertTarget | null; params: BlockParams | null} = {
   store: null,
+  media: null,
   pages: [],
   current: null,
   mode: 'layout',
   selected: null,
   inserting: null,
+  params: null,
 };
+let shell: Shell | null = null;
 
 const page = () => state.pages.find((p) => p.id === state.current) ?? null;
 
@@ -80,15 +104,123 @@ function showPages() {
   $<HTMLElement & {items: unknown}>('#pages').items = state.pages.map((p) => ({id: p.id, label: p.title, href: `#page=${encodeURIComponent(p.id)}`, icon: 'description', current: p.id === state.current}));
 }
 
+/** The Properties panel: the chosen layout block in the Layout mode, the chosen content block's parameters in the Content mode. */
 function showProperties() {
+  const content = state.mode === 'content';
   const current = page();
-  const node = current && state.selected ? (locate(current.layout.root, state.selected)?.node ?? null) : null;
-  $('#props-empty').hidden = Boolean(node);
+  const node = !content && current && state.selected ? (locate(current.layout.root, state.selected)?.node ?? null) : null;
+  const params = content ? state.params : null;
+  $('#props-empty').hidden = Boolean(node || params);
+  $('#props-empty').textContent = t(content ? 'props.emptyContent' : 'props.empty');
   $('#props').hidden = !node;
+  $('#props-later').hidden = content;
+  $('#props-block').hidden = !params;
   if (node) {
     $('#props-type').textContent = typeLabel(node.type);
     $('#props-id').textContent = node.id;
   }
+  if (params) showParams(params);
+}
+
+const contentEditor = () => $<ContentEditor>('#content-editor');
+
+/** One Framework field per parameter; a change goes back to the editor, which writes it and sends the block again. */
+function paramControl(id: string, field: ParamField) {
+  const tag = field.kind === 'toggle' ? 'sf-switch' : field.kind === 'choice' ? 'sf-dropdown' : 'sf-input';
+  const control = document.createElement(tag);
+  control.dataset.param = field.key;
+  control.setAttribute('size', '1/2');
+  control.setAttribute('label', field.label);
+  if (tag === 'sf-input') control.setAttribute('input-type', field.kind === 'integer' ? 'number' : 'text');
+  control.addEventListener('change', (event) => {
+    event.stopPropagation();
+    const target = control as HTMLElement & {checked?: boolean; value?: unknown};
+    const detail = (event as CustomEvent<{value?: unknown; checked?: boolean}>).detail;
+    const value = tag === 'sf-switch' ? String(detail?.checked ?? target.checked ?? false) : String(detail?.value ?? target.value ?? '');
+    contentEditor().setParameter({id, key: field.key, value});
+  });
+  return control;
+}
+
+/** Writes the field's value and words; a field the person is typing in keeps what is typed. */
+function fillControl(control: HTMLElement, field: ParamField) {
+  const target = control as HTMLElement & {checked?: boolean; value?: unknown; options?: unknown};
+  control.setAttribute('label', field.label);
+  control.setAttribute('hint', field.warning ?? '');
+  if (control.tagName === 'SF-SWITCH') {
+    control.toggleAttribute('checked', field.value === true);
+    target.checked = field.value === true;
+    return;
+  }
+  const value = field.value === null || field.value === undefined ? '' : String(field.value);
+  if (control.tagName === 'SF-DROPDOWN') {
+    // A Framework element takes properties once it is defined (start()).
+    void customElements.whenDefined('sf-dropdown').then(() => {
+      target.options = (field.choices ?? []).map((choice) => ({value: choice.value, text: choice.label}));
+      target.value = value;
+      control.setAttribute('value', value);
+    });
+    return;
+  }
+  if (control.contains(document.activeElement)) return;
+  control.setAttribute('value', value);
+  void customElements.whenDefined('sf-input').then(() => (target.value = value));
+}
+
+function showParams(params: BlockParams) {
+  $('#props-block-type').textContent = params.label;
+  const box = $('#props-fields');
+  const shape = `${params.id}|${params.fields.map((field) => `${field.key}:${field.kind}`).join(',')}`;
+  if (box.dataset.shape !== shape) {
+    box.dataset.shape = shape;
+    box.replaceChildren(...params.fields.map((field) => paramControl(params.id, field)));
+    if (!params.fields.length) {
+      const none = document.createElement('p');
+      none.className = 'muted text-1/2 m-0';
+      none.textContent = t('props.noFields');
+      box.append(none);
+    }
+  }
+  for (const field of params.fields) {
+    const control = box.querySelector<HTMLElement>(`[data-param="${field.key}"]`);
+    if (control) fillControl(control, field);
+  }
+}
+
+/** The media values a content names: the pictures' src. */
+function mediaOf(content: CompositionDocument) {
+  const found: string[] = [];
+  const walk = (node: CompositionNode) => {
+    const src = (node.data as {src?: unknown} | undefined)?.src;
+    if (isMedia(src)) found.push(src);
+    Object.values(node.slots ?? {}).flat().forEach(walk);
+  };
+  walk(content.root);
+  return found;
+}
+
+const MEDIA_PATH = './media/';
+
+/** The content as the canvas draws it, and this tab's address of each picture
+    in it. SF.Composition.render refuses blob: addresses as unsafe, so a media
+    value is drawn as a relative path and the image takes its address after
+    (docs/GAPS.md, G-14). */
+async function shownContent(content: CompositionDocument) {
+  const sources = await state.media!.resolve(mediaOf(content));
+  const hrefs = new Map<string, string>();
+  if (!Object.keys(sources).length) return {content, hrefs};
+  const shown = structuredClone(content);
+  const walk = (node: CompositionNode) => {
+    const data = node.data as {src?: unknown} | undefined;
+    if (data && isMedia(data.src) && sources[data.src]) {
+      const path = `${MEDIA_PATH}${data.src.slice('media:'.length)}`;
+      hrefs.set(path, sources[data.src]!);
+      data.src = path;
+    }
+    Object.values(node.slots ?? {}).flat().forEach(walk);
+  };
+  walk(shown.root);
+  return {content: shown, hrefs};
 }
 
 /** The toolbar over the selected block: icons, keys, and what cannot be done where it stands. */
@@ -118,11 +250,17 @@ async function renderCanvas(keep: string | null = null) {
     canvas.replaceChildren();
     return;
   }
-  const result = await sf().Composition.render(current.layout, {content: current.content});
+  const shown = await shownContent(current.content);
+  const result = await sf().Composition.render(current.layout, {content: shown.content});
   problems.hidden = result.diagnostics.length === 0;
   problems.textContent = result.diagnostics.length ? t('canvas.invalid', {n: result.diagnostics.map((d) => `${d.code} ${d.path}`).join(', ')}) : '';
   // The renderer escapes every value it writes; the HTML is the Framework's.
   canvas.innerHTML = result.html;
+  for (const image of canvas.querySelectorAll<HTMLImageElement>(`img[src^="${MEDIA_PATH}"]`)) {
+    const href = shown.hrefs.get(image.getAttribute('src')!);
+    // A local file costs no network: it loads at once, not when scrolled to.
+    if (href) Object.assign(image, {loading: 'eager', src: href});
+  }
   canvas.dataset.document = current.id;
   canvas.querySelector('[data-sf-outlet]')?.setAttribute('title', t('outlet.open'));
   const overlay = $<Overlay>('#overlay');
@@ -233,7 +371,10 @@ async function showContent() {
   await customElements.whenDefined('sf-content-editor');
   const editor = $<ContentEditor>('#content-editor');
   const current = page();
-  if (current && editor.document !== current.content) editor.document = current.content;
+  if (!current || editor.document === current.content) return;
+  // The pictures' addresses come before the document, so it draws them at once.
+  editor.sources = await state.media!.resolve(mediaOf(current.content));
+  editor.document = current.content;
 }
 
 async function newPage() {
@@ -261,6 +402,7 @@ async function setMode(mode: Mode) {
   // The overlay belongs to the Layout mode; it stays attached, hidden.
   $('#overlay').hidden = mode !== 'layout';
   document.body.dataset.mode = mode;
+  showProperties();
   if (mode === 'content') {
     await showContent();
     // The caret goes to the first block once the editor has drawn the page.
@@ -300,6 +442,7 @@ async function start() {
 
   const store = await openPageStore();
   state.store = store;
+  state.media = await openMediaStore();
   $('#storage-state').hidden = store.persistent;
   let pages = await store.list();
   if (pages.length === 0) {
@@ -312,9 +455,9 @@ async function start() {
   }
   state.pages = pages;
 
-  const shell = startShell(() => requestAnimationFrame(() => $<Overlay>('#overlay').refresh()));
-  $('#toggle-left').addEventListener('click', () => shell.togglePanel('left'));
-  $('#toggle-right').addEventListener('click', () => shell.togglePanel('right'));
+  shell = startShell(() => requestAnimationFrame(() => $<Overlay>('#overlay').refresh()));
+  $('#toggle-left').addEventListener('click', () => shell!.togglePanel('left'));
+  $('#toggle-right').addEventListener('click', () => shell!.togglePanel('right'));
   $('#mode').addEventListener('change', (event) => void setMode((event as CustomEvent<{value: Mode}>).detail.value));
   const editor = $<ContentEditor>('#content-editor');
   editor.addEventListener('change', (event) => {
@@ -323,6 +466,22 @@ async function start() {
   });
   // Esc on chosen blocks: the editor is left, and the layout comes back.
   editor.addEventListener('sf-content-editor-leave', () => void setMode('layout'));
+  // The chosen block's parameters; «Parameters…» and the toolbar's more button open the panel.
+  editor.addEventListener('sf-content-editor-params', (event) => {
+    const detail = (event as CustomEvent<BlockParams>).detail;
+    state.params = detail.id ? detail : null;
+    showProperties();
+    if (detail.open && !shell!.isOpen('right')) shell!.togglePanel('right');
+    if (detail.open) requestAnimationFrame(() => $('#props-fields').querySelector<HTMLElement>('input, button, [role="combobox"], [role="switch"]')?.focus());
+  });
+  // A picture put on the page: kept in the media store, its value goes back to the block.
+  editor.addEventListener('sf-content-editor-file', (event) => {
+    const {file, block} = (event as CustomEvent<{file: File; block: string}>).detail;
+    state.media!.put(file).then(
+      ({value, href}) => editor.answerFile({block, value, href}),
+      () => editor.answerFile({block, reason: t('media.refused')}),
+    );
+  });
   $('#language').addEventListener('change', (event) => setUiLanguage((event as CustomEvent<{value: Language}>).detail.value));
   $('#new-page').addEventListener('click', () => void newPage());
   $('#pages').addEventListener('sf-menu-navigate', (event) => {

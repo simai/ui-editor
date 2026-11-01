@@ -2,47 +2,55 @@
   "schema": "simai.ui-editor.framework-lock",
   "version": 1,
   "note": "The SIMAI Framework release and the SIMAI Pro package the editor is built and checked against, never latest. scripts/framework-fetch.mjs downloads the npm tarball and the package tar, checks them against the hashes here, checks every Framework file against the package's own package-manifest.json, and checks that the Pro package's receipt names this pair and the pinned source. A repin changes this file, then the end-to-end runs pass again.",
-  "pair": "ui-3b75bb31a203",
+  "pair": "ui-a823cf887c20",
   "pinned_on": "2026-11-01",
   "ui": {
     "repository": "simai/ui",
-    "commit": "3b75bb31a203c1935d4a5357510daed3abee53e8",
+    "commit": "a823cf887c2035540ade6dd48ea17bbcffb11473",
     "npm": {
       "package": "@simai-studio/ui",
-      "version": "5.20261101.414",
-      "tarball": "https://registry.npmjs.org/@simai-studio/ui/-/ui-5.20261101.414.tgz",
-      "integrity": "sha512-yKskWAkWdeMn9fsCbcbIDDfHi3Y4iYVPx7A6P4jfFXiXL9Ono4zhy8w4s45r6b3i/dwfeontoovP5S2fk6MkyA==",
-      "shasum": "a293247c9caa69964d10983222ddb4c6c70280c4",
-      "tarball_sha256": "ef1e3b763449b0a050cea2a119e0899a3fdbcc1359e855a28332d5713c5be4e3",
+      "version": "5.20261101.1638",
+      "tarball": "https://registry.npmjs.org/@simai-studio/ui/-/ui-5.20261101.1638.tgz",
+      "integrity": "sha512-dRDl1fqchAFDJNv26AoCWdqF8XpgB1eFhyg7y6vh5cNwkdZWdaXp5VOfn7TzFaQJMtQFMIaoVr7Xezktyh70Qw==",
+      "shasum": "639c9b953feddf26ac1858be9821f41c4840a8e5",
+      "tarball_sha256": "53053fabbb2274315cfde043e987ac06b7e93af0f7f87aa38f14de2a0d752231",
       "file_count": 4795,
       "license": "Apache-2.0"
     },
     "package_manifest": {
       "path": "package-manifest.json",
-      "sha256": "f012ab72ff3c29e44b5a67c79301772b5bf9ad615ee0cca23f1b2eab03b66d35",
+      "sha256": "85dd73b6df3c83e1a6bb4db207ee5a72c11f29c11548a21528a952fd0d58f040",
       "files": 4789
     }
   },
   "ui_source": {
     "repository": "simai/ui-source",
-    "commit": "b5a55fd032ca1b087c0cd9adf7c046d306bd2f92"
+    "commit": "a4b6c27b37eea547e93d23049efcf557d184b437"
   },
   "package": {
     "name": "larena",
-    "release": "larena-27366c53cfdf",
+    "release": "larena-779d07ef29e3",
     "repository": "simai/larena-ui",
     "source": {
       "repository": "simai/ui-pro",
-      "commit": "27366c53cfdfd25f1e05ae76f7d927f39b9c544e"
+      "commit": "779d07ef29e38d23dbe7e4cf0a47957cd7011e4e"
     },
-    "tar": "https://github.com/simai/larena-ui/releases/download/larena-27366c53cfdf/package-larena.tar",
-    "tar_sha256": "54a36c56f5d01a9e42da945862981aa8935b2512a727ebaf8c0144eaa428971f",
-    "receipt": "https://github.com/simai/larena-ui/releases/download/larena-27366c53cfdf/package-receipt.json",
-    "receipt_sha256": "48a34259deb387a582fda323ff1b09405e32b3f4d5131d6e03cd817334a7ad10",
+    "tar": "https://github.com/simai/larena-ui/releases/download/larena-779d07ef29e3/package-larena.tar",
+    "tar_sha256": "cea3dc92253303c1e3c8ee5f155be7750f45cc2222510ce78b90b21c4b361b95",
+    "receipt": "https://github.com/simai/larena-ui/releases/download/larena-779d07ef29e3/package-receipt.json",
+    "receipt_sha256": "4488bc4f9b9a83f9939223d9063654c21853bb6842cd8ffa30fa55f16c9283ac",
     "base": "pkg/larena/smart",
     "licence": "PolyForm-Small-Business-1.0.0 OR PolyForm-Noncommercial-1.0.0 OR LicenseRef-SIMAI-Commercial"
   },
   "history": [
+    {
+      "pair": "ui-3b75bb31a203",
+      "npm": "5.20261101.414",
+      "package": "larena-27366c53cfdf",
+      "pinned_on": "2026-11-01",
+      "replaced_on": "2026-11-01",
+      "why": "sf-content-editor 1.0.1: the title edit; replaced by 1.1.0, the owner review of the content editor"
+    },
     {
       "pair": "ui-3b75bb31a203",
       "npm": "5.20261101.414",

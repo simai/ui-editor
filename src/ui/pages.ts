@@ -1,8 +1,9 @@
 // The page list, kept in this browser's IndexedDB: database `ui-editor`, store
 // `pages`, one record per page {id, title, layout, content, created, updated},
-// listed in the order they were made. Version 2 of the database starts the list
+// listed in the order they were made. Version 2 of the database started the list
 // again: the pages of version 1 had one layout document and no content, and
-// were the seeded demo pages. When IndexedDB
+// were the seeded demo pages. Version 3 adds the store `media`, the pictures a
+// page's content names (src/ui/media.ts), and keeps the pages. When IndexedDB
 // is refused (a private window, a blocked origin) the list lives in memory for
 // the tab and the shell says so.
 
@@ -30,18 +31,31 @@ export interface PageStore {
 
 const DB = 'ui-editor';
 const STORE = 'pages';
+export const MEDIA = 'media';
 
-const request = <T>(r: IDBRequest<T>) => new Promise<T>((resolve, reject) => {
+export const request = <T>(r: IDBRequest<T>) => new Promise<T>((resolve, reject) => {
   r.onsuccess = () => resolve(r.result);
   r.onerror = () => reject(r.error);
 });
 
+let opening: Promise<IDBDatabase> | null = null;
+
+/** The editor's database, opened once for the tab: the page list and the media share it. */
+export function openDatabase(): Promise<IDBDatabase> {
+  opening ??= open();
+  return opening;
+}
+
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const r = indexedDB.open(DB, 2);
-    r.onupgradeneeded = () => {
-      if (r.result.objectStoreNames.contains(STORE)) r.result.deleteObjectStore(STORE);
-      r.result.createObjectStore(STORE, {keyPath: 'id'});
+    const r = indexedDB.open(DB, 3);
+    r.onupgradeneeded = (event) => {
+      const names = r.result.objectStoreNames;
+      if (event.oldVersion < 2) {
+        if (names.contains(STORE)) r.result.deleteObjectStore(STORE);
+        r.result.createObjectStore(STORE, {keyPath: 'id'});
+      }
+      if (!names.contains(MEDIA)) r.result.createObjectStore(MEDIA, {keyPath: 'id'});
     };
     r.onsuccess = () => resolve(r.result);
     r.onerror = () => reject(r.error);
@@ -63,7 +77,7 @@ function memoryStore(): PageStore {
 export async function openPageStore(): Promise<PageStore> {
   let db: IDBDatabase;
   try {
-    db = await open();
+    db = await openDatabase();
   } catch {
     return memoryStore();
   }

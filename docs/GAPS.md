@@ -5,8 +5,8 @@ who owns it and what the editor does meanwhile. A Framework defect has a
 `simai/ui-source` issue; an editor part is ordered from `simai/ui-pro`. A gap
 closes when a pinned release brings the part and the workaround goes.
 
-Pinned: Framework `ui-3b75bb31a203` (`@simai-studio/ui@5.20261101.414`),
-Pro package `larena-27366c53cfdf` ([`framework.lock.json`](../framework.lock.json)).
+Pinned: Framework `ui-a823cf887c20` (`@simai-studio/ui@5.20261101.1638`),
+Pro package `larena-779d07ef29e3` ([`framework.lock.json`](../framework.lock.json)).
 
 | Id | Gap | Owner | Meanwhile | Closes when |
 |:---|:---|:---|:---|:---|
@@ -21,6 +21,7 @@ Pro package `larena-27366c53cfdf` ([`framework.lock.json`](../framework.lock.jso
 | G-10 | `sf-tooltip` stands off its anchor inside `[data-sf-overlay-container]`: `contain: layout` makes the container the containing block of `position: fixed`, so the toolbar's tooltips stood a top bar low, over their buttons, and the grip could not be dragged | Framework, [simai/ui-source#63](https://github.com/simai/ui-source/issues/63) | the editor area is no container; `src/ui/app.css` puts the panels under the top bar with `--sf-drawer-block-start` and `--sf-drawer-dock-block-start` | not needed back: the drawer's own variables are the documented way; the issue stays for other hosts |
 | G-11 | No block picker: the seam's + needs a list of what can go there | ui-pro (plan step 5) | the + opens `sf-context-menu` with the starter types (heading, paragraph, section) that the parent's slot accepts by `SF.Composition.BUILTIN_TYPE_MANIFESTS`; `layout.columns` is left out while it has no stylesheet (G-04) | ui-pro releases the picker |
 | G-12 | `sf-composition-overlay-insert` names the place, not the + that was pressed, so a host cannot anchor its list to it | Framework, minor (not filed) | the editor finds the overlay's insertion button whose `data-key` is `<parent>\|<slot>\|<index>` and opens the list under its round mark (`.sf-composition-overlay-insert-mark`), internals that may change | the event carries its anchor, or the overlay opens a host list itself |
+| G-14 | `SF.Composition.render` refuses `blob:` picture addresses as `unsafe_url`, so the canvas cannot draw a picture kept in the browser | Framework, [simai/ui-source#71](https://github.com/simai/ui-source/issues/71) | `src/ui/app.ts` renders a stored picture (`media:<id>`) as `./media/<id>` and gives each such `img` its object URL after the render | `render` takes a source resolver or allows the page's own `blob:` addresses; the swap goes |
 
 ## What `ui-a7c68408a293` and `larena-7bc706e9a07f` closed
 
@@ -55,3 +56,22 @@ Repinned 2026-11-01 from `larena-68015a3b75a0`, on the same Framework pair.
   The editor's guard and the a11y gate's allowance are gone;
   `scripts/e2e-content.mjs` checks that a typed title is saved and the page
   list follows it.
+
+## What `ui-a823cf887c20` and `larena-779d07ef29e3` closed
+
+Repinned 2026-11-01 from `ui-3b75bb31a203` and `larena-27366c53cfdf`.
+
+- The owner's review of `sf-content-editor` 1.0.1 (simai/ui-pro `71b22c2`,
+  1.1.0): the gutter stands outside the text, menus open at their trigger and
+  the `/` menu at the caret, parameters go to the host's Properties panel
+  (`parameters="host"`), and pictures can be dropped or pasted on the page.
+- G-05 is closed for the Content mode: the right panel edits the chosen
+  block's parameters. It stays open for the Layout mode.
+- The editor keeps dropped and pasted pictures in IndexedDB (`ui-editor` /
+  `media`, `src/ui/media.ts`); a picture outlives a reload in the editor and on
+  the canvas. G-14 is new: the canvas draws them through a swap.
+- Filed with the release: simai/ui-source #68 (`openFor` on a
+  `display: contents` host anchors at 0,0; ui-pro anchors to the inner button),
+  #69 (no menu offset: 4 px, not the specified 8), #70 (the Loader leaves
+  elements in a closed `sf-popover` undefined; ui-pro renders the form on open)
+  and #71 (G-14). #59 to #63 are still open; their workarounds stay.
