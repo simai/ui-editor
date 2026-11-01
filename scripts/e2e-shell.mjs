@@ -165,7 +165,7 @@ try {
   const content = await page.evaluate(() => ({
     mode: globalThis.uiEditor.state.mode,
     canvas: document.querySelector('#layout-view').hidden,
-    editor: !document.querySelector('#content-view').hidden && document.querySelector('#content-editor')?.localName,
+    editor: getComputedStyle(document.querySelector('#content-view')).display !== 'none' && document.querySelector('#content-editor')?.localName,
     overlay: document.querySelector('#overlay').hidden,
   }));
   check('the Content mode shows sf-content-editor, and the overlay goes', content.mode === 'content' && content.canvas && content.editor === 'sf-content-editor' && content.overlay, JSON.stringify(content));

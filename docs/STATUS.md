@@ -83,6 +83,7 @@ pair that brought `sf-content-editor`. The proofs of steps 0 and 1 hold on it.
 | The first Esc chooses the block; the second brings the Layout mode back with the outlet chosen and focused, the typed text drawn in it | `scripts/e2e-content.mjs` |
 | Another page chosen in the Content mode shows its content; the content outlives a reload | `scripts/e2e-content.mjs` |
 | axe-core finds nothing in the Content mode at every size and scheme of step 0 | `scripts/e2e-a11y.mjs` |
+| Repinned to `larena-27366c53cfdf` (`sf-content-editor` 1.0.1): a typed title is saved as the content's `data.title` and the page list follows it; the editor loads with the page, so the first switch is never blank | `scripts/e2e-content.mjs` |
 
 The side panels at about 800 px wide stand over the canvas edge, and that is
 intended: below 1024 px both panels start closed and slide over the canvas one

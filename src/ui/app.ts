@@ -151,14 +151,6 @@ async function change(layout: CompositionDocument, selected: string | null) {
 async function changeContent(content: CompositionDocument) {
   const current = page();
   if (!current) return;
-  // sf-content-editor of larena-68015a3b75a0 writes a title edit to
-  // data["undefined"], which content.document's closed schema refuses: the
-  // key is dropped and the title stays (docs/GAPS.md, G-13).
-  const data = content.root.data as Record<string, unknown> | undefined;
-  if (data && 'undefined' in data) {
-    content = structuredClone(content);
-    delete (content.root.data as Record<string, unknown>).undefined;
-  }
   const title = String((content.root.data as {title?: unknown} | undefined)?.title ?? '').trim() || current.title;
   await save({...current, content, title, updated: new Date().toISOString()});
   if (title !== current.title) showPages();
@@ -262,7 +254,10 @@ async function setMode(mode: Mode) {
   state.mode = mode;
   $('#mode').setAttribute('value', mode);
   $('#layout-view').hidden = mode !== 'layout';
-  $('#content-view').hidden = mode !== 'content';
+  // The Content view is never `hidden`: the Loader fetches no code for an
+  // element in a closed container, and sf-content-editor would arrive only on
+  // the first switch, a second or two of an empty area. It is shown by mode
+  // (src/ui/app.css), so the editor loads with the page.
   // The overlay belongs to the Layout mode; it stays attached, hidden.
   $('#overlay').hidden = mode !== 'layout';
   document.body.dataset.mode = mode;

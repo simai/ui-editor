@@ -35,6 +35,7 @@ const typedIn = () => page.evaluate(() => {
 
 try {
   await load(page, run.origin);
+  check('sf-content-editor loads with the page, before the first switch', await page.evaluate(() => Boolean(customElements.get('sf-content-editor'))));
 
   // ---------------------------------------------------------------- the outlet
   const outlet = await page.evaluate(() => {
@@ -53,7 +54,7 @@ try {
   const opened = await page.evaluate(() => ({
     mode: globalThis.uiEditor.state.mode,
     layout: document.querySelector('#layout-view').hidden,
-    editor: !document.querySelector('#content-view').hidden,
+    editor: getComputedStyle(document.querySelector('#content-view')).display !== 'none',
     pressed: document.querySelector('#mode').getAttribute('value'),
     title: document.querySelector('#content-editor .sf-content-editor-title')?.textContent,
   }));
@@ -100,9 +101,6 @@ try {
   await settle(700);
 
   // ------------------------------------------------------------ the title
-  // A title edit is lost in larena-68015a3b75a0 (docs/GAPS.md, G-13): the
-  // page stays valid and keeps its title. With the fix pinned, this checks
-  // that the list follows the typed title instead.
   await page.locator('#mode button', {hasText: 'Контент'}).click();
   await settle(700);
   await page.locator('#content-editor .sf-content-editor-title').click();
@@ -110,7 +108,7 @@ try {
   await page.keyboard.type('!');
   await settle(900);
   const titled = await page.evaluate(() => ({label: document.querySelector('#pages').items[0].label, data: globalThis.uiEditor.state.pages[0].content.root.data}));
-  check('a title edit leaves the page valid (G-13)', JSON.stringify(Object.keys(titled.data)) === '["title"]' && titled.label === titled.data.title, JSON.stringify(titled));
+  check('a typed title is saved as data.title, and the page list follows it', JSON.stringify(titled.data) === '{"title":"Как устроена страница!"}' && titled.label === 'Как устроена страница!', JSON.stringify(titled));
   await page.locator('#mode button', {hasText: 'Макет'}).click();
   await settle(700);
   check('the layout draws the page with no diagnostics', await page.evaluate(() => document.querySelector('#canvas-problems').hidden));
@@ -126,7 +124,7 @@ try {
   // ---------------------------------------------------------------- a reload
   await load(page, run.origin);
   const kept = await outletText();
-  check('the typed content outlives a reload', kept.includes('Набрано здесь.') && kept.includes('Новый раздел'));
+  check('the typed content outlives a reload', kept.includes('Набрано здесь.') && kept.includes('Новый раздел') && kept.includes('Как устроена страница!'));
 
   check('no page errors', errors.length === 0, errors.join(' | '));
 } catch (error) {

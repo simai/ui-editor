@@ -29,20 +29,28 @@
   },
   "package": {
     "name": "larena",
-    "release": "larena-68015a3b75a0",
+    "release": "larena-27366c53cfdf",
     "repository": "simai/larena-ui",
     "source": {
       "repository": "simai/ui-pro",
-      "commit": "68015a3b75a0d504464529887cab7a909655c731"
+      "commit": "27366c53cfdfd25f1e05ae76f7d927f39b9c544e"
     },
-    "tar": "https://github.com/simai/larena-ui/releases/download/larena-68015a3b75a0/package-larena.tar",
-    "tar_sha256": "c8c2e43ca62674ceb1e787eb0c1a57a31071d1deca6d3d8822bfe4c0ba891607",
-    "receipt": "https://github.com/simai/larena-ui/releases/download/larena-68015a3b75a0/package-receipt.json",
-    "receipt_sha256": "7be0611e92e463eca092eb5f5cd8e6e2ec317d0024cc38047b83adaf2397f2b9",
+    "tar": "https://github.com/simai/larena-ui/releases/download/larena-27366c53cfdf/package-larena.tar",
+    "tar_sha256": "54a36c56f5d01a9e42da945862981aa8935b2512a727ebaf8c0144eaa428971f",
+    "receipt": "https://github.com/simai/larena-ui/releases/download/larena-27366c53cfdf/package-receipt.json",
+    "receipt_sha256": "48a34259deb387a582fda323ff1b09405e32b3f4d5131d6e03cd817334a7ad10",
     "base": "pkg/larena/smart",
     "licence": "PolyForm-Small-Business-1.0.0 OR PolyForm-Noncommercial-1.0.0 OR LicenseRef-SIMAI-Commercial"
   },
   "history": [
+    {
+      "pair": "ui-3b75bb31a203",
+      "npm": "5.20261101.414",
+      "package": "larena-68015a3b75a0",
+      "pinned_on": "2026-11-01",
+      "replaced_on": "2026-11-01",
+      "why": "sf-content-editor 1.0.1: a title edit is written to data.title, and the title is a textbox, not an h1"
+    },
     {
       "pair": "ui-a7c68408a293",
       "npm": "5.20261031.2233",

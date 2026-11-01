@@ -6,7 +6,7 @@ who owns it and what the editor does meanwhile. A Framework defect has a
 closes when a pinned release brings the part and the workaround goes.
 
 Pinned: Framework `ui-3b75bb31a203` (`@simai-studio/ui@5.20261101.414`),
-Pro package `larena-68015a3b75a0` ([`framework.lock.json`](../framework.lock.json)).
+Pro package `larena-27366c53cfdf` ([`framework.lock.json`](../framework.lock.json)).
 
 | Id | Gap | Owner | Meanwhile | Closes when |
 |:---|:---|:---|:---|:---|
@@ -21,7 +21,6 @@ Pro package `larena-68015a3b75a0` ([`framework.lock.json`](../framework.lock.jso
 | G-10 | `sf-tooltip` stands off its anchor inside `[data-sf-overlay-container]`: `contain: layout` makes the container the containing block of `position: fixed`, so the toolbar's tooltips stood a top bar low, over their buttons, and the grip could not be dragged | Framework, [simai/ui-source#63](https://github.com/simai/ui-source/issues/63) | the editor area is no container; `src/ui/app.css` puts the panels under the top bar with `--sf-drawer-block-start` and `--sf-drawer-dock-block-start` | not needed back: the drawer's own variables are the documented way; the issue stays for other hosts |
 | G-11 | No block picker: the seam's + needs a list of what can go there | ui-pro (plan step 5) | the + opens `sf-context-menu` with the starter types (heading, paragraph, section) that the parent's slot accepts by `SF.Composition.BUILTIN_TYPE_MANIFESTS`; `layout.columns` is left out while it has no stylesheet (G-04) | ui-pro releases the picker |
 | G-12 | `sf-composition-overlay-insert` names the place, not the + that was pressed, so a host cannot anchor its list to it | Framework, minor (not filed) | the editor finds the overlay's insertion button whose `data-key` is `<parent>\|<slot>\|<index>` and opens the list under its round mark (`.sf-composition-overlay-insert-mark`), internals that may change | the event carries its anchor, or the overlay opens a host list itself |
-| G-13 | `sf-content-editor` writes a title edit to `data["undefined"]`: the title does not change and the Document fails `content.document`'s closed schema. Its title is also an `h1` with `role="textbox"`, which axe-core refuses (`aria-allowed-role`) | ui-pro, fixed on `fix/content-editor-title` (`c992336`, `4ac22ac`), sent to the Framework thread for a `larena` release | `src/ui/app.ts` drops `data["undefined"]` from a content it saves, so the page stays valid and keeps its title; `scripts/e2e-a11y.mjs` allows that one rule on `.sf-content-editor-title` | a pinned `larena` release has both fixes; the guard and the allowance go, and `scripts/e2e-content.mjs` checks that the page list follows a typed title |
 
 ## What `ui-a7c68408a293` and `larena-7bc706e9a07f` closed
 
@@ -46,3 +45,13 @@ Repinned 2026-11-01 from `ui-a7c68408a293` and `larena-7bc706e9a07f`.
   package. The Content mode types in it, and `content.outlet` with
   `render(layout, {content})` puts the content in the layout.
 - #59 to #63 are still open in simai/ui-source; their workarounds stay.
+
+## What `larena-27366c53cfdf` closed
+
+Repinned 2026-11-01 from `larena-68015a3b75a0`, on the same Framework pair.
+
+- G-13 closed: `sf-content-editor` 1.0.1 writes a title edit to `data.title`,
+  and its title is a textbox, not an `h1` (simai/ui-pro `c992336`, `4ac22ac`).
+  The editor's guard and the a11y gate's allowance are gone;
+  `scripts/e2e-content.mjs` checks that a typed title is saved and the page
+  list follows it.

@@ -14,11 +14,7 @@ import {ROOT, load, startRun} from './e2e-common.mjs';
 const axeSource = readFileSync(join(ROOT, 'node_modules/axe-core/axe.min.js'), 'utf8');
 
 /** Framework and Pro defects, each reported or fixed upstream. Nothing of the editor's own goes here. */
-const ALLOWED = [
-  // sf-content-editor of larena-68015a3b75a0 draws its title as an h1 with
-  // role="textbox"; fixed in simai/ui-pro 4ac22ac, goes with its release (G-13).
-  {id: 'aria-allowed-role', target: /\.sf-content-editor-title$/u},
-];
+const ALLOWED = [];
 
 const run = await startRun();
 const {check} = run;
