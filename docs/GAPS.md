@@ -5,8 +5,8 @@ who owns it and what the editor does meanwhile. A Framework defect has a
 `simai/ui-source` issue; an editor part is ordered from `simai/ui-pro`. A gap
 closes when a pinned release brings the part and the workaround goes.
 
-Pinned: Framework `ui-a823cf887c20` (`@simai-studio/ui@5.20261101.1638`),
-Pro package `larena-86cd44526d9c` ([`framework.lock.json`](../framework.lock.json)).
+Pinned: Framework `ui-1232b187244c` (`@simai-studio/ui@5.20261101.1951`),
+Pro package `larena-f8939812c7f9` ([`framework.lock.json`](../framework.lock.json)).
 
 | Id | Gap | Owner | Meanwhile | Closes when |
 |:---|:---|:---|:---|:---|
@@ -21,7 +21,7 @@ Pro package `larena-86cd44526d9c` ([`framework.lock.json`](../framework.lock.jso
 | G-10 | `sf-tooltip` stands off its anchor inside `[data-sf-overlay-container]`: `contain: layout` makes the container the containing block of `position: fixed`, so the toolbar's tooltips stood a top bar low, over their buttons, and the grip could not be dragged | Framework, [simai/ui-source#63](https://github.com/simai/ui-source/issues/63) | the editor area is no container; `src/ui/app.css` puts the panels under the top bar with `--sf-drawer-block-start` and `--sf-drawer-dock-block-start` | not needed back: the drawer's own variables are the documented way; the issue stays for other hosts |
 | G-11 | No block picker: the seam's + needs a list of what can go there | ui-pro (plan step 5) | the + opens `sf-context-menu` with the starter types (heading, paragraph, section) that the parent's slot accepts by `SF.Composition.BUILTIN_TYPE_MANIFESTS`; `layout.columns` is left out while it has no stylesheet (G-04) | ui-pro releases the picker |
 | G-12 | `sf-composition-overlay-insert` names the place, not the + that was pressed, so a host cannot anchor its list to it | Framework, minor (not filed) | the editor finds the overlay's insertion button whose `data-key` is `<parent>\|<slot>\|<index>` and opens the list under its round mark (`.sf-composition-overlay-insert-mark`), internals that may change | the event carries its anchor, or the overlay opens a host list itself |
-| G-14 | `SF.Composition.render` refuses `blob:` picture addresses as `unsafe_url`, so the canvas cannot draw a picture kept in the browser | Framework, [simai/ui-source#71](https://github.com/simai/ui-source/issues/71) | `src/ui/app.ts` renders a stored picture (`media:<id>`) as `./media/<id>` and gives each such `img` its object URL after the render | `render` takes a source resolver or allows the page's own `blob:` addresses; the swap goes |
+| G-14 | `SF.Composition.render` refuses `blob:` picture addresses as `unsafe_url`, so the canvas cannot draw a picture kept in the browser | Framework, [simai/ui-source#71](https://github.com/simai/ui-source/issues/71) | `src/ui/app.ts` renders a stored picture (`media:<id>`) as `./media/<id>` and gives each such `img` its object URL after the render; a stored file is kept with the address `./media/<id>` and each such download link gets its object URL and its name | `render` takes a source resolver or allows the page's own `blob:` addresses; the swap goes |
 
 ## What `ui-a7c68408a293` and `larena-7bc706e9a07f` closed
 
@@ -75,6 +75,19 @@ Repinned 2026-11-01 from `ui-3b75bb31a203` and `larena-27366c53cfdf`.
   #69 (no menu offset: 4 px, not the specified 8), #70 (the Loader leaves
   elements in a closed `sf-popover` undefined; ui-pro renders the form on open)
   and #71 (G-14). #59 to #63 are still open; their workarounds stay.
+
+## What `larena-f8939812c7f9` closed
+
+Repinned 2026-11-02 from `larena-86cd44526d9c`, with the Framework moved to
+`ui-1232b187244c`, the pair that brings `content.file` 1.0.0.
+
+- `sf-content-editor` 1.2.0 (simai/ui-pro `f893981`, the dispatcher's task):
+  the File block. File is a kind in the + and / menus; an empty File block is
+  the drop zone for any file; a document dropped on the page becomes a File
+  block at the drop line; the block stores href, label, mime and size and draws
+  the download-file row. The editor keeps the file in IndexedDB like a picture
+  (G-14 covers file links too), and an empty File block outlives a reload as a
+  note on the canvas.
 
 ## What `larena-86cd44526d9c` closed
 

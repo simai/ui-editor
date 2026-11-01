@@ -8,7 +8,9 @@
 // the layout's canvas. A picture left without a file outlives a reload: the
 // canvas draws a note in its place and the block still takes a file. Enter in
 // the + menu search takes the first match, the gutter stands at a picture's
-// top, and /div finds the divider in the Russian interface.
+// top, and /div finds the divider in the Russian interface. A File block
+// takes any file, from its zone or dropped on the page, and outlives a reload
+// empty or filled.
 //
 //   node scripts/build-ui.mjs && node scripts/e2e-content-ux.mjs [--chrome <path>]
 import {load, startRun} from './e2e-common.mjs';
@@ -270,6 +272,67 @@ try {
   const afterDiv = await contentBlocks(page);
   const at = afterDiv.findIndex((block) => block.id === 'home-p2');
   check('/div finds the divider in the Russian interface, and the line with the / becomes it', afterDiv[at + 1]?.type === 'content.divider', JSON.stringify(afterDiv.slice(at).map((block) => block.type)));
+
+  // ---------------------------------------------------------------- files
+  // File from the + menu is an empty file block: a zone for any file, stored
+  // without an address; a reload keeps the page (a note on the canvas) and
+  // the block. A file picked in its zone and a document dropped on the page
+  // are kept in IndexedDB, stored with an address the canvas downloads from.
+  await page.locator('#content-editor .sf-content-editor-block[data-sf-node="home-h2"]').hover();
+  await page.waitForTimeout(200);
+  await page.locator('#content-editor .sf-content-editor-plus button').click();
+  await page.waitForTimeout(400);
+  await page.keyboard.type('Файл', {delay: 40});
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(800);
+  const fileNodes = () => page.evaluate(() => globalThis.uiEditor.state.pages[0].content.root.slots.default.filter((node) => node.type === 'content.file').map((node) => ({id: node.id, ...node.data})));
+  const emptyFile = (await fileNodes()).find((node) => !node.href);
+  const anyType = await page.evaluate((id) => {
+    const zone = document.querySelector(`#content-editor [data-sf-zone="${id}"] sf-file-upload`);
+    return Boolean(zone) && !zone.hasAttribute('accept');
+  }, emptyFile?.id);
+  check('File in the + menu makes an empty file block, a zone for any file', Boolean(emptyFile) && anyType, JSON.stringify(await fileNodes()));
+  await load(page, run.origin);
+  const fileKept = await page.evaluate((id) => ({
+    problems: document.querySelector('#canvas-problems').hidden,
+    note: document.querySelector(`#canvas [data-sf-composition-id="${id}"]`)?.textContent.trim() ?? '',
+  }), emptyFile?.id);
+  check('after a reload the canvas draws the page, with a note where the file waits', fileKept.problems && fileKept.note.includes('Файл ждёт загрузки'), JSON.stringify(fileKept));
+  await page.evaluate(() => globalThis.uiEditor.setMode('content'));
+  await page.waitForTimeout(900);
+  const fileInput = page.locator(`#content-editor [data-sf-zone="${emptyFile?.id}"] sf-file-upload input[type="file"]`);
+  check('and the editor still shows its zone', (await fileInput.count()) === 1);
+  await fileInput.setInputFiles({name: 'Отчёт.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 a report')});
+  await page.waitForTimeout(900);
+  const picked = (await fileNodes()).find((node) => node.id === emptyFile?.id);
+  check('a file picked in the zone is kept and stored with its address, name, type and size', /^media:/.test(picked?.value ?? '') && picked.href === `./media/${picked.value.slice(6)}` && picked.label === 'Отчёт.pdf' && picked.mime === 'application/pdf' && picked.size === 17 && (await mediaCount(page)) === 4, JSON.stringify(picked));
+  check('the block draws the download row: the kind\'s icon, the name, the size', await page.evaluate((id) => {
+    const row = document.querySelector(`#content-editor [data-sf-node="${id}"] .sf-content-editor-file-row`);
+    return row?.querySelector('.sf-content-editor-file-icon')?.getAttribute('icon') === 'picture_as_pdf' && row.querySelector('.sf-content-editor-file-name').textContent === 'Отчёт.pdf' && /17/.test(row.querySelector('.sf-content-editor-file-size')?.textContent ?? '');
+  }, emptyFile?.id));
+  await page.evaluate(() => {
+    const editor = document.querySelector('#content-editor');
+    const target = editor.querySelector('.sf-content-editor-block[data-sf-node="home-h2"]');
+    target.scrollIntoView({block: 'center'});
+    const y = target.getBoundingClientRect().top + 2;
+    const data = new DataTransfer();
+    data.items.add(new File(['a,b\n1,2'], 'plan.csv', {type: 'text/csv'}));
+    target.dispatchEvent(new DragEvent('dragover', {bubbles: true, cancelable: true, clientX: 600, clientY: y, dataTransfer: data}));
+    target.dispatchEvent(new DragEvent('drop', {bubbles: true, cancelable: true, clientX: 600, clientY: y, dataTransfer: data}));
+  });
+  await page.waitForTimeout(900);
+  const afterFileDrop = await contentBlocks(page);
+  const dropAt = afterFileDrop.findIndex((block) => block.id === 'home-h2');
+  const csv = (await fileNodes()).find((node) => node.label === 'plan.csv');
+  check('a file that is not a picture, dropped on the page, makes a file block at the drop line and is kept', afterFileDrop[dropAt - 1]?.type === 'content.file' && /^media:/.test(csv?.value ?? '') && (await mediaCount(page)) === 5, JSON.stringify(afterFileDrop.slice(Math.max(0, dropAt - 2), dropAt + 1).map((block) => block.type)));
+  await load(page, run.origin);
+  const links = await page.evaluate(async () => Promise.all([...document.querySelectorAll('#canvas [data-sf-outlet] a.sf-download-file')].map(async (link) => ({name: link.download, blob: link.href.startsWith('blob:'), bytes: (await (await fetch(link.href)).blob()).size}))));
+  check('after a reload the canvas offers both files to download, from the store', JSON.stringify(links.map((link) => [link.name, link.blob, link.bytes]).sort()) === JSON.stringify([['plan.csv', true, 7], ['Отчёт.pdf', true, 17]]), JSON.stringify(links));
+  await page.evaluate(() => globalThis.uiEditor.setMode('content'));
+  await page.waitForTimeout(900);
+  const rows = await page.evaluate(() => [...document.querySelectorAll('#content-editor .sf-content-editor-file-name')].map((name) => name.textContent).sort());
+  check('and the editor shows both rows', JSON.stringify(rows) === JSON.stringify(['plan.csv', 'Отчёт.pdf']), JSON.stringify(rows));
 
   // ------------------------------------- the / menu near the scroller's bottom
   await caretAtEnd(page, 'home-p2');

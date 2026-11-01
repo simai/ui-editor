@@ -191,13 +191,18 @@ function showParams(params: BlockParams) {
 function mediaOf(content: CompositionDocument) {
   const found: string[] = [];
   const walk = (node: CompositionNode) => {
-    const src = (node.data as {src?: unknown} | undefined)?.src;
-    if (isMedia(src)) found.push(src);
+    const data = node.data as {src?: unknown; value?: unknown} | undefined;
+    if (isMedia(data?.src)) found.push(data.src);
+    if (node.type === 'content.file' && isMedia(data?.value)) found.push(data.value);
     Object.values(node.slots ?? {}).flat().forEach(walk);
   };
   walk(content.root);
   return found;
 }
+
+/** Where a stored file is downloaded from on the page: a relative path the
+    renderer takes, given its object URL on the canvas (G-14). */
+const filePath = (value: string) => `${MEDIA_PATH}${value.slice('media:'.length)}`;
 
 const MEDIA_PATH = './media/';
 
@@ -211,7 +216,10 @@ async function shownContent(content: CompositionDocument) {
   const shown = structuredClone(content);
   if (!Object.keys(sources).length) return {content: shown, hrefs};
   const walk = (node: CompositionNode) => {
-    const data = node.data as {src?: unknown} | undefined;
+    const data = node.data as {src?: unknown; value?: unknown; href?: unknown} | undefined;
+    if (node.type === 'content.file' && data && isMedia(data.value) && sources[data.value] && typeof data.href === 'string') {
+      hrefs.set(data.href, sources[data.value]!);
+    }
     if (data && isMedia(data.src) && sources[data.src]) {
       const path = `${MEDIA_PATH}${data.src.slice('media:'.length)}`;
       hrefs.set(path, sources[data.src]!);
@@ -235,8 +243,9 @@ function standIn(content: CompositionDocument, diagnostics: {path: string}[]) {
     const [slot, at] = steps.at(-1)!;
     const node = parent?.slots?.[slot]?.[at];
     if (!node || node.type === 'content.alert') continue;
-    const empty = node.type === 'content.figure' && !(node.data as {src?: unknown} | undefined)?.src;
-    const text = empty ? t('canvas.emptyPicture') : t('canvas.badBlock', {type: typeLabel(node.type)});
+    const data = node.data as {src?: unknown; href?: unknown} | undefined;
+    const empty = (node.type === 'content.figure' && !data?.src) || (node.type === 'content.file' && !data?.href);
+    const text = !empty ? t('canvas.badBlock', {type: typeLabel(node.type)}) : t(node.type === 'content.file' ? 'canvas.emptyFile' : 'canvas.emptyPicture');
     parent!.slots![slot]![at] = {id: node.id, type: 'content.alert', props: {status: empty ? 'info' : 'warning'}, data: {title: [{type: 'text', value: text}]}};
     replaced = true;
   }
@@ -286,6 +295,14 @@ async function renderCanvas(keep: string | null = null) {
     const href = shown.hrefs.get(image.getAttribute('src')!);
     // A local file costs no network: it loads at once, not when scrolled to.
     if (href) Object.assign(image, {loading: 'eager', src: href});
+  }
+  // A stored file downloads from this tab's object URL, under its own name.
+  for (const link of canvas.querySelectorAll<HTMLAnchorElement>(`a[download][href^="${MEDIA_PATH}"]`)) {
+    const href = shown.hrefs.get(link.getAttribute('href')!);
+    if (href) {
+      link.download = link.querySelector('.sf-download-file__name')?.textContent ?? '';
+      link.href = href;
+    }
   }
   canvas.dataset.document = current.id;
   canvas.querySelector('[data-sf-outlet]')?.setAttribute('title', t('outlet.open'));
@@ -502,9 +519,11 @@ async function start() {
   });
   // A picture put on the page: kept in the media store, its value goes back to the block.
   editor.addEventListener('sf-content-editor-file', (event) => {
-    const {file, block} = (event as CustomEvent<{file: File; block: string}>).detail;
+    const {file, block, type} = (event as CustomEvent<{file: File; block: string; type?: string}>).detail;
+    // A picture is shown from this tab's object URL; a file block keeps its
+    // address in the content, so it gets one the Document's URL rule takes.
     state.media!.put(file).then(
-      ({value, href}) => editor.answerFile({block, value, href}),
+      ({value, href}) => editor.answerFile({block, value, href: type === 'content.file' ? filePath(value) : href}),
       () => editor.answerFile({block, reason: t('media.refused')}),
     );
   });
