@@ -50,7 +50,7 @@ const stored = (parent) => page.evaluate((parent) => new Promise((resolve) => {
     const request = open.result.transaction('pages').objectStore('pages').get('home');
     request.onsuccess = () => {
       const find = (n) => n.id === parent ? n : Object.values(n.slots ?? {}).flat().map(find).find(Boolean);
-      resolve((find(request.result.document.root)?.slots?.default ?? []).map((child) => child.id));
+      resolve((find(request.result.layout.root)?.slots?.default ?? []).map((child) => child.id));
       open.result.close();
     };
   };
@@ -139,7 +139,7 @@ try {
   await page.getByRole('menuitem', {name: 'Абзац'}).click();
   await settle();
   const added = await page.evaluate(() => globalThis.uiEditor.state.selected);
-  check('the chosen type is inserted at the seam and selected', (await order('home-root')).join() === `home-hero,${added},home-layout,home-content` && /^home-paragraph/u.test(added), (await order('home-root')).join());
+  check('the chosen type is inserted at the seam and selected', (await order('home-root')).join() === `home-hero,${added},home-layout,home-content,home-outlet` && /^home-paragraph/u.test(added), (await order('home-root')).join());
   check('the insert is saved in IndexedDB', (await stored('home-root')).includes(added));
   const menuOpen = await page.evaluate(() => [...document.querySelectorAll('#insert-menu [role="menuitem"]')].some((item) => item.getClientRects().length));
   check('the list closes after the choice', !menuOpen);
@@ -180,7 +180,7 @@ try {
 
   // ------------------------------------------------------------------ a reload
   await load(page, run.origin);
-  check('the changed page outlives a reload', (await order('home-root')).length === 4 && (await order('home-content')).join() === 'home-content-text,home-content-title', `${(await order('home-root')).join()} | ${(await order('home-content')).join()}`);
+  check('the changed page outlives a reload', (await order('home-root')).length === 5 && (await order('home-content')).join() === 'home-content-text,home-content-title', `${(await order('home-root')).join()} | ${(await order('home-content')).join()}`);
 
   check('no page errors', errors.length === 0, errors.join(' | '));
 } catch (error) {

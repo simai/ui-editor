@@ -66,4 +66,27 @@ ui-source `c2949690`) and Pro `larena-7bc706e9a07f`, the pair that brought
 | Every change is saved in IndexedDB and outlives a reload; an edit keeps the page list's order | `scripts/e2e-layout.mjs` |
 | axe-core finds nothing with the toolbar shown and with the list of types open, at every size and scheme of step 0 | `scripts/e2e-a11y.mjs` |
 
+
+## Step 5, here: the Content mode on `sf-content-editor`
+
+Built 2026-11-01 on Framework `ui-3b75bb31a203` (`@simai-studio/ui@5.20261101.414`,
+ui-source `b5a55fd0`) and Pro `larena-68015a3b75a0` (simai/ui-pro `68015a3`), the
+pair that brought `sf-content-editor`. The proofs of steps 0 and 1 hold on it.
+
+| What | Proved by |
+|:---|:---|
+| The repin: both pins match their hashes, the Pro tar is the one its receipt names, built for this pair from the pinned sources | `scripts/framework-fetch.mjs` |
+| A page is two Documents: a layout (`ui-layout`) with one `content.outlet`, and its content (`structured-content`, root `content.document` under the page's title); the canvas is exactly `render(layout, {content})`, the content in the outlet | `scripts/e2e-shell.mjs` |
+| In the Layout mode the outlet is one block: a click inside it chooses it, the properties panel names it | `scripts/e2e-content.mjs` |
+| A double click on the outlet, or Enter while it is chosen, opens the Content mode with the caret in the first block | `scripts/e2e-content.mjs` |
+| Typing, Enter for a new block and `## ` for a heading are saved in IndexedDB as the page's content; the layout is untouched | `scripts/e2e-content.mjs` |
+| The first Esc chooses the block; the second brings the Layout mode back with the outlet chosen and focused, the typed text drawn in it | `scripts/e2e-content.mjs` |
+| Another page chosen in the Content mode shows its content; the content outlives a reload | `scripts/e2e-content.mjs` |
+| axe-core finds nothing in the Content mode at every size and scheme of step 0 | `scripts/e2e-a11y.mjs` |
+
+The side panels at about 800 px wide stand over the canvas edge, and that is
+intended: below 1024 px both panels start closed and slide over the canvas one
+at a time (`src/ui/shell.ts`), so the canvas keeps its whole width; at 1024 px
+and wider both are docked beside it.
+
 What is missing is in [GAPS.md](GAPS.md).

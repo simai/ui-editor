@@ -5,13 +5,12 @@ who owns it and what the editor does meanwhile. A Framework defect has a
 `simai/ui-source` issue; an editor part is ordered from `simai/ui-pro`. A gap
 closes when a pinned release brings the part and the workaround goes.
 
-Pinned: Framework `ui-a7c68408a293` (`@simai-studio/ui@5.20261031.2233`),
-Pro package `larena-7bc706e9a07f` ([`framework.lock.json`](../framework.lock.json)).
+Pinned: Framework `ui-3b75bb31a203` (`@simai-studio/ui@5.20261101.414`),
+Pro package `larena-68015a3b75a0` ([`framework.lock.json`](../framework.lock.json)).
 
 | Id | Gap | Owner | Meanwhile | Closes when |
 |:---|:---|:---|:---|:---|
 | G-01 | `sf-resizer` inside `sf-drawer` stands off the panel's edge: the panel keeps a scrollbar's room at both sides | Framework, [simai/ui-source#59](https://github.com/simai/ui-source/issues/59) (open) | `src/ui/app.css` lets the panel overflow and scrolls its body instead, as ui-mail does | a release fixes #59; the two rules go |
-| G-02 | No `sf-content-editor`: the Content mode has nothing to type in | ui-pro (plan step 5) | the Content mode shows an `sf-empty-state` placeholder | ui-pro releases it in a `larena` package |
 | G-03 | `layout.page` renders `<main>`, so a page document on the editor's canvas nests a second main landmark | Framework, [simai/ui-source#60](https://github.com/simai/ui-source/issues/60) | the seeded documents have a `layout.section` root | render can draw a page without a top-level landmark |
 | G-04 | `layout.columns` names the asset `composition/layout`, but no stylesheet ships for `.sf-composition-columns` | Framework, [simai/ui-source#61](https://github.com/simai/ui-source/issues/61) | the seeded documents use no columns | the stylesheet ships |
 | G-05 | No properties panel for a selected node: the overlay selects, moves, copies and deletes, but nothing edits a node's data and props | Framework or ui-pro, to order (overlay 1.3.0 brought the toolbar, not a panel) | the right panel names the selected node's type and id | the overlay or ui-pro ships the panel |
@@ -22,6 +21,7 @@ Pro package `larena-7bc706e9a07f` ([`framework.lock.json`](../framework.lock.jso
 | G-10 | `sf-tooltip` stands off its anchor inside `[data-sf-overlay-container]`: `contain: layout` makes the container the containing block of `position: fixed`, so the toolbar's tooltips stood a top bar low, over their buttons, and the grip could not be dragged | Framework, [simai/ui-source#63](https://github.com/simai/ui-source/issues/63) | the editor area is no container; `src/ui/app.css` puts the panels under the top bar with `--sf-drawer-block-start` and `--sf-drawer-dock-block-start` | not needed back: the drawer's own variables are the documented way; the issue stays for other hosts |
 | G-11 | No block picker: the seam's + needs a list of what can go there | ui-pro (plan step 5) | the + opens `sf-context-menu` with the starter types (heading, paragraph, section) that the parent's slot accepts by `SF.Composition.BUILTIN_TYPE_MANIFESTS`; `layout.columns` is left out while it has no stylesheet (G-04) | ui-pro releases the picker |
 | G-12 | `sf-composition-overlay-insert` names the place, not the + that was pressed, so a host cannot anchor its list to it | Framework, minor (not filed) | the editor finds the overlay's insertion button whose `data-key` is `<parent>\|<slot>\|<index>` and opens the list under its round mark (`.sf-composition-overlay-insert-mark`), internals that may change | the event carries its anchor, or the overlay opens a host list itself |
+| G-13 | `sf-content-editor` writes a title edit to `data["undefined"]`: the title does not change and the Document fails `content.document`'s closed schema. Its title is also an `h1` with `role="textbox"`, which axe-core refuses (`aria-allowed-role`) | ui-pro, fixed on `fix/content-editor-title` (`c992336`, `4ac22ac`), sent to the Framework thread for a `larena` release | `src/ui/app.ts` drops `data["undefined"]` from a content it saves, so the page stays valid and keeps its title; `scripts/e2e-a11y.mjs` allows that one rule on `.sf-content-editor-title` | a pinned `larena` release has both fixes; the guard and the allowance go, and `scripts/e2e-content.mjs` checks that the page list follows a typed title |
 
 ## What `ui-a7c68408a293` and `larena-7bc706e9a07f` closed
 
@@ -37,3 +37,12 @@ Repinned 2026-11-01 from `ui-2194bce0e673` and `larena-5a2ae14a0ea0`.
 - Still open on this pair, checked again: #59 (without the two rules of G-01
   each handle stands 15 px off its edge), #60 (`layout.page` still renders
   `<main>`), #61 (no stylesheet for `.sf-composition-columns` in the package).
+
+## What `ui-3b75bb31a203` and `larena-68015a3b75a0` closed
+
+Repinned 2026-11-01 from `ui-a7c68408a293` and `larena-7bc706e9a07f`.
+
+- G-02 closed: plan step 5's `sf-content-editor` arrived in the `larena`
+  package. The Content mode types in it, and `content.outlet` with
+  `render(layout, {content})` puts the content in the layout.
+- #59 to #63 are still open in simai/ui-source; their workarounds stay.

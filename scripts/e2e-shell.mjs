@@ -3,6 +3,7 @@
 // SF.Composition.render, the 32 px top bar, both side panels resizing with
 // sf-resizer and closing by their toggles and ⌘\ / ⌥⌘\, the Layout and Content
 // modes, the page list in IndexedDB and the RU/EN dictionaries.
+// The Content mode itself is scripts/e2e-content.mjs.
 //
 //   node scripts/build-ui.mjs && node scripts/e2e-shell.mjs [--chrome <path>]
 import {load, startRun} from './e2e-common.mjs';
@@ -52,22 +53,26 @@ try {
   const drawn = await page.evaluate(async () => {
     const {state} = globalThis.uiEditor;
     const current = state.pages.find((p) => p.id === state.current);
-    const expected = await globalThis.SF.Composition.render(current.document);
+    const expected = await globalThis.SF.Composition.render(current.layout, {content: current.content});
     const ids = [];
     const walk = (node) => { ids.push(node.id); Object.values(node.slots ?? {}).flat().forEach(walk); };
-    walk(current.document.root);
+    walk(current.layout.root);
+    walk(current.content.root);
     const canvas = document.querySelector('#canvas');
     return {
-      same: canvas.innerHTML === expected.html,
+      // The editor adds only the outlet's hint (its title) to what render drew.
+      same: (() => { const copy = canvas.cloneNode(true); copy.querySelector('[data-sf-outlet]')?.removeAttribute('title'); return copy.innerHTML === expected.html; })(),
       diagnostics: expected.diagnostics.length,
       ids: ids.length,
       marked: canvas.querySelectorAll('[data-sf-composition-id]').length,
-      profile: current.document.profile,
-      schema: current.document.schema,
+      outlets: canvas.querySelectorAll('[data-sf-outlet]').length,
+      inOutlet: canvas.querySelector('[data-sf-outlet] [data-sf-composition-id="home-document"]') !== null,
+      layout: `${current.layout.schema} ${current.layout.profile}`,
+      content: `${current.content.schema} ${current.content.profile} ${current.content.root.type}`,
     };
   });
-  check('the seeded page is a Composition Document of profile ui-layout', drawn.schema === 'simai.composition.document.v1' && drawn.profile === 'ui-layout', JSON.stringify(drawn));
-  check('the canvas holds exactly what SF.Composition.render draws, with no diagnostics', drawn.same && drawn.diagnostics === 0 && drawn.marked === drawn.ids, `${drawn.marked}/${drawn.ids} nodes`);
+  check('the seeded page is a layout (ui-layout) and its content (structured-content, content.document)', drawn.layout === 'simai.composition.document.v1 ui-layout' && drawn.content === 'simai.composition.document.v1 structured-content content.document', JSON.stringify(drawn));
+  check('the canvas holds exactly what SF.Composition.render draws, the content in the layout\'s one outlet, with no diagnostics', drawn.same && drawn.diagnostics === 0 && drawn.marked === drawn.ids && drawn.outlets === 1 && drawn.inOutlet, `${drawn.marked}/${drawn.ids} nodes`);
 
   // ---------------------------------------------------------------- the top bar
   const bar = await page.evaluate(() => {
@@ -160,11 +165,10 @@ try {
   const content = await page.evaluate(() => ({
     mode: globalThis.uiEditor.state.mode,
     canvas: document.querySelector('#layout-view').hidden,
-    placeholder: !document.querySelector('#content-view').hidden && Boolean(document.querySelector('#content-placeholder').textContent.trim()),
+    editor: !document.querySelector('#content-view').hidden && document.querySelector('#content-editor')?.localName,
     overlay: document.querySelector('#overlay').hidden,
-    contentEditor: Boolean(document.querySelector('sf-content-editor')),
   }));
-  check('the Content mode shows the placeholder, and the overlay goes', content.mode === 'content' && content.canvas && content.placeholder && content.overlay && !content.contentEditor, JSON.stringify(content));
+  check('the Content mode shows sf-content-editor, and the overlay goes', content.mode === 'content' && content.canvas && content.editor === 'sf-content-editor' && content.overlay, JSON.stringify(content));
   await page.locator('#mode button', {hasText: 'Макет'}).click();
   await settle();
   const layout = await page.evaluate(() => ({mode: globalThis.uiEditor.state.mode, canvas: !document.querySelector('#layout-view').hidden, overlay: !document.querySelector('#overlay').hidden}));

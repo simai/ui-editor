@@ -5,9 +5,11 @@ The reference page editor for SIMAI Framework and SIMAI Pro, in the line of
 pages before products take them: the email editor (`simai/ui-mail`), Larena's
 layout editor and documentation editing in Docara.
 
-**Status: step 1, the Layout mode on the overlay, built 2026-11-01** on
-Framework `ui-a7c68408a293` and Pro `larena-7bc706e9a07f`: blocks are selected,
-moved (buttons, keys, a drag by the grip), copied, deleted and inserted at the
+**Status: step 5, the Content mode, built 2026-11-01** on Framework
+`ui-3b75bb31a203` and Pro `larena-68015a3b75a0`: a page is a layout with one
+content outlet and its content; the Layout mode selects, moves, copies, deletes
+and inserts blocks, and the outlet opens SIMAI Pro's `sf-content-editor` for
+typing (a double click or Enter; Esc twice returns). Blocks are inserted at the
 seam. The repository is private until it passes acceptance.
 
 ## Two modes, one core
@@ -16,8 +18,8 @@ seam. The repository is private until it passes acceptance.
   toolbar above the block, insertion between blocks and a properties panel
   (`sf-composition-overlay`).
 - **Content.** Write: a flow of typing, Enter for a new block, `/` for the block
-  menu, a bar over selected text and block parameters (`sf-content-editor`, to be
-  built in ui-pro).
+  menu, a bar over selected text and block parameters (`sf-content-editor` from
+  SIMAI Pro).
 
 Both edit one format, the SIMAI Framework Composition Document: profile
 `ui-layout` for layouts, `structured-content` for content. A layout holds content
@@ -41,7 +43,7 @@ through one node, so an author never breaks the layout.
 |:---|:---|
 | [`docs/STATUS.md`](docs/STATUS.md) | Decisions, plan and what each step must prove |
 | [`docs/GAPS.md`](docs/GAPS.md) | What the pinned releases do not give yet, and who owns it |
-| [`src/ui/`](src/ui) | The shell: the page, its wiring, the Layout mode's changes to a Document, the page store and the seeded pages |
+| [`src/ui/`](src/ui) | The shell: the page, its wiring, the Layout mode's changes to a layout, the page store and the seeded pages (a layout and its content each) |
 | [`locales/`](locales) | The RU/EN dictionaries |
 | [`framework.lock.json`](framework.lock.json) | The pinned Framework release and Pro package, with their hashes |
 | [`scripts/`](scripts) | Fetch and verify the pins, build, serve, the checks and the end-to-end runs |

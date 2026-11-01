@@ -1,6 +1,8 @@
 // The page list, kept in this browser's IndexedDB: database `ui-editor`, store
-// `pages`, one record per page {id, title, document, created, updated}, listed in
-// the order they were made. When IndexedDB
+// `pages`, one record per page {id, title, layout, content, created, updated},
+// listed in the order they were made. Version 2 of the database starts the list
+// again: the pages of version 1 had one layout document and no content, and
+// were the seeded demo pages. When IndexedDB
 // is refused (a private window, a blocked origin) the list lives in memory for
 // the tab and the shell says so.
 
@@ -8,8 +10,12 @@ import type {CompositionDocument} from './seed.ts';
 
 export interface Page {
   id: string;
+  /** The page's title in the list: its content's `data.title`. */
   title: string;
-  document: CompositionDocument;
+  /** The page's frame (`ui-layout`), with one `content.outlet`. */
+  layout: CompositionDocument;
+  /** What the outlet holds (`structured-content`, root `content.document`). */
+  content: CompositionDocument;
   /** ISO time the page was made: the list's order, which an edit keeps. Pages kept before step 1 have none. */
   created?: string;
   /** ISO time of the last write. */
@@ -32,8 +38,11 @@ const request = <T>(r: IDBRequest<T>) => new Promise<T>((resolve, reject) => {
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const r = indexedDB.open(DB, 1);
-    r.onupgradeneeded = () => r.result.createObjectStore(STORE, {keyPath: 'id'});
+    const r = indexedDB.open(DB, 2);
+    r.onupgradeneeded = () => {
+      if (r.result.objectStoreNames.contains(STORE)) r.result.deleteObjectStore(STORE);
+      r.result.createObjectStore(STORE, {keyPath: 'id'});
+    };
     r.onsuccess = () => resolve(r.result);
     r.onerror = () => reject(r.error);
     r.onblocked = () => reject(new Error('indexeddb_blocked'));

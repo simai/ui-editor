@@ -20,8 +20,6 @@
     "canvas.label": "Page canvas",
     "canvas.tree": "Page structure",
     "canvas.invalid": "The page document did not pass the check: {n}",
-    "content.heading": "The content mode is not ready yet",
-    "content.text": "Typing comes with the sf-content-editor component of SIMAI Pro. Until then, view the page and choose its parts in the Layout mode.",
     "props.empty": "Choose a part of the page on the canvas.",
     "props.type": "Type",
     "props.id": "Id",
@@ -38,7 +36,10 @@
     "action.duplicate": "Duplicate",
     "action.remove": "Delete",
     "insert.label": "What to insert",
-    "insert.heading": "Block types"
+    "insert.heading": "Block types",
+    "content.label": "Page content",
+    "type.content.outlet": "Page content",
+    "outlet.open": "Double click or press Enter to type"
   },
   "seed": {
     "home.title": "SIMAI page editor",
@@ -46,10 +47,17 @@
     "home.layoutTitle": "The Layout mode",
     "home.layoutText": "Choose a block on the canvas: sf-composition-overlay draws the frame, the toolbar above the block and the insertion places.",
     "home.contentTitle": "The Content mode",
-    "home.contentText": "Typing in a flow comes with the sf-content-editor component.",
+    "home.contentText": "The Page content block below is where the layout puts the page’s text. Double click it or press Enter to type; Esc twice brings the layout back.",
     "about.title": "About",
     "about.text": "The second page shows that the page list is kept in the browser and switches the document on the canvas.",
     "starter.heading": "A new heading",
-    "starter.paragraph": "A new paragraph."
+    "starter.paragraph": "A new paragraph.",
+    "home.pageTitle": "How a page is made",
+    "home.p1": "This text is the page’s content document. The same SF.Composition.render draws it, and sf-content-editor from SIMAI Pro types in it.",
+    "home.h2": "What to try",
+    "home.li1": "Press Enter at the end of a line for a new paragraph.",
+    "home.li2": "Type “## ” in an empty line to make it a heading.",
+    "home.li3": "Type “/” in an empty line for the list of block kinds.",
+    "home.p2": "Select a word: a bar over it gives bold, italic, code and link."
   }
 }

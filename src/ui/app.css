@@ -28,8 +28,11 @@ body { background: var(--sf-surface-0); color: var(--sf-on-surface); display: fl
 .canvas section { display: flex; flex-direction: column; gap: var(--sf-space-1); padding-block: var(--sf-space-1\/2); }
 .canvas h1, .canvas h2, .canvas p { margin: 0; }
 .problems { color: var(--sf-error); }
-#content-view { display: flex; align-items: center; justify-content: center; }
-#content-view[hidden] { display: none; }
+/* The outlet on the layout's canvas: where the content stands, a double click
+   away from typing. */
+.canvas [data-sf-outlet] { outline: var(--sf-px) dashed var(--sf-outline-variant); outline-offset: var(--sf-space-1\/4); border-radius: var(--sf-radius--surface); cursor: text; }
+.canvas [data-sf-outlet] article { display: flex; flex-direction: column; gap: var(--sf-space-1); }
+.canvas [data-sf-outlet] :is(h1, h2, h3, ul, ol, blockquote) { margin: 0; }
 
 .pane-title { font-size: var(--sf-text--size-1); font-weight: var(--sf-font-weight-bold); }
 .props { display: grid; grid-template-columns: auto 1fr; gap: var(--sf-space-1\/4) var(--sf-space-1); }
