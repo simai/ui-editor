@@ -6,7 +6,9 @@
 // chosen, and its parameters fill the Properties panel, where the fit changes
 // the picture and moves nothing else; a reload shows it in the editor and on
 // the layout's canvas. A picture left without a file outlives a reload: the
-// canvas draws a note in its place and the block still takes a file.
+// canvas draws a note in its place and the block still takes a file. Enter in
+// the + menu search takes the first match, the gutter stands at a picture's
+// top, and /div finds the divider in the Russian interface.
 //
 //   node scripts/build-ui.mjs && node scripts/e2e-content-ux.mjs [--chrome <path>]
 import {load, startRun} from './e2e-common.mjs';
@@ -222,10 +224,17 @@ try {
   await page.waitForTimeout(200);
   await page.locator('#content-editor .sf-content-editor-plus button').click();
   await page.waitForTimeout(400);
-  await page.locator('#content-editor .sf-content-editor-menu [role="menuitem"]:has-text("Картинка")').click();
+  await page.keyboard.type('Карт', {delay: 40});
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Enter');
   await page.waitForTimeout(800);
+  const menuAfter = await page.evaluate(() => ({
+    open: (document.querySelector('#content-editor .sf-content-editor-menu .sf-context-menu')?.getBoundingClientRect().height ?? 0) > 0,
+    plus: document.activeElement === document.querySelector('#content-editor .sf-content-editor-plus button'),
+  }));
+  check('Enter in the + menu search takes the first match; the menu closes and the focus is not left on the +', !menuAfter.open && !menuAfter.plus, JSON.stringify(menuAfter));
   const waiting = (await contentBlocks(page)).find((block) => block.type === 'content.figure' && !block.src);
-  check('a picture chosen in the + menu waits for its file, stored without one', Boolean(waiting), JSON.stringify(await contentBlocks(page)));
+  check('the picture waits for its file, stored without one', Boolean(waiting), JSON.stringify(await contentBlocks(page)));
   await load(page, run.origin);
   const kept = await page.evaluate((id) => ({
     problems: document.querySelector('#canvas-problems').hidden,
@@ -240,6 +249,27 @@ try {
   await page.waitForTimeout(900);
   const filled = (await contentBlocks(page)).find((block) => block.id === waiting?.id);
   check('and the block still takes a file, kept in IndexedDB', /^media:/.test(filled?.src ?? '') && (await mediaCount(page)) === 3, JSON.stringify(filled));
+
+  // Beside a picture the gutter stands at the block's top, not on its caption.
+  const figure = page.locator(`#content-editor .sf-content-editor-blocks > .sf-content-editor-block[data-sf-node="${waiting?.id}"]`);
+  await figure.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  const figureBox = await figure.boundingBox();
+  await page.mouse.move(figureBox.x + 120, figureBox.y + figureBox.height - 6);
+  await page.waitForTimeout(400);
+  const gripOff = await page.evaluate((id) => Math.round(document.querySelector('#content-editor .sf-content-editor-grip button').getBoundingClientRect().top - document.querySelector(`#content-editor .sf-content-editor-blocks > [data-sf-node="${id}"]`).getBoundingClientRect().top), waiting?.id);
+  check('beside a picture the gutter stands at its top', Math.abs(gripOff) <= 4, String(gripOff));
+
+  // ------------------------------------------------- /div in the Russian interface
+  await caretAtEnd(page, 'home-p2');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('/div', {delay: 40});
+  await page.waitForTimeout(400);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(600);
+  const afterDiv = await contentBlocks(page);
+  const at = afterDiv.findIndex((block) => block.id === 'home-p2');
+  check('/div finds the divider in the Russian interface, and the line with the / becomes it', afterDiv[at + 1]?.type === 'content.divider', JSON.stringify(afterDiv.slice(at).map((block) => block.type)));
 
   // ------------------------------------- the / menu near the scroller's bottom
   await caretAtEnd(page, 'home-p2');

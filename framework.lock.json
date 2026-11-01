@@ -29,20 +29,28 @@
   },
   "package": {
     "name": "larena",
-    "release": "larena-779d07ef29e3",
+    "release": "larena-86cd44526d9c",
     "repository": "simai/larena-ui",
     "source": {
       "repository": "simai/ui-pro",
-      "commit": "779d07ef29e38d23dbe7e4cf0a47957cd7011e4e"
+      "commit": "86cd44526d9cd2f38630b57c1cdb902ca5b382d6"
     },
-    "tar": "https://github.com/simai/larena-ui/releases/download/larena-779d07ef29e3/package-larena.tar",
-    "tar_sha256": "cea3dc92253303c1e3c8ee5f155be7750f45cc2222510ce78b90b21c4b361b95",
-    "receipt": "https://github.com/simai/larena-ui/releases/download/larena-779d07ef29e3/package-receipt.json",
-    "receipt_sha256": "4488bc4f9b9a83f9939223d9063654c21853bb6842cd8ffa30fa55f16c9283ac",
+    "tar": "https://github.com/simai/larena-ui/releases/download/larena-86cd44526d9c/package-larena.tar",
+    "tar_sha256": "e89046099f23de742a5e536edc8da58897529cd3d83b94435c2997e8c6ccf428",
+    "receipt": "https://github.com/simai/larena-ui/releases/download/larena-86cd44526d9c/package-receipt.json",
+    "receipt_sha256": "4797ea63d79c9893b0f33c6b9417efb2b86d6ae920729b292068ab038a449db2",
     "base": "pkg/larena/smart",
     "licence": "PolyForm-Small-Business-1.0.0 OR PolyForm-Noncommercial-1.0.0 OR LicenseRef-SIMAI-Commercial"
   },
   "history": [
+    {
+      "pair": "ui-a823cf887c20",
+      "npm": "5.20261101.1638",
+      "package": "larena-779d07ef29e3",
+      "pinned_on": "2026-11-01",
+      "replaced_on": "2026-11-01",
+      "why": "sf-content-editor 1.1.0, the owner review of the content editor"
+    },
     {
       "pair": "ui-3b75bb31a203",
       "npm": "5.20261101.414",

@@ -6,7 +6,7 @@ who owns it and what the editor does meanwhile. A Framework defect has a
 closes when a pinned release brings the part and the workaround goes.
 
 Pinned: Framework `ui-a823cf887c20` (`@simai-studio/ui@5.20261101.1638`),
-Pro package `larena-779d07ef29e3` ([`framework.lock.json`](../framework.lock.json)).
+Pro package `larena-86cd44526d9c` ([`framework.lock.json`](../framework.lock.json)).
 
 | Id | Gap | Owner | Meanwhile | Closes when |
 |:---|:---|:---|:---|:---|
@@ -75,3 +75,14 @@ Repinned 2026-11-01 from `ui-3b75bb31a203` and `larena-27366c53cfdf`.
   #69 (no menu offset: 4 px, not the specified 8), #70 (the Loader leaves
   elements in a closed `sf-popover` undefined; ui-pro renders the form on open)
   and #71 (G-14). #59 to #63 are still open; their workarounds stay.
+
+## What `larena-86cd44526d9c` closed
+
+Repinned 2026-11-01 from `larena-779d07ef29e3`, on the same Framework pair.
+
+- `sf-content-editor` 1.1.1 (simai/ui-pro `86cd445`), the dispatcher's three
+  small items on 1.1.0: Enter in the + menu search takes the first match and
+  the new block keeps the focus; a kind is found by its English names in every
+  language (`/div` in Russian); the gutter stands at a picture's top.
+- Filed with it: simai/ui-source#72 (Enter in an `sf-context-menu` search field
+  does nothing; ui-pro takes the first row meanwhile).
