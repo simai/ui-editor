@@ -87,6 +87,7 @@ pair that brought `sf-content-editor`. The proofs of steps 0 and 1 hold on it.
 | Repinned to `ui-a823cf887c20` and `larena-779d07ef29e3` (`sf-content-editor` 1.1.0, the owner's review): the gutter stands outside the text at 1440, 1024 and 375 px, the grip alone under a 640 px sheet; the + menu opens within 12 px of its button and the `/` menu at the caret, above it near the bottom; Esc gives the focus back | `scripts/e2e-content-ux.mjs` |
 | The chosen block's parameters are in the right panel (`parameters="host"`); a change there is written and the quick toolbar follows it; a picture without alt says so | `scripts/e2e-content-ux.mjs` |
 | A picture dropped on the page or pasted on an empty line is kept in IndexedDB (`media`) and outlives a reload in the editor and on the canvas | `scripts/e2e-content-ux.mjs` |
+| A picture left without a file outlives a reload: the canvas draws a note in its place (any content block that fails the check is drawn so, never the page dropped), and the Content mode still offers the block a file | `scripts/e2e-content-ux.mjs` |
 
 The side panels at about 800 px wide stand over the canvas edge, and that is
 intended: below 1024 px both panels start closed and slide over the canvas one

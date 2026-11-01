@@ -208,8 +208,8 @@ const MEDIA_PATH = './media/';
 async function shownContent(content: CompositionDocument) {
   const sources = await state.media!.resolve(mediaOf(content));
   const hrefs = new Map<string, string>();
-  if (!Object.keys(sources).length) return {content, hrefs};
   const shown = structuredClone(content);
+  if (!Object.keys(sources).length) return {content: shown, hrefs};
   const walk = (node: CompositionNode) => {
     const data = node.data as {src?: unknown} | undefined;
     if (data && isMedia(data.src) && sources[data.src]) {
@@ -221,6 +221,26 @@ async function shownContent(content: CompositionDocument) {
   };
   walk(shown.root);
   return {content: shown, hrefs};
+}
+
+const CONTENT_NODE = /^\$\.content\.root((?:\.slots\.[\w-]+\[\d+\])+)/;
+
+/** Puts a note in place of each content block a diagnostic names; true when one was replaced. */
+function standIn(content: CompositionDocument, diagnostics: {path: string}[]) {
+  let replaced = false;
+  for (const path of new Set(diagnostics.map((d) => CONTENT_NODE.exec(d.path)?.[1]).filter(Boolean))) {
+    const steps = [...path!.matchAll(/\.slots\.([\w-]+)\[(\d+)\]/g)].map((m) => [m[1]!, Number(m[2])] as const);
+    let parent: CompositionNode | undefined = content.root;
+    for (const [slot, at] of steps.slice(0, -1)) parent = parent?.slots?.[slot]?.[at];
+    const [slot, at] = steps.at(-1)!;
+    const node = parent?.slots?.[slot]?.[at];
+    if (!node || node.type === 'content.alert') continue;
+    const empty = node.type === 'content.figure' && !(node.data as {src?: unknown} | undefined)?.src;
+    const text = empty ? t('canvas.emptyPicture') : t('canvas.badBlock', {type: typeLabel(node.type)});
+    parent!.slots![slot]![at] = {id: node.id, type: 'content.alert', props: {status: empty ? 'info' : 'warning'}, data: {title: [{type: 'text', value: text}]}};
+    replaced = true;
+  }
+  return replaced;
 }
 
 /** The toolbar over the selected block: icons, keys, and what cannot be done where it stands. */
@@ -251,7 +271,13 @@ async function renderCanvas(keep: string | null = null) {
     return;
   }
   const shown = await shownContent(current.content);
-  const result = await sf().Composition.render(current.layout, {content: shown.content});
+  let result = await sf().Composition.render(current.layout, {content: shown.content});
+  // A content block that fails the check is drawn as a note, not the page
+  // dropped: an empty picture waits for its file, and the Content mode still
+  // opens the block as it is stored.
+  if (result.diagnostics.length && standIn(shown.content, result.diagnostics)) {
+    result = await sf().Composition.render(current.layout, {content: shown.content});
+  }
   problems.hidden = result.diagnostics.length === 0;
   problems.textContent = result.diagnostics.length ? t('canvas.invalid', {n: result.diagnostics.map((d) => `${d.code} ${d.path}`).join(', ')}) : '';
   // The renderer escapes every value it writes; the HTML is the Framework's.

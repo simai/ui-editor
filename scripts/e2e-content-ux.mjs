@@ -5,7 +5,8 @@
 // scroller; a picture dropped or pasted on the page is kept in IndexedDB,
 // chosen, and its parameters fill the Properties panel, where the fit changes
 // the picture and moves nothing else; a reload shows it in the editor and on
-// the layout's canvas.
+// the layout's canvas. A picture left without a file outlives a reload: the
+// canvas draws a note in its place and the block still takes a file.
 //
 //   node scripts/build-ui.mjs && node scripts/e2e-content-ux.mjs [--chrome <path>]
 import {load, startRun} from './e2e-common.mjs';
@@ -212,6 +213,33 @@ try {
     return images.map((image) => image.naturalWidth);
   });
   check('and so does the editor', shown.join() === '400,40', JSON.stringify(shown));
+
+  // ------------------------------------ an empty picture outlives a reload
+  // A picture inserted from the + menu and left without a file is stored as
+  // it is; the canvas draws a note in its place, never drops the page, and
+  // the Content mode still offers the block a file.
+  await page.locator('#content-editor .sf-content-editor-block[data-sf-node="home-h2"]').hover();
+  await page.waitForTimeout(200);
+  await page.locator('#content-editor .sf-content-editor-plus button').click();
+  await page.waitForTimeout(400);
+  await page.locator('#content-editor .sf-content-editor-menu [role="menuitem"]:has-text("Картинка")').click();
+  await page.waitForTimeout(800);
+  const waiting = (await contentBlocks(page)).find((block) => block.type === 'content.figure' && !block.src);
+  check('a picture chosen in the + menu waits for its file, stored without one', Boolean(waiting), JSON.stringify(await contentBlocks(page)));
+  await load(page, run.origin);
+  const kept = await page.evaluate((id) => ({
+    problems: document.querySelector('#canvas-problems').hidden,
+    blocks: document.querySelectorAll('#canvas [data-sf-outlet] [data-sf-composition-id]').length,
+    note: document.querySelector(`#canvas [data-sf-composition-id="${id}"]`)?.textContent.trim() ?? '',
+    wide: document.documentElement.scrollWidth <= innerWidth,
+  }), waiting?.id);
+  check('after a reload the canvas draws the page, with a note where the picture waits', kept.problems && kept.blocks > 3 && kept.note.includes('Картинка ждёт файла') && kept.wide, JSON.stringify(kept));
+  await page.evaluate(() => globalThis.uiEditor.setMode('content'));
+  await page.waitForTimeout(900);
+  await page.locator(`#content-editor .sf-content-editor-block[data-sf-node="${waiting?.id}"] sf-file-upload input[type="file"]`).setInputFiles({name: 'late.png', mimeType: 'image/png', buffer: Buffer.from(await page.evaluate(async (make) => [...new Uint8Array(await (await eval(make)(120, 60, 'late.png')).arrayBuffer())], PICTURE))});
+  await page.waitForTimeout(900);
+  const filled = (await contentBlocks(page)).find((block) => block.id === waiting?.id);
+  check('and the block still takes a file, kept in IndexedDB', /^media:/.test(filled?.src ?? '') && (await mediaCount(page)) === 3, JSON.stringify(filled));
 
   // ------------------------------------- the / menu near the scroller's bottom
   await caretAtEnd(page, 'home-p2');

@@ -27,7 +27,7 @@ body { background: var(--sf-surface-0); color: var(--sf-on-surface); display: fl
 .canvas { max-inline-size: var(--sf-h2); margin-inline: auto; padding: var(--sf-space-2); background: var(--sf-surface-0); border-radius: var(--sf-radius--surface); box-sizing: border-box; }
 .canvas section { display: flex; flex-direction: column; gap: var(--sf-space-1); padding-block: var(--sf-space-1\/2); }
 .canvas h1, .canvas h2, .canvas p { margin: 0; }
-.problems { color: var(--sf-error); }
+.problems { color: var(--sf-error); overflow-wrap: anywhere; }
 /* The Content view shows in the Content mode only; it carries no `hidden`, so
    sf-content-editor loads with the page (src/ui/app.ts, setMode). */
 body:not([data-mode="content"]) #content-view { display: none; }
