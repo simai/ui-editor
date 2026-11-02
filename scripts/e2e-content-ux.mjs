@@ -48,12 +48,20 @@ const measureGutter = (page, id) => page.evaluate((id) => {
   const button = (name) => editor.querySelector(`.sf-content-editor-${name} button`);
   const shown = (element) => Boolean(element) && getComputedStyle(element).display !== 'none' && element.getBoundingClientRect().width > 0;
   const grip = button('grip').getBoundingClientRect();
+  const plus = button('plus').getBoundingClientRect();
+  // The block's highlight reaches past its text; the gutter stands outside it.
+  const highlight = field.closest('.sf-content-editor-blocks > .sf-content-editor-block').getBoundingClientRect();
+  // The first button of the gutter is centred on the line: the + on a narrow sheet, where it stands above the grip.
+  const lead = plus.top < grip.top ? plus : grip;
   return {
     sheet: Math.round(editor.querySelector('.sf-content-editor-sheet').getBoundingClientRect().width),
     shown: editor.querySelector('.sf-content-editor-gutter').classList.contains('is-shown'),
     plus: shown(button('plus')),
+    stacked: plus.bottom <= grip.top,
+    side: plus.right <= grip.left,
     gap: Math.round(Math.min(first.left, box.left) - grip.right),
-    off: Math.round(Math.abs(grip.top + grip.height / 2 - (first.top + first.height / 2))),
+    clear: Math.round(highlight.left - Math.max(plus.right, grip.right)),
+    off: Math.round(Math.abs(lead.top + lead.height / 2 - (first.top + first.height / 2))),
   };
 }, id);
 
@@ -98,9 +106,9 @@ try {
     const page = await open(width);
     for (const [id, name] of [['home-h2', 'heading'], ['home-p1', 'paragraph'], ['home-li1', 'list item']]) {
       const at = await gutterAt(page, id);
-      check(`${width} px: the gutter stands outside the ${name}'s text, on its first line`, at.shown && at.gap >= 0 && at.off <= 2, JSON.stringify(at));
-      // A sheet under 640 px keeps the grip only, whose menu adds below.
-      if (id === 'home-p1') check(`${width} px: the + ${at.sheet < 640 ? 'gives way to the grip menu on a narrow sheet' : 'stands beside the grip'}`, at.plus === at.sheet >= 640, JSON.stringify(at));
+      check(`${width} px: the gutter stands outside the ${name}'s text and 4 px outside its highlight, on its first line`, at.shown && at.gap >= 0 && at.clear >= 4 && at.off <= 2, JSON.stringify(at));
+      // A sheet under 640 px stands the + above the grip, whose menu also adds below.
+      if (id === 'home-p1') check(`${width} px: the + ${at.sheet < 640 ? 'stands above the grip on a narrow sheet' : 'stands beside the grip'}`, at.plus && (at.sheet < 640 ? at.stacked : at.side), JSON.stringify(at));
     }
     await page.context().close();
   }

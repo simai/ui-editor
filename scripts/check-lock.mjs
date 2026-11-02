@@ -25,15 +25,15 @@ expect(/^sha512-[A-Za-z0-9+/]{86}==$/u.test(lock.ui?.npm?.integrity ?? ''), 'loc
 expect(sha(lock.ui?.npm?.shasum, 40) && sha(lock.ui?.npm?.tarball_sha256, 64), 'lock: shasum and tarball sha256');
 expect(sha(lock.ui?.package_manifest?.sha256, 64), 'lock: package-manifest sha256');
 expect(sha(lock.ui_source?.commit, 40), 'lock: ui_source.commit is a full sha');
-expect(lock.package?.name === 'larena' && /^larena-[0-9a-f]{12}$/u.test(lock.package?.release ?? ''), 'lock: the Pro package is one exact larena release');
-expect(lock.package?.release === `larena-${lock.package?.source?.commit?.slice(0, 12)}` && sha(lock.package?.source?.commit, 40), 'lock: the package release is larena-<first 12 of its source commit>');
-expect(lock.package?.tar === `https://github.com/${lock.package?.repository}/releases/download/${lock.package?.release}/package-larena.tar`, 'lock: the package tar is the release asset');
+expect(lock.package?.name === 'pro' && /^pro-[0-9a-f]{12}$/u.test(lock.package?.release ?? ''), 'lock: the Pro package is one exact pro release');
+expect(lock.package?.release === `pro-${lock.package?.source?.commit?.slice(0, 12)}` && sha(lock.package?.source?.commit, 40), 'lock: the package release is pro-<first 12 of its source commit>');
+expect(lock.package?.tar === `https://github.com/${lock.package?.repository}/releases/download/${lock.package?.release}/package-pro.tar`, 'lock: the package tar is the release asset');
 expect(sha(lock.package?.tar_sha256, 64) && sha(lock.package?.receipt_sha256, 64), 'lock: package tar and receipt sha256');
 expect(!/latest|\/main\b/u.test(JSON.stringify([lock.ui, lock.package])), 'lock: no floating latest or main');
 
 const page = read('src/ui/index.html');
 expect(page.includes(`<meta name="sf-release" content="${lock.pair}">`), `src/ui/index.html: sf-release is the pinned pair (${lock.pair})`);
-expect(page.includes(`packages: {larena: {base: '${lock.package?.base}'}}`), 'src/ui/index.html: declares the pinned package at its base');
+expect(page.includes(`packages: {pro: {base: '${lock.package?.base}'}}`), 'src/ui/index.html: declares the pinned package at its base');
 
 const node = read('.nvmrc').trim();
 const pkg = JSON.parse(read('package.json'));

@@ -5,8 +5,8 @@ who owns it and what the editor does meanwhile. A Framework defect has a
 `simai/ui-source` issue; an editor part is ordered from `simai/ui-pro`. A gap
 closes when a pinned release brings the part and the workaround goes.
 
-Pinned: Framework `ui-1232b187244c` (`@simai-studio/ui@5.20261101.1951`),
-Pro package `larena-f8939812c7f9` ([`framework.lock.json`](../framework.lock.json)).
+Pinned: Framework `ui-2d39b617a719` (`@simai-studio/ui@5.20261102.1106`),
+Pro package `pro-1fcb47404ee8` ([`framework.lock.json`](../framework.lock.json)).
 
 | Id | Gap | Owner | Meanwhile | Closes when |
 |:---|:---|:---|:---|:---|
@@ -75,6 +75,24 @@ Repinned 2026-11-01 from `ui-3b75bb31a203` and `larena-27366c53cfdf`.
   #69 (no menu offset: 4 px, not the specified 8), #70 (the Loader leaves
   elements in a closed `sf-popover` undefined; ui-pro renders the form on open)
   and #71 (G-14). #59 to #63 are still open; their workarounds stay.
+
+## What `pro-1fcb47404ee8` closed
+
+Repinned 2026-11-02 from `larena-f8939812c7f9`, with the Framework moved to
+`ui-2d39b617a719`. The Pro package is now named `pro` (the owner's decision of
+2026-11-02): its release and receipt come from `simai/ui-pro`, the page
+declares `packages.pro` and the package is served from `pkg/pro/`. Released
+`larena-<12>` ids above stay as they were.
+
+- `sf-content-editor` 1.2.1 (simai/ui-pro `1a16a17`): steps take
+  `sf-procedure`'s geometry, and the example names the 1.2 parameters.
+- `sf-content-editor` 1.2.2 (simai/ui-pro `53b6aa6`), the owner's remarks on
+  the docs example:
+  - the + and the grip stand 4px outside a block's highlight, with their icons
+    centred;
+  - under 640px of sheet the + stands above the grip instead of going;
+  - the quick toolbar covers no block's text;
+  - the grip menu's keys are one size step smaller.
 
 ## What `larena-f8939812c7f9` closed
 
