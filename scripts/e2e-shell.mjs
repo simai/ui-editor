@@ -164,11 +164,12 @@ try {
   await settle();
   const content = await page.evaluate(() => ({
     mode: globalThis.uiEditor.state.mode,
-    canvas: document.querySelector('#layout-view').hidden,
-    editor: getComputedStyle(document.querySelector('#content-view')).display !== 'none' && document.querySelector('#content-editor')?.localName,
+    canvas: getComputedStyle(document.querySelector('#layout-view')).display !== 'none',
+    view: getComputedStyle(document.querySelector('#content-view')).display,
+    editor: document.querySelector('#canvas [data-sf-outlet] > #content-editor')?.localName,
     overlay: document.querySelector('#overlay').hidden,
   }));
-  check('the Content mode shows sf-content-editor, and the overlay goes', content.mode === 'content' && content.canvas && content.editor === 'sf-content-editor' && content.overlay, JSON.stringify(content));
+  check('the Content mode puts sf-content-editor in the outlet on the canvas, and the overlay goes', content.mode === 'content' && content.canvas && content.view === 'none' && content.editor === 'sf-content-editor' && content.overlay, JSON.stringify(content));
   await page.locator('#mode button', {hasText: 'Макет'}).click();
   await settle();
   const layout = await page.evaluate(() => ({mode: globalThis.uiEditor.state.mode, canvas: !document.querySelector('#layout-view').hidden, overlay: !document.querySelector('#overlay').hidden}));

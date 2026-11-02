@@ -9,8 +9,9 @@ layout editor and documentation editing in Docara.
 `ui-2d39b617a719` and Pro `pro-1fcb47404ee8`: a page is a layout with one
 content outlet and its content; the Layout mode selects, moves, copies, deletes
 and inserts blocks, and the outlet opens SIMAI Pro's `sf-content-editor` for
-typing (a double click or Enter; Esc twice returns). Blocks are inserted at the
-seam. The repository is private until it passes acceptance.
+typing in place, inside the outlet with the layout around it (a click on the
+chosen outlet, a double click or Enter; Esc twice or a press on the layout
+returns). Blocks, and the outlet itself, are inserted at the seam. The repository is private until it passes acceptance.
 
 ## Two modes, one core
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// The owner's review of sf-content-editor 1.0.1, end to end in headless Chrome:
+// The owner's review of sf-content-editor 1.0.1, end to end in headless Chrome,
+// with the editor in place in the layout's outlet:
 // the gutter stands outside the text at 1440, 1024 and 375 px; the + menu
 // opens at its +, the / menu at the caret near the top and the bottom of the
 // scroller; a picture dropped or pasted on the page is kept in IndexedDB,
@@ -32,6 +33,8 @@ async function open(width) {
 /** The gutter beside a block's first line: where its buttons stand against the text. */
 async function gutterAt(page, id) {
   const field = page.locator(`#content-editor .sf-content-editor-field[data-sf-node="${id}"]`).first();
+  // In place the content stands below the layout's blocks, maybe under the fold.
+  await field.scrollIntoViewIfNeeded();
   const box = await field.boundingBox();
   await page.mouse.move(box.x + 10, box.y + 4);
   await page.waitForTimeout(300);
@@ -123,9 +126,12 @@ try {
   const plus = await page.evaluate(() => {
     const anchor = document.querySelector('#content-editor .sf-content-editor-plus button').getBoundingClientRect();
     const menu = document.querySelector('#content-editor .sf-content-editor-menu .sf-context-menu').getBoundingClientRect();
-    return {dx: Math.round(menu.left - anchor.left), dy: Math.round(menu.top - anchor.bottom), search: document.activeElement?.matches('.sf-context-menu-search-input') ?? false};
+    // In place the content stands under the layout's blocks, low in the
+    // scroller: a menu with no room below flips above its +.
+    const below = menu.top >= anchor.bottom - 1;
+    return {dx: Math.round(menu.left - anchor.left), dy: below ? Math.round(menu.top - anchor.bottom) : Math.round(anchor.top - menu.bottom), below, search: document.activeElement?.matches('.sf-context-menu-search-input') ?? false};
   });
-  check('the + menu opens under its +, within 12 px of its corner, with its search field focused', Math.hypot(plus.dx, plus.dy) <= 12 && plus.search, JSON.stringify(plus));
+  check('the + menu opens at its +, under it or above it, within 12 px of its corner, with its search field focused', Math.hypot(plus.dx, plus.dy) <= 12 && plus.search, JSON.stringify(plus));
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
   check('Esc closes it and the focus goes back to the +', await page.evaluate(() => document.activeElement === document.querySelector('#content-editor .sf-content-editor-plus button')));
@@ -139,7 +145,7 @@ try {
     const box = list.getBoundingClientRect();
     const below = Math.round(box.top - caret.bottom);
     const above = Math.round(caret.top - box.bottom);
-    const room = Math.round(document.querySelector('#content-view').getBoundingClientRect().bottom - caret.bottom);
+    const room = Math.round(document.querySelector('#layout-view').getBoundingClientRect().bottom - caret.bottom);
     return {shown: !list.hidden && box.height > 0, below, above, room, near: (below >= 0 && below <= 16) || (above >= 0 && above <= 16), left: Math.round(box.left - caret.left)};
   });
   await caretAtEnd(page, 'home-p1');

@@ -47,7 +47,7 @@
     "insert.heading": "Block types",
     "content.label": "Page content",
     "type.content.outlet": "Page content",
-    "outlet.open": "Double click or press Enter to type"
+    "outlet.open": "Click the chosen area, double click it or press Enter to type here"
   },
   "seed": {
     "home.title": "SIMAI page editor",
@@ -55,7 +55,7 @@
     "home.layoutTitle": "The Layout mode",
     "home.layoutText": "Choose a block on the canvas: sf-composition-overlay draws the frame, the toolbar above the block and the insertion places.",
     "home.contentTitle": "The Content mode",
-    "home.contentText": "The Page content block below is where the layout puts the page’s text. Double click it or press Enter to type; Esc twice brings the layout back.",
+    "home.contentText": "The Page content block below is where the layout puts the page’s text. Click it once to choose it, again to type right here; Esc twice or a click on the layout brings the layout back.",
     "about.title": "About",
     "about.text": "The second page shows that the page list is kept in the browser and switches the document on the canvas.",
     "starter.heading": "A new heading",

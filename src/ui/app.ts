@@ -4,9 +4,11 @@
 // its toolbar above the selected block and one insertion point at the seam; the
 // editor turns the overlay's intent into a changed layout, saves it and draws
 // it again. The Content mode is SIMAI Pro's sf-content-editor over the page's
-// content: it sends the changed content, the editor saves it. A double click or
-// Enter on the outlet opens the Content mode; Esc twice there brings the
-// layout back with the outlet selected. In the Content mode the Properties
+// content: it sends the changed content, the editor saves it. It types in
+// place: the editor stands in the outlet on the canvas, the layout around it in
+// view. A click on the chosen outlet, a double click or Enter opens it there;
+// Esc twice, or a press on the layout outside it, brings the Layout mode back.
+// A layout with no outlet types its content in the editor's own view. In the Content mode the Properties
 // panel holds the chosen block's parameters, which the editor sends, and the
 // pictures put on the page are kept by the editor's media store (src/ui/media.ts).
 // Everything on screen is a Framework or Pro component; this file only wires them.
@@ -45,6 +47,7 @@ interface Overlay extends HTMLElement {
   setDocument(document: CompositionDocument, options?: {describe?: (node: CompositionNode) => {label: string}}): unknown;
   setActions(actions: Action[]): unknown;
   setInsertionTarget(target: InsertTarget | null): unknown;
+  attach(canvas: Element): unknown;
   select(id: string | null, options?: {focus?: boolean; emit?: boolean}): unknown;
   refresh(): unknown;
 }
@@ -271,9 +274,35 @@ function select(id: string | null) {
   showActions();
 }
 
+/** The editor waits in its own view while the layout is edited, and types
+    there a page whose layout has no outlet. It goes back before the canvas is
+    drawn again: the canvas's HTML is replaced, and anything in it. */
+function parkEditor() {
+  const editor = contentEditor();
+  if (editor.parentElement !== $('#content-view')) $('#content-view').append(editor);
+  if (document.body.dataset.inplace) $<Overlay>('#overlay').attach($('#canvas'));
+  delete document.body.dataset.inplace;
+}
+
+/** What the overlay draws over while the editor types in place: nothing. The
+    overlay takes every click on its canvas's blocks, hidden or not, and the
+    editor's own buttons stand in the outlet (docs/GAPS.md, G-16). */
+const idle = document.createElement('div');
+
+/** The Content mode in place: the editor stands in the outlet, where render drew the content. */
+function placeEditor() {
+  const outlet = $('#canvas').querySelector('[data-sf-outlet]');
+  if (!outlet) return;
+  $<Overlay>('#overlay').attach(idle);
+  outlet.replaceChildren(contentEditor());
+  outlet.removeAttribute('title');
+  document.body.dataset.inplace = 'true';
+}
+
 async function renderCanvas(keep: string | null = null) {
   const current = page();
   const canvas = $('#canvas');
+  parkEditor();
   const problems = $('#canvas-problems');
   if (!current) {
     canvas.replaceChildren();
@@ -313,6 +342,7 @@ async function renderCanvas(keep: string | null = null) {
   const kept = keep && locate(current.layout.root, keep) ? keep : null;
   overlay.select(kept, {emit: false});
   select(kept);
+  if (state.mode === 'content') placeEditor();
 }
 
 async function save(changed: Page) {
@@ -359,16 +389,18 @@ function apply(action: string, id: string) {
   } else if (action === 'remove') void change(remove(document, id), neighbour(document, id));
 }
 
-/** The starter types that the parent's slot accepts, by the Framework's own type manifests. */
+/** The starter types that the parent's slot accepts, by the Framework's own
+    type manifests; the content's area only while the layout has none, as a
+    layout holds the content in one place. */
 function typesFor(target: InsertTarget) {
   const current = page();
   const parent = current ? locate(current.layout.root, target.parent_id)?.node : null;
   const manifests = sf().Composition.BUILTIN_TYPE_MANIFESTS;
   const accepts = manifests.find((m) => m.type === parent?.type)?.slots[target.slot]?.categories ?? [];
-  return STARTER_TYPES.filter((type) => accepts.includes(manifests.find((m) => m.type === type)?.category ?? ''));
+  return STARTER_TYPES.filter((type) => accepts.includes(manifests.find((m) => m.type === type)?.category ?? '') && (type !== 'content.outlet' || !outletOf(current)));
 }
 
-const TYPE_ICONS: Record<string, string> = {'content.heading': 'title', 'content.paragraph': 'notes', 'layout.section': 'view_agenda'};
+const TYPE_ICONS: Record<string, string> = {'content.heading': 'title', 'content.paragraph': 'notes', 'layout.section': 'view_agenda', 'content.outlet': 'edit_note'};
 
 /** The seam's + raises a simple list of types; the block picker proper is ui-pro's (plan step 5, docs/GAPS.md G-11). */
 function offerTypes(target: InsertTarget) {
@@ -433,14 +465,16 @@ async function newPage() {
   await openPage(id);
 }
 
-async function setMode(mode: Mode) {
+/** Switches the mode. `at` is the content block to type in when the content
+    opens, or the layout block to choose when the layout comes back. */
+async function setMode(mode: Mode, at: string | null = null) {
   const was = state.mode;
   state.mode = mode;
   $('#mode').setAttribute('value', mode);
-  $('#layout-view').hidden = mode !== 'layout';
   // The Content view is never `hidden`: the Loader fetches no code for an
   // element in a closed container, and sf-content-editor would arrive only on
-  // the first switch, a second or two of an empty area. It is shown by mode
+  // the first switch, a second or two of an empty area. Which view shows is
+  // the stylesheet's, by mode and by whether the editor stands in place
   // (src/ui/app.css), so the editor loads with the page.
   // The overlay belongs to the Layout mode; it stays attached, hidden.
   $('#overlay').hidden = mode !== 'layout';
@@ -448,17 +482,25 @@ async function setMode(mode: Mode) {
   showProperties();
   if (mode === 'content') {
     await showContent();
-    // The caret goes to the first block once the editor has drawn the page.
-    if (was !== 'content') requestAnimationFrame(() => $<ContentEditor>('#content-editor').edit());
+    if (was !== 'content') {
+      placeEditor();
+      // The caret goes to the block asked for, or the first, once the editor has drawn the page.
+      requestAnimationFrame(() => {
+        const editor = contentEditor();
+        if (!at || editor.edit({id: at}).outcome !== 'applied') editor.edit();
+      });
+    }
   } else if (was === 'content') {
-    // Back from the content: the canvas shows what was typed, the outlet chosen.
+    // Back from the content: the canvas shows what was typed, the outlet chosen
+    // (or the block pressed on the way out).
     const outlet = outletOf(page());
-    await renderCanvas(outlet);
-    // Once the overlay has measured the canvas again, the outlet takes the
-    // focus in its tree, where Enter opens the content again.
+    const chosen = at ?? outlet;
+    await renderCanvas(chosen);
+    // Once the overlay has measured the canvas again, the chosen block takes
+    // the focus in its tree, where Enter opens the content again.
     // The tree is focused by hand: select() moves no focus to a block that is
     // already chosen.
-    if (outlet) requestAnimationFrame(() => $('#overlay').querySelector<HTMLElement>('[role="tree"]')?.focus({preventScroll: true}));
+    if (chosen) requestAnimationFrame(() => $('#overlay').querySelector<HTMLElement>('[role="tree"]')?.focus({preventScroll: true}));
   } else requestAnimationFrame(() => $<Overlay>('#overlay').refresh());
 }
 
@@ -552,19 +594,40 @@ async function start() {
   // toolbar; a click on a block leaves it on the canvas scroller. Until the
   // overlay takes them there too (docs/GAPS.md, G-09), the scroller hands such
   // a key to the tree, and the overlay decides whether it is an action's.
-  // The outlet opens the content: a double click on it, or Enter while it is chosen.
-  $('#canvas').addEventListener('dblclick', (event) => {
-    if ((event.target as Element).closest('[data-sf-outlet]')) void setMode('content');
-  });
+  // The outlet opens the content in place: a click on it once it is chosen,
+  // a double click, or Enter while it is chosen. The first click chooses it,
+  // as any block, so it can be moved. A press on the layout outside it while
+  // typing brings the layout back with the block pressed chosen.
+  let chosenAtPress = false;
+  window.addEventListener('pointerdown', (event) => {
+    const target = event.target as Element;
+    chosenAtPress = state.mode === 'layout' && Boolean(state.selected) && state.selected === outletOf(page());
+    if (state.mode !== 'content' || !document.body.dataset.inplace || !$('#layout-view').contains(target) || target.closest('[data-sf-outlet]')) return;
+    const block = target.closest('#canvas [data-sf-composition-id]')?.getAttribute('data-sf-composition-id') ?? null;
+    void setMode('layout', block);
+  }, {capture: true});
+  const openAt = (event: Event) => {
+    const target = event.target as Element;
+    const outlet = target.closest('#canvas [data-sf-outlet]');
+    if (!outlet || state.mode !== 'layout') return;
+    const block = target.closest('[data-sf-composition-id]');
+    void setMode('content', block && block !== outlet && outlet.contains(block) ? block.getAttribute('data-sf-composition-id') : null);
+  };
+  // The overlay takes the canvas's clicks for itself: the window hears them first.
+  window.addEventListener('click', (event) => {
+    if (chosenAtPress) openAt(event);
+  }, {capture: true});
+  $('#canvas').addEventListener('dblclick', openAt);
   $('#layout-view').addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter' || event.altKey || event.metaKey || event.ctrlKey || event.shiftKey || !state.selected || state.selected !== outletOf(page())) return;
+    if (state.mode !== 'layout' || event.key !== 'Enter' || event.altKey || event.metaKey || event.ctrlKey || event.shiftKey || !state.selected || state.selected !== outletOf(page())) return;
     if ((event.target as Element).closest('button:not([role="treeitem"]), input, [contenteditable]')) return;
     event.preventDefault();
     event.stopPropagation();
     void setMode('content');
   }, {capture: true});
   $('#layout-view').addEventListener('keydown', (event) => {
-    if (!state.selected || overlay.contains(event.target as Node)) return;
+    // The editor typing in place stands in this scroller too: its keys are its own.
+    if (state.mode !== 'layout' || !state.selected || overlay.contains(event.target as Node)) return;
     if (!(event.altKey || event.metaKey || event.ctrlKey || event.key === 'Backspace' || event.key === 'Delete')) return;
     const tree = overlay.querySelector('[role="tree"]');
     const {key, code, altKey, metaKey, ctrlKey, shiftKey} = event;

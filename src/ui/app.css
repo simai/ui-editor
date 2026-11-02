@@ -28,9 +28,16 @@ body { background: var(--sf-surface-0); color: var(--sf-on-surface); display: fl
 .canvas section { display: flex; flex-direction: column; gap: var(--sf-space-1); padding-block: var(--sf-space-1\/2); }
 .canvas h1, .canvas h2, .canvas p { margin: 0; }
 .problems { color: var(--sf-error); overflow-wrap: anywhere; }
-/* The Content view shows in the Content mode only; it carries no `hidden`, so
-   sf-content-editor loads with the page (src/ui/app.ts, setMode). */
-body:not([data-mode="content"]) #content-view { display: none; }
+/* The Content view shows in the Content mode only, and only for a layout with
+   no outlet: otherwise the editor types in place, in the outlet on the canvas.
+   It carries no `hidden`, so sf-content-editor loads with the page
+   (src/ui/app.ts, setMode). */
+body:not([data-mode="content"]) #content-view,
+body[data-inplace] #content-view,
+body[data-mode="content"]:not([data-inplace]) #layout-view { display: none; }
+/* In place the editor is no sheet of its own: the canvas around it is. */
+.canvas [data-sf-outlet] > #content-editor { max-inline-size: none; margin: 0; padding: 0; background: none; border-radius: 0; }
+body[data-inplace] .canvas [data-sf-outlet] { outline-style: solid; outline-color: var(--sf-primary); cursor: auto; }
 /* The outlet on the layout's canvas: where the content stands, a double click
    away from typing. */
 .canvas [data-sf-outlet] { outline: var(--sf-px) dashed var(--sf-outline-variant); outline-offset: var(--sf-space-1\/4); border-radius: var(--sf-radius--surface); cursor: text; }
