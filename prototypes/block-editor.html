@@ -84,9 +84,27 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .vars { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 2px 6px 8px 8px; }
 .var { border-radius: 8px; box-shadow: inset 0 0 0 1px var(--outline-variant); padding: 6px; cursor: grab; text-align: left; }
 .var:hover { box-shadow: inset 0 0 0 1px var(--primary-line); background: var(--state-hover); }
-.var .pv { height: 44px; border-radius: 4px; background: var(--surface-1); margin-bottom: 4px; display: grid; gap: 3px; padding: 5px; overflow: hidden; }
+.var .pv { height: 54px; border-radius: 4px; background: var(--surface-1); margin-bottom: 4px; display: grid; gap: 3px; padding: 5px; overflow: hidden; }
 .var .pv i { display: block; background: var(--faint); opacity: .35; border-radius: 2px; }
 .var .pv i.acc { background: var(--primary); opacity: .55; }
+.var .pv { align-content: center; }
+.var .pv .sk-sec { display: grid; padding: 4px; border-radius: 3px; min-height: 100%; align-content: center; }
+.var .pv .sk-sec[data-bg="soft"] { background: color-mix(in srgb, var(--primary) 8%, transparent); }
+.var .pv .sk-sec[data-bg="primary"] { background: color-mix(in srgb, var(--primary) 30%, transparent); }
+.var .pv .sk-box { display: grid; gap: 3px; margin-inline: auto; width: 100%; }
+.var .pv .sk-box[data-w="narrow"] { width: 62%; } .var .pv .sk-box[data-w="normal"] { width: 84%; }
+.var .pv .sk-grid { display: grid; gap: 3px; }
+.var .pv .sk-col { display: grid; gap: 3px; align-content: start; min-width: 0; }
+.var .pv .sk-row { display: flex; gap: 4px; align-items: center; }
+.var .pv .sk-btn { width: 100%; }
+.var .pv [style*="justify-items:center"] > .sk-btn { justify-content: center; }
+.var .pv .sk-q { display: grid; gap: 3px; border-left: 2px solid var(--primary); padding-left: 4px; }
+.var .pv i.pill { height: 8px; border-radius: 4px; }
+.var .pv i.pill.line { background: none; box-shadow: inset 0 0 0 1px var(--primary); opacity: .7; }
+.var .pv i.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.var .pv i.img { width: 100%; min-height: 10px; opacity: .3; }
+.var .pv i.sk-cell { height: 18px; }
+.var .pv i.sk-gap { height: 10px; background: none; border-block: 1px dashed var(--faint); }
 .var span { font-size: 12px; line-height: 16px; display: block; }
 .libtabs { display: flex; width: 100%; margin-bottom: 8px; }
 .libtabs button { flex: 1; justify-content: center; font-weight: 500; }
@@ -186,6 +204,39 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .b-section > .inner { max-width: 920px; margin: 0 auto; }
 .b-section[data-width="narrow"] > .inner { max-width: 680px; }
 .b-section[data-width="wide"] > .inner { max-width: 1120px; }
+.b-section[data-width="full"] > .inner { max-width: none; }
+.frame { container-type: inline-size; }
+.frame [data-bleed="true"] { width: 100cqw; max-width: none; margin-inline: calc(50% - 50cqw); }
+.b-container { margin-inline: auto; width: 100%; }
+.b-container[data-width="narrow"] { max-width: 600px; }
+.b-container[data-width="wide"] { max-width: 1120px; }
+.b-grid { position: relative; }
+.b-grid > .gadd { position: absolute; right: -14px; bottom: -14px; }
+.b-spacer { background: repeating-linear-gradient(135deg, transparent 0 6px, var(--state-hover) 6px 7px); border-radius: 4px; }
+.frame .offbp { opacity: .4; outline: 1px dashed var(--outline-variant); outline-offset: 2px; }
+.frame .offbp::after { content: 'Скрыто на этом экране'; position: absolute; top: 4px; right: 4px; font-size: 11px; line-height: 16px; padding: 0 6px; border-radius: 4px; background: var(--surface-1); color: var(--on-variant); pointer-events: none; }
+.b-button > a { gap: 8px; }
+.b-button > a .ic { font-size: 20px; }
+.b-button[data-look="tonal"] > a { background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); }
+.b-button[data-look="link"] > a { background: none; color: var(--primary); padding: 0; height: auto; }
+.b-button[data-look="surface"] > a { background: var(--surface-1); color: var(--on-surface, inherit); box-shadow: inset 0 0 0 1px var(--outline-variant); }
+.b-button[data-size="1/2"] > a { height: 36px; padding: 0 14px; font-size: 14px; }
+.b-button[data-size="2"] > a { height: 52px; padding: 0 26px; font-size: 17px; }
+.ibtn { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 22px; background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); }
+.ibtn[data-look="default"] { background: var(--primary); color: var(--on-primary); }
+.ibtn[data-look="outline"] { background: none; box-shadow: inset 0 0 0 1px var(--primary); }
+.ibtn[data-look="ghost"] { background: none; }
+.ibtn[data-size="1/2"] { width: 36px; height: 36px; } .ibtn[data-size="2"] { width: 52px; height: 52px; }
+.bdg { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 12px; font-size: 13px; font-weight: 500; background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); }
+.bdg[data-look="main"] { background: var(--primary); color: var(--on-primary); }
+.bdg[data-look="outline"] { background: none; box-shadow: inset 0 0 0 1px currentColor; }
+.bdg[data-scheme="neutral"] { color: var(--on-variant); }
+.bdg[data-scheme="neutral"][data-look="tonal"] { background: var(--state-hover); }
+.eic { color: var(--primary); font-size: 32px; } .eic[data-size="1"] { font-size: 20px; } .eic[data-size="4"] { font-size: 56px; }
+.b-divider hr { border: 0; border-top: 1px solid var(--outline-variant); margin: 0; }
+.fld .bind { display: block; margin-top: 4px; font-size: 11px; line-height: 16px; color: var(--faint); font-family: ui-monospace, Menlo, monospace; }
+.sets { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; line-height: 17px; color: var(--on-variant); background: var(--state-hover); border-radius: 8px; padding: 6px 8px; margin: 8px 0; }
+.sets .ic { font-size: 16px; color: var(--primary); }
 .b-area { border-radius: 6px; display: grid; gap: 12px; --g: 12px; padding: 4px 0; }
 .b-area::after { content: attr(data-label); position: absolute; top: -10px; left: 8px; font-size: 11px; line-height: 16px; padding: 0 6px; border-radius: 4px; background: var(--primary-soft); color: var(--primary); opacity: 0; }
 .n.b-area.hover::after, .n.b-area.sel::after, .author .n.b-area::after { opacity: 1; }
@@ -433,56 +484,95 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 let seq = 100;
+let OUT = false; // true while the HTML tab prints the page
 const uid = p => `${p}-${(++seq).toString(36)}`;
 const clone = o => JSON.parse(JSON.stringify(o));
 
 /* ---------- Catalogue: groups, types, variants ---------- */
 const GROUPS = [
-  ['text', 'Текст', 'notes'], ['media', 'Медиа', 'image'], ['structure', 'Структура', 'view_quilt'],
+  ['text', 'Текст', 'notes'], ['media', 'Медиа', 'image'], ['elements', 'Элементы', 'interests'], ['layout', 'Макет', 'view_quilt'],
   ['parts', 'Части страницы', 'web'], ['marketing', 'Маркетинг', 'campaign'], ['data', 'Данные', 'dataset'],
-  ['forms', 'Формы', 'smart_button'], ['saved', 'Сохранённые', 'bookmark'],
+  ['forms', 'Формы', 'edit_square'], ['saved', 'Сохранённые', 'bookmark'],
 ];
 const GNAME = Object.fromEntries(GROUPS.map(g => [g[0], g[1]]));
 
-// Fields: tab, kind (select|seg|number|toggle|text), choices, default, responsive.
+/* ---------- Parameter sets: one standard for every block ----------
+   A field is bound to SIMAI Framework: a utility (its classes), a Smart component input, or the block's own data.
+   A type names its sets; the form, the Document and the HTML follow (owner, 2026-11-03). */
+const SZ = [['s', 'S'], ['m', 'M'], ['l', 'L']], COLS = [['1', '1'], ['2', '2'], ['3', '3'], ['4', '4']];
+const SETS = {
+  background: { name: 'Фон', fields: [{ key: 'bg', label: 'Фон', tab: 'look', kind: 'seg', choices: [['none', 'Нет'], ['soft', 'Мягкий'], ['primary', 'Акцент']], default: 'none', mod: v => ({ none: '', soft: 'bg-surface-container', primary: 'bg-primary' })[v], bind: 'утилита bg-*' }] },
+  spacing: { name: 'Отступы', fields: [
+    { key: 'pad', label: 'Отступы сверху и снизу', tab: 'layout', kind: 'seg', choices: SZ, default: 'l', responsive: true, mod: v => 'p-y-' + { s: 5, m: 6, l: 8 }[v], bind: 'утилита p-y-*' },
+    { key: 'gap', label: 'Промежуток между блоками', tab: 'layout', kind: 'seg', choices: SZ, default: 'm', responsive: true, part: 'inner', mod: v => 'gap-' + { s: 3, m: 5, l: 7 }[v], bind: 'утилита gap-*' }] },
+  width: { name: 'Ширина', fields: [{ key: 'width', label: 'Ширина содержимого', tab: 'layout', kind: 'select', choices: [['narrow', 'Узкая, для текста'], ['normal', 'Обычная'], ['wide', 'Широкая'], ['full', 'Во всю ширину']], default: 'normal', part: 'inner', mod: v => ({ narrow: 'container max-w-prose', normal: 'container', wide: 'container max-container-7', full: 'container-flush' })[v], bind: 'утилиты container, max-w-*' }] },
+  grid: { name: 'Сетка', fields: [
+    { key: 'cols', label: 'Колонок', tab: 'layout', kind: 'seg', choices: COLS, default: '2', responsive: true, mod: v => 'grid-col-' + v, bind: 'утилита grid-col-*' },
+    { key: 'gap', label: 'Промежуток', tab: 'layout', kind: 'seg', choices: SZ, default: 'l', responsive: true, mod: v => 'gap-' + { s: 3, m: 5, l: 6 }[v], bind: 'утилита gap-*' }] },
+  align: { name: 'Выравнивание', fields: [{ key: 'talign', label: 'Выравнивание', tab: 'layout', kind: 'seg', choices: [['start', 'Слева'], ['center', 'По центру'], ['end', 'Справа']], default: 'start', responsive: true, quiet: true, mod: v => 'text-' + v, bind: 'утилита text-*' }] },
+  bleed: { name: 'Выход за контейнер', fields: [{ key: 'bleed', label: 'Выйти на всю ширину', tab: 'layout', kind: 'toggle', default: false, gap: 'Во Framework нет модификатора «выйти из контейнера». Записано как пробел; в HTML пока не попадает.' }] },
+  visibility: { name: 'Видимость', fields: [{ key: 'show', label: 'Показывать на этом экране', tab: 'extra', kind: 'toggle', default: true, responsive: true, quiet: true, out: true, mod: (v, n) => v ? (T[n.type].display || 'block') : 'hidden', bind: 'утилиты hidden, block с md:, lg:' }] },
+};
+// Fields: tab, kind (select|seg|number|toggle|text|icon), choices, default, responsive, mod (value → class), bind (what in Framework).
 const T = {
-  'layout.page': { name: 'Страница', icon: 'article', cat: 'structure', container: true, hidden: true, fields: [] },
-  'layout.section': { name: 'Секция', icon: 'crop_landscape', cat: 'structure', container: true, syn: 'блок полоса',
-    fields: [
-      { key: 'bg', label: 'Фон', tab: 'look', kind: 'seg', choices: [['none', 'Нет'], ['soft', 'Мягкий'], ['primary', 'Акцент']], default: 'none' },
-      { key: 'pad', label: 'Отступы сверху и снизу', tab: 'look', kind: 'seg', choices: [['s', 'S'], ['m', 'M'], ['l', 'L']], default: 'l', responsive: true, mod: v => 'p-y-' + { s: 5, m: 6, l: 8 }[v] },
-      { key: 'gap', label: 'Промежуток между блоками', tab: 'layout', kind: 'seg', choices: [['s', 'S'], ['m', 'M'], ['l', 'L']], default: 'm', responsive: true, part: 'inner', mod: v => 'gap-' + { s: 3, m: 5, l: 7 }[v] },
-      { key: 'width', label: 'Ширина содержимого', tab: 'layout', kind: 'select', choices: [['narrow', 'Узкая, для текста'], ['normal', 'Обычная'], ['wide', 'Широкая']], default: 'normal' },
-    ],
+  'layout.page': { name: 'Страница', icon: 'article', cat: 'layout', container: true, hidden: true, fields: [] },
+  'layout.section': { name: 'Секция', icon: 'crop_landscape', cat: 'layout', container: true, syn: 'блок полоса',
+    hint: 'Секция всегда во всю ширину страницы. Её содержимое стоит в контейнере: узком, обычном, широком или во всю ширину.',
+    fields: [], sets: ['background', 'spacing', 'width'],
     variants: [
       { id: 'plain', name: 'Пустая', props: {}, pv: 'plain' },
       { id: 'soft', name: 'На мягком фоне', props: { bg: 'soft' }, pv: 'soft' },
       { id: 'text', name: 'С областью текста', props: { width: 'narrow' }, kids: [{ type: 'layout.area' }], pv: 'text' },
     ] },
-  'layout.columns': { name: 'Колонки', icon: 'view_column', cat: 'structure', container: true, syn: 'сетка',
-    base: 'gap-6', fields: [{ key: 'cols', label: 'Колонок', tab: 'layout', kind: 'seg', choices: [['1', '1'], ['2', '2'], ['3', '3'], ['4', '4']], default: '2', responsive: true, mod: v => 'grid-col-' + v }],
+  'layout.columns': { name: 'Колонки', icon: 'view_column', cat: 'layout', container: true, syn: 'сетка',
+    display: 'grid', fields: [], sets: ['grid'],
     variants: [
       { id: 'two', name: 'Две колонки', props: { cols: '2' }, kids: [{ type: 'layout.column' }, { type: 'layout.column' }], pv: 'cols2' },
       { id: 'three', name: 'Три колонки', props: { cols: '3' }, kids: [{ type: 'layout.column' }, { type: 'layout.column' }, { type: 'layout.column' }], pv: 'cols3' },
     ] },
-  'layout.column': { name: 'Колонка', icon: 'splitscreen_vertical_add', cat: 'structure', container: true, hidden: true, fields: [] },
-  'layout.area': { name: 'Область текста', icon: 'edit_note', cat: 'structure', container: true, syn: 'контент текст страницы outlet',
+  'layout.column': { name: 'Колонка', icon: 'splitscreen_vertical_add', cat: 'layout', container: true, hidden: true, fields: [] },
+  'layout.area': { name: 'Область текста', icon: 'edit_note', cat: 'layout', container: true, syn: 'контент текст страницы outlet',
     hint: 'Здесь автор пишет текст страницы. Остальной макет для автора закреплён.', fields: [] },
-  'content.heading': { name: 'Заголовок', icon: 'title', cat: 'text', text: true, syn: 'h1 h2 h3 title',
+  'layout.container': { name: 'Контейнер', icon: 'width_normal', cat: 'layout', container: true, syn: 'ширина обёртка container',
+    hint: 'Держит часть секции в своей ширине: например, узкий текст в широкой секции.', fields: [], sets: ['width'], setDefaults: { width: 'narrow' }, setPart: { width: 'root' } },
+  'layout.grid': { name: 'Сетка', icon: 'grid_on', cat: 'layout', container: true, syn: 'плитка grid галерея', display: 'grid',
+    hint: 'Одинаковые ячейки. «+» в конце добавляет ещё одну такую же.', fields: [], sets: ['grid'], setDefaults: { cols: '3', gap: 'm' },
+    kids: [{ type: 'content.image', props: { ratio: '1/1' } }, { type: 'content.image', props: { ratio: '1/1' } }, { type: 'content.image', props: { ratio: '1/1' } }] },
+  'layout.spacer': { name: 'Пустое место', icon: 'height', cat: 'layout', syn: 'отступ spacer промежуток',
+    fields: [{ key: 'size', label: 'Высота', tab: 'layout', kind: 'seg', choices: SZ, default: 'm', responsive: true, mod: v => 'p-top-' + { s: 4, m: 6, l: 8 }[v], bind: 'утилита p-top-*' }] },
+  'content.heading': { name: 'Заголовок', icon: 'title', cat: 'text', text: true, syn: 'h1 h2 h3 title', sets: ['align'],
     fields: [{ key: 'level', label: 'Уровень', tab: 'content', kind: 'seg', choices: [['1', 'H1'], ['2', 'H2'], ['3', 'H3']], default: '2' }] },
-  'content.paragraph': { name: 'Абзац', icon: 'notes', cat: 'text', text: true, syn: 'текст параграф',
+  'content.paragraph': { name: 'Абзац', icon: 'notes', cat: 'text', text: true, syn: 'текст параграф', sets: ['align'],
     fields: [{ key: 'size', label: 'Размер', tab: 'look', kind: 'seg', choices: [['body', 'Обычный'], ['lead', 'Крупный']], default: 'body' }] },
   'content.list': { name: 'Список', icon: 'format_list_bulleted', cat: 'text', text: true, syn: 'пункты нумерованный маркированный',
     fields: [{ key: 'kind', label: 'Вид', tab: 'content', kind: 'seg', choices: [['bullet', 'Маркеры'], ['ordered', '1, 2, 3']], default: 'bullet' }] },
   'content.quote': { name: 'Цитата', icon: 'format_quote', cat: 'text', text: true, fields: [] },
   'content.alert': { name: 'Заметка', icon: 'info', cat: 'text', text: true, syn: 'alert внимание callout',
     fields: [{ key: 'status', label: 'Вид', tab: 'content', kind: 'select', choices: [['info', 'Информация'], ['success', 'Успех'], ['warning', 'Внимание']], default: 'info' }] },
-  'content.image': { name: 'Картинка', icon: 'image', cat: 'media', syn: 'фото изображение',
+  'content.image': { name: 'Картинка', icon: 'image', cat: 'media', syn: 'фото изображение', sets: ['bleed'],
     fields: [{ key: 'ratio', label: 'Пропорции', tab: 'look', kind: 'seg', choices: [['16/9', '16:9'], ['4/3', '4:3'], ['1/1', '1:1']], default: '16/9' }] },
-  'content.video': { name: 'Видео', icon: 'smart_display', cat: 'media', fields: [] },
-  'content.button': { name: 'Кнопка', icon: 'smart_button', cat: 'text', text: true, syn: 'ссылка cta',
-    fields: [{ key: 'look', label: 'Вид', tab: 'look', kind: 'seg', choices: [['fill', 'Заливка'], ['outline', 'Контур']], default: 'fill' },
-      { key: 'href', label: 'Ссылка', tab: 'content', kind: 'text', default: '/contacts' }] },
+  'content.video': { name: 'Видео', icon: 'smart_display', cat: 'media', fields: [], sets: ['bleed'] },
+  // Elements: Smart components; their parameters are the component inputs (smart.manifest.json).
+  'content.button': { name: 'Кнопка', icon: 'smart_button', cat: 'elements', also: ['text'], text: true, syn: 'ссылка cta с иконкой со значком', smart: 'sf-button',
+    fields: [{ key: 'appearance', label: 'Вид', tab: 'look', kind: 'select', choices: [['default', 'Заливка'], ['tonal', 'Тональная'], ['outline', 'Контур'], ['link', 'Ссылка'], ['surface', 'На поверхности']], default: 'default', bind: 'sf-button · appearance' },
+      { key: 'size', label: 'Размер', tab: 'look', kind: 'seg', choices: [['1/2', 'S'], ['1', 'M'], ['2', 'L']], default: '1', bind: 'sf-button · size' },
+      { key: 'icon', label: 'Значок', tab: 'content', kind: 'icon', default: '', bind: 'sf-button · icon' },
+      { key: 'iconpos', label: 'Значок', tab: 'look', kind: 'seg', choices: [['start', 'Слева'], ['end', 'Справа']], default: 'end', bind: 'sf-button · icon-position', when: n => val(n, 'icon') },
+      { key: 'href', label: 'Ссылка', tab: 'content', kind: 'text', default: '/contacts', bind: 'sf-button · href' }],
+    variants: [{ id: 'plain', name: 'Кнопка', props: {} }, { id: 'icon', name: 'Со значком', props: { icon: 'arrow_forward' } }, { id: 'outline', name: 'Контурная', props: { appearance: 'outline' } }] },
+  'element.iconbutton': { name: 'Кнопка-значок', icon: 'add_circle', cat: 'elements', syn: 'иконка кнопка icon button', smart: 'sf-icon-button', display: 'inline-flex',
+    fields: [{ key: 'icon', label: 'Значок', tab: 'content', kind: 'icon', default: 'favorite', bind: 'sf-icon-button · icon' },
+      { key: 'appearance', label: 'Вид', tab: 'look', kind: 'select', choices: [['default', 'Заливка'], ['tonal', 'Тональная'], ['outline', 'Контур'], ['ghost', 'Без фона']], default: 'tonal', bind: 'sf-icon-button · appearance' },
+      { key: 'size', label: 'Размер', tab: 'look', kind: 'seg', choices: [['1/2', 'S'], ['1', 'M'], ['2', 'L']], default: '1', bind: 'sf-icon-button · size' },
+      { key: 'label', label: 'Подпись для экранного диктора', tab: 'content', kind: 'text', default: 'Нравится', bind: 'sf-icon-button · aria-label' }] },
+  'element.badge': { name: 'Метка', icon: 'label', cat: 'elements', syn: 'бейдж badge тег статус новинка', text: true, smart: 'sf-badge', display: 'inline-flex',
+    fields: [{ key: 'appearance', label: 'Вид', tab: 'look', kind: 'seg', choices: [['main', 'Заливка'], ['tonal', 'Тональная'], ['outline', 'Контур']], default: 'tonal', bind: 'sf-badge · appearance' },
+      { key: 'scheme', label: 'Цвет', tab: 'look', kind: 'select', choices: [['primary', 'Основной'], ['secondary', 'Второй'], ['neutral', 'Нейтральный']], default: 'primary', bind: 'sf-badge · scheme' }] },
+  'element.icon': { name: 'Значок', icon: 'star', cat: 'elements', syn: 'иконка icon', smart: 'sf-icon',
+    fields: [{ key: 'icon', label: 'Значок', tab: 'content', kind: 'icon', default: 'star', bind: 'sf-icon · icon' },
+      { key: 'size', label: 'Размер', tab: 'look', kind: 'seg', choices: [['1', 'S'], ['2', 'M'], ['4', 'L']], default: '2', bind: 'sf-icon · size' }] },
+  'element.divider': { name: 'Разделитель', icon: 'horizontal_rule', cat: 'elements', also: ['text'], syn: 'линия hr divider черта',
+    fields: [{ key: 'space', label: 'Отступы вокруг', tab: 'layout', kind: 'seg', choices: SZ, default: 'm', mod: v => 'p-y-' + { s: 2, m: 4, l: 6 }[v], bind: 'утилита p-y-* · компонент sf-divider' }] },
   'forms.form': { name: 'Форма заявки', icon: 'contact_mail', cat: 'forms', syn: 'заявка обратная связь контакты',
     fields: [{ key: 'fields', label: 'Поля', tab: 'content', kind: 'seg', choices: [['short', 'Имя и телефон'], ['full', 'С сообщением']], default: 'short' }],
     variants: [{ id: 'short', name: 'Короткая', props: {}, pv: 'formS' }, { id: 'full', name: 'С сообщением', props: { fields: 'full' }, pv: 'formF' }] },
@@ -495,7 +585,7 @@ const T = {
       { id: 'center', name: 'Логотип по центру', props: { look: 'center' }, pv: 'hdrc' },
     ] },
   'parts.footer': { name: 'Подвал', icon: 'call_to_action', cat: 'parts', syn: 'footer', template: true, fields: [] },
-  'marketing.hero': { name: 'Первый экран', icon: 'featured_video', cat: 'marketing', container: true, syn: 'hero баннер обложка',
+  'marketing.hero': { name: 'Первый экран', icon: 'featured_video', cat: 'marketing', container: true, syn: 'hero баннер обложка', sets: ['bleed'],
     fields: [{ key: 'align', label: 'Расположение', tab: 'layout', kind: 'seg', choices: [['left', 'Слева'], ['center', 'По центру'], ['split', 'С картинкой']], default: 'left', responsive: true }],
     variants: [
       { id: 'left', name: 'Текст слева', props: { align: 'left' }, pv: 'heroL' },
@@ -504,12 +594,11 @@ const T = {
     ],
     kids: [{ type: 'content.heading', props: { level: '1' }, data: { text: 'Заголовок первого экрана' } }, { type: 'content.paragraph', props: { size: 'lead' }, data: { text: 'Одна-две строки о главном.' } }, { type: 'content.button', data: { text: 'Подробнее' } }] },
   'marketing.features': { name: 'Преимущества', icon: 'grid_view', cat: 'marketing', syn: 'фичи особенности',
-    base: 'gap-5', fields: [{ key: 'cols', label: 'В ряд', tab: 'layout', kind: 'seg', choices: [['1', '1'], ['2', '2'], ['3', '3'], ['4', '4']], default: '3', responsive: true, mod: v => 'grid-col-' + v }] },
+    display: 'grid', fields: [], sets: ['grid'], setDefaults: { cols: '3', gap: 'm' } },
   'marketing.cta': { name: 'Призыв к действию', icon: 'ads_click', cat: 'marketing', container: true, syn: 'cta кнопка',
     fields: [], kids: [{ type: 'content.heading', data: { text: 'Готовы начать?' } }, { type: 'content.button', data: { text: 'Оставить заявку' } }] },
-  'data.cards': { name: 'Список карточек', icon: 'view_cozy', cat: 'data', data: 'cards', syn: 'новости товары каталог список', base: 'gap-5',
+  'data.cards': { name: 'Список карточек', icon: 'view_cozy', cat: 'data', data: 'cards', syn: 'новости товары каталог список', display: 'grid', sets: ['grid'], setDefaults: { cols: '3', gap: 'm' },
     fields: [
-      { key: 'cols', label: 'В ряд', tab: 'layout', kind: 'seg', choices: [['1', '1'], ['2', '2'], ['3', '3'], ['4', '4']], default: '3', responsive: true, mod: v => 'grid-col-' + v },
       { key: 'per', label: 'На странице', tab: 'data', kind: 'number', default: 3 },
       { key: 'empty', label: 'Текст, если пусто', tab: 'data', kind: 'text', default: 'Здесь пока ничего нет' },
     ],
@@ -525,6 +614,13 @@ const T = {
 const THEMES = { normal: {}, compact: { 'layout.section': { pad: 'm', gap: 's' }, 'data.cards': { per: 4 } } };
 // The split hero has two places: text, and a picture that is a real block.
 T['marketing.hero'].variants[2].kids = [...T['marketing.hero'].kids, { type: 'content.image', props: { ratio: '4/3' } }];
+// Sets become fields; every block can be hidden per screen.
+for (const [k, t] of Object.entries(T)) {
+  if (k === 'layout.page') continue;
+  t.sets = [...(t.sets || []), ...(k === 'layout.column' ? [] : ['visibility'])];
+  for (const s of t.sets) for (const f of SETS[s].fields) if (!t.fields.some(x => x.key === f.key))
+    t.fields.push({ ...f, set: s, ...(t.setDefaults && f.key in t.setDefaults ? { default: t.setDefaults[f.key] } : {}), ...(t.setPart?.[f.key] ? { part: t.setPart[f.key] } : {}) });
+}
 // Every block may take extra Framework modifiers; the editor checks each one.
 for (const [k, t] of Object.entries(T)) if (k !== 'layout.page') t.fields.push({ key: 'mods', label: 'Свои модификаторы', tab: 'extra', kind: 'mods', default: '' });
 /* ---------- Framework modifiers ----------
@@ -537,10 +633,14 @@ function modClasses(n, part = 'root') {
   const out = part === 'root' && T[n.type].base ? [T[n.type].base] : [];
   for (const f of T[n.type].fields) {
     if (!f.mod || (f.part || 'root') !== part) continue;
-    if (!f.responsive) { out.push(f.mod(val(n, f.key))); continue; }
+    if (f.out && !OUT) continue; // the canvas shows a hidden block faded; the HTML hides it
+    if (!f.responsive) { const c = f.mod(val(n, f.key), n); if (c) out.push(c); continue; }
+    if (f.quiet && BPX.every(([bp]) => String(resolve(n, f.key, bp).v) === String(f.default))) continue;
     let prev = null;
-    for (const [bp, pre] of BPX) { const c = f.mod(resolve(n, f.key, bp).v); if (c !== prev) out.push(pre + c); prev = c; }
+    for (const [bp, pre] of BPX) { const c = f.mod(resolve(n, f.key, bp).v, n); if (c && c !== prev) out.push(pre + c); prev = c; }
   }
+  // a grid block needs display:grid unless the visibility classes already set it per screen
+  if (part === 'root' && T[n.type].display === 'grid' && !out.some(c => /(^|:)(hidden|grid)$/.test(c))) out.unshift('grid');
   if (part === 'root' && n.props.mods) out.push(...String(n.props.mods).split(/\s+/).filter(okMod));
   return out.join(' ');
 }
@@ -676,8 +776,8 @@ function accepts(parentType, childType) {
   const c = T[childType].cat;
   if (parentType === 'layout.page') return true; // non-sections are wrapped in a section
   if (childType === 'layout.section' || c === 'parts') return false;
-  if (parentType === 'layout.area') return ['text', 'media', 'forms'].includes(c);
-  if (parentType === 'marketing.hero' || parentType === 'marketing.cta') return ['text', 'forms', 'media'].includes(c);
+  if (parentType === 'layout.area') return ['text', 'media', 'elements', 'forms'].includes(c);
+  if (parentType === 'marketing.hero' || parentType === 'marketing.cta') return ['text', 'elements', 'forms', 'media'].includes(c);
   if (parentType === 'layout.column') return childType !== 'layout.columns';
   return true;
 }
@@ -759,13 +859,17 @@ function draw(n) {
   if (S.tplEdit && inTemplate(n.id) && !n.template) cls.push('tplin');
   if (!canEdit(n.id)) cls.push('locked');
   const mc = modClasses(n); if (mc) cls.push(mc);
-  const at = `class="${cls.join(' ')}" data-id="${n.id}"`;
+  if (!OUT && !val(n, 'show') && t.fields.some(f => f.key === 'show')) cls.push('offbp');
+  const at = `class="${cls.join(' ')}" data-id="${n.id}"${val(n, 'bleed') ? ' data-bleed="true"' : ''}`, oc = mc ? ` class="${mc}"` : '';
   switch (n.type) {
     case 'layout.page': return kids(n);
     case 'layout.section': return `<section ${at} data-bg="${val(n, 'bg')}" data-width="${val(n, 'width')}"><div class="inner grid ${modClasses(n, 'inner')}">${kids(n)}</div></section>`;
     case 'layout.columns': return `<div ${at}>${(n.children || []).map(draw).join('')}${canInsertInto(n.id) && n.children.length < 4 ? `<button class="cadd" data-addcol="${n.id}" title="Добавить колонку"><span class="ic">add</span></button>` : ''}</div>`;
     case 'layout.column': return `<div ${at}>${kids(n)}</div>`;
     case 'layout.area': return `<div ${at} data-label="Область текста">${kids(n)}</div>`;
+    case 'layout.container': return `<div ${at} data-width="${val(n, 'width')}">${kids(n)}</div>`;
+    case 'layout.grid': return `<div ${at}>${n.children.map(draw).join('')}${canInsertInto(n.id) ? `<button class="cadd gadd" data-addin="${n.id}" title="Ещё одна ячейка"><span class="ic">add</span></button>` : ''}</div>`;
+    case 'layout.spacer': return `<div ${at}></div>`;
     case 'content.heading': { const l = val(n, 'level'); return `<div ${at}>${txt(n, 'text', 'h' + l, 'Заголовок', 'b-heading" data-level="' + l)}</div>`; }
     case 'content.paragraph': return `<div ${at}>${txt(n, 'text', 'p', 'Пишите или наберите «/»', 'b-paragraph" data-size="' + val(n, 'size'))}</div>`;
     case 'content.list': { const tg = val(n, 'kind') === 'ordered' ? 'ol' : 'ul'; return `<div ${at}><${tg} class="txt" ${canEdit(n.id) ? 'contenteditable="true"' : ''} data-key="items" spellcheck="false">${n.data.items.map(i => `<li>${i}</li>`).join('')}</${tg}></div>`; }
@@ -773,7 +877,15 @@ function draw(n) {
     case 'content.alert': return `<div ${at}><div class="al" data-status="${val(n, 'status')}"><span class="ic">${{ info: 'info', success: 'check_circle', warning: 'warning' }[val(n, 'status')]}</span>${txt(n, 'text', 'div', 'Текст заметки')}</div></div>`;
     case 'content.image': return `<figure ${at} data-ratio="${val(n, 'ratio')}" style="margin:0;--h:${(n.id.length * 47) % 360}"><div class="ph"><span class="ic">image</span></div></figure>`;
     case 'content.video': return `<div ${at}><div class="b-image"><div class="ph" style="--h:330"><span class="ic">play_circle</span></div></div></div>`;
-    case 'content.button': return `<div ${at} data-look="${val(n, 'look')}"><a href="#" onclick="return false">${txt(n, 'text', 'span', 'Кнопка')}</a></div>`;
+    case 'content.button': {
+      const ic = val(n, 'icon'), st = val(n, 'iconpos') === 'start', ico = ic ? `<span class="ic">${ic}</span>` : '';
+      if (OUT) return `<sf-button${oc}${smartAttrs(n)}>${esc(n.data.text || 'Кнопка')}</sf-button>`;
+      return `<div ${at} data-look="${val(n, 'appearance')}" data-size="${val(n, 'size')}"><a href="#" onclick="return false">${st ? ico : ''}${txt(n, 'text', 'span', 'Кнопка')}${st ? '' : ico}</a></div>`;
+    }
+    case 'element.iconbutton': return OUT ? `<sf-icon-button${oc}${smartAttrs(n)}></sf-icon-button>` : `<div ${at}><span class="ibtn" data-look="${val(n, 'appearance')}" data-size="${val(n, 'size')}" title="${esc(val(n, 'label'))}"><span class="ic">${val(n, 'icon')}</span></span></div>`;
+    case 'element.badge': return OUT ? `<sf-badge${oc}${smartAttrs(n)}>${esc(n.data.text || 'Метка')}</sf-badge>` : `<div ${at}><span class="bdg" data-look="${val(n, 'appearance')}" data-scheme="${val(n, 'scheme')}">${txt(n, 'text', 'span', 'Метка')}</span></div>`;
+    case 'element.icon': return OUT ? `<sf-icon${oc}${smartAttrs(n)}></sf-icon>` : `<div ${at}><span class="ic eic" data-size="${val(n, 'size')}">${val(n, 'icon')}</span></div>`;
+    case 'element.divider': return OUT ? `<hr class="sf-divider${mc ? ' ' + mc : ''}">` : `<div ${at}><hr class="sf-divider"></div>`;
     case 'forms.form': return `<div ${at} style="display:grid;gap:10px;max-width:420px"><input placeholder="Имя" disabled style="height:40px;border-radius:8px;border:1px solid var(--outline-variant);padding:0 12px;background:var(--surface-0)"><input placeholder="Телефон" disabled style="height:40px;border-radius:8px;border:1px solid var(--outline-variant);padding:0 12px;background:var(--surface-0)">${val(n, 'fields') === 'full' ? '<textarea placeholder="Сообщение" disabled style="height:88px;border-radius:8px;border:1px solid var(--outline-variant);padding:10px 12px;background:var(--surface-0);font:inherit"></textarea>' : ''}<span class="b-button"><a href="#" onclick="return false">Отправить</a></span></div>`;
     case 'parts.header': return `<header ${at} data-look="${val(n, 'look')}"><span class="logo"><i></i>SIMAI</span><nav><span>Продукты</span><span>Документация</span><span>Цены</span><span>Контакты</span></nav>${val(n, 'search') ? '<span class="srch"><span class="ic" style="font-size:18px">search</span>Поиск</span>' : ''}</header>`;
     case 'parts.footer': return `<footer ${at}>${txt(n, 'text', 'span', 'Подпись')}<span>Политика · Контакты</span></footer>`;
@@ -796,6 +908,13 @@ function draw(n) {
   return `<div ${at}>${esc(t.name)}</div>`;
 }
 
+// A Smart element prints its inputs as attributes; only what differs from the default.
+const SMART_IN = { iconpos: 'icon-position', label: 'aria-label' };
+function smartAttrs(n) {
+  return T[n.type].fields.filter(f => f.bind && f.bind.startsWith('sf-') && (!f.when || f.when(n))).map(f => {
+    const v = val(n, f.key); return v === '' || (String(v) === String(f.default) && f.key !== 'icon' && f.key !== 'label') ? '' : ` ${SMART_IN[f.key] || f.key}="${esc(v)}"`;
+  }).join('');
+}
 function rowsFor(n) {
   const b = n.bindings[0], src = SOURCES[b.ref];
   if (!src) return [];
@@ -962,7 +1081,7 @@ frame.addEventListener('click', ev => {
   const ic = ev.target.closest('[data-icon]'); if (ic && !ic.disabled) { openIcons(ic, ic.closest('.n').dataset.id, +ic.dataset.icon); return; }
   const ac = ev.target.closest('[data-addcol]'); if (ac) { addColumn(ac.dataset.addcol); return; }
   const ad = ev.target.closest('[data-addin]');
-  if (ad) { const hn = node(ad.dataset.addin); insertAt(hn.id, hn.children.length, make('content.image', { props: { ratio: '4/3' } })); return; }
+  if (ad) { const hn = node(ad.dataset.addin), last = hn.children.at(-1); insertAt(hn.id, hn.children.length, hn.type === 'layout.grid' && last ? cloneTree(last) : make('content.image', { props: { ratio: '4/3' } })); return; }
   if (ev.target.closest('#tplDone')) { commit(() => { S.tplEdit = false; }, 'Шаблон сохранён: изменения на всех страницах'); return; }
   const z = ev.target.closest('.ins');
   if (z) openPicker(z, { parent: z.dataset.parent, index: +z.dataset.index });
@@ -1137,7 +1256,7 @@ function featureItem(id, act, i) {
     if (act === 'add') S.typing = { id, key: `items.${it.length - 1}.title`, at: 'start' };
   }, act === 'del' ? 'Пункт удалён. Cmd+Z вернёт' : null);
 }
-const ICONS = ['bolt', 'layers', 'lock', 'star', 'favorite', 'verified', 'rocket_launch', 'speed', 'shield', 'support_agent', 'schedule', 'savings', 'payments', 'local_shipping', 'eco', 'groups', 'handshake', 'workspace_premium', 'insights', 'trending_up', 'settings', 'cloud', 'devices', 'chat', 'mail', 'call', 'location_on', 'school', 'search', 'check_circle'];
+const ICONS = ['arrow_forward', 'open_in_new', 'download', 'play_arrow', 'bolt', 'layers', 'lock', 'star', 'favorite', 'verified', 'rocket_launch', 'speed', 'shield', 'support_agent', 'schedule', 'savings', 'payments', 'local_shipping', 'eco', 'groups', 'handshake', 'workspace_premium', 'insights', 'trending_up', 'settings', 'cloud', 'devices', 'chat', 'mail', 'call', 'location_on', 'school', 'search', 'check_circle'];
 function openIcons(anchor, id, i) {
   const cur = node(id).data.items[i].icon;
   menu.innerHTML = `<div class="icons" role="listbox" aria-label="Значок">${ICONS.map(k => `<button data-pick-icon="${id}:${i}:${k}" aria-pressed="${k === cur}" title="${k}"><span class="ic">${k}</span></button>`).join('')}</div><div class="hint" style="padding:0 10px 8px">Значки SIMAI Framework. В настоящем редакторе — весь набор с поиском.</div>`;
@@ -1215,7 +1334,7 @@ function enterBuilder(id) {
   const wrap = tree.type === 'layout.section' ? tree : make('layout.section', { children: [] });
   if (wrap !== tree) wrap.children.push(tree);
   const page = make('layout.page'); page.children = [wrap];
-  S.build = { key, name: key ? T[key].name : 'Мой блок', cat: key ? T[key].cat : (T[tree.type].cat === 'structure' ? 'marketing' : T[tree.type].cat), rootId: tree.id,
+  S.build = { key, name: key ? T[key].name : 'Мой блок', cat: key ? T[key].cat : (T[tree.type].cat === 'layout' ? 'marketing' : T[tree.type].cat), rootId: tree.id,
     exposed: ct ? ct.exposed.map(e => atPath(tree, e.path).id + '|' + e.key) : [], doc0: S.doc, past: H.past, future: H.future, sel0: S.sel, tpl0: S.tplEdit };
   H.past = []; H.future = []; S.doc = page; S.sel = null; S.typing = null; S.tplEdit = false; S.rightTab = 'params';
   closeMenu(); render(); canvas.scrollTop = 0;
@@ -1256,7 +1375,7 @@ function builderPanel() {
   walk(root, x => { for (const f of T[x.type].fields) { if (f.kind === 'mods') continue; const k = x.id + '|' + f.key; rows += `<label class="xrow"><input type="checkbox" data-expose="${k}" ${b.exposed.includes(k) ? 'checked' : ''}><span class="ic">${T[x.type].icon}</span><span>${esc(T[x.type].name)} · ${esc(f.label)}</span></label>`; } });
   return `<div class="props"><div class="ph"><span class="ic">widgets</span><div><b>${b.key ? 'Блок сайта' : 'Новый блок'}</b><small>конструктор блока</small></div></div>
   <div class="fld"><span class="lb">Название в библиотеке</span><input type="text" data-build="name" value="${esc(b.name)}"></div>
-  <div class="fld"><span class="lb">Раздел библиотеки</span><select data-build="cat">${['marketing', 'parts', 'structure', 'data', 'forms'].map(g => `<option value="${g}" ${g === b.cat ? 'selected' : ''}>${GNAME[g]}</option>`).join('')}</select></div>
+  <div class="fld"><span class="lb">Раздел библиотеки</span><select data-build="cat">${['marketing', 'parts', 'layout', 'data', 'forms'].map(g => `<option value="${g}" ${g === b.cat ? 'selected' : ''}>${GNAME[g]}</option>`).join('')}</select></div>
   <div class="grp" style="margin-left:0">Что сможет менять автор</div>
   <div class="xlist">${rows || '<div class="hint">У блоков внутри нет параметров</div>'}</div>
   <div class="hint">Текст автор правит всегда. Остальное в блоке закрыто, так его нельзя сломать. Отмеченное появится справа у блока, когда его поставят на страницу.</div>
@@ -1277,28 +1396,58 @@ function changeVariant(id, vid) {
 /* ---------- Catalogue entries (types, variants, saved) ---------- */
 function entries() {
   const out = [];
-  for (const [type, t] of Object.entries(T)) if (!t.hidden) out.push({ key: type, type: t.custom ? t.custom.tree.type : type, name: t.name, icon: t.icon, cat: t.cat, syn: t.syn || '', variants: t.variants || [], site: t.custom ? type : null });
-  S.saved.forEach((s, i) => out.push({ key: 'saved:' + i, type: s.node.type, name: s.name, icon: 'bookmark', cat: 'saved', syn: T[s.node.type].name, variants: [], saved: s }));
+  for (const [type, t] of Object.entries(T)) if (!t.hidden) out.push({ key: type, type: t.custom ? t.custom.tree.type : type, name: t.name, icon: t.icon, cat: t.cat, syn: t.syn || '', variants: t.variants || [], also: t.also || [], site: t.custom ? type : null });
+  S.saved.forEach((s, i) => out.push({ key: 'saved:' + i, type: s.node.type, name: s.name, icon: 'bookmark', cat: 'saved', syn: T[s.node.type].name, variants: [], also: [], saved: s }));
   return out;
 }
 function matches(e, q) { q = q.trim().toLowerCase(); return !q || (e.name + ' ' + e.syn + ' ' + GNAME[e.cat]).toLowerCase().includes(q); }
 function build(e, vid) { if (e.site) return instantiate(e.site); if (e.saved) return cloneTree(e.saved.node); return vid ? withVariant(e.type, vid) : (e.variants[0] ? withVariant(e.type, e.variants[0].id) : make(e.type)); }
-const PV = {
-  plain: '<i style="height:100%"></i>', soft: '<i class="acc" style="height:100%;opacity:.25"></i>', text: '<i style="width:70%;height:6px"></i><i style="width:90%;height:4px"></i><i style="width:80%;height:4px"></i>',
-  cols2: '<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;height:100%"><i></i><i></i></div>', cols3: '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;height:100%"><i></i><i></i><i></i></div>',
-  hdr: '<div style="display:flex;gap:4px;align-items:center"><i class="acc" style="width:10px;height:10px"></i><i style="width:50%;height:4px"></i></div>', hdrs: '<div style="display:flex;gap:4px;align-items:center"><i class="acc" style="width:10px;height:10px"></i><i style="width:35%;height:4px"></i><i style="width:25%;height:8px;margin-left:auto"></i></div>', hdrc: '<i class="acc" style="width:10px;height:10px;justify-self:center"></i><i style="width:60%;height:4px;justify-self:center"></i>',
-  heroL: '<i style="width:70%;height:8px"></i><i style="width:50%;height:4px"></i><i class="acc" style="width:28%;height:8px"></i>', heroC: '<i style="width:70%;height:8px;justify-self:center"></i><i style="width:50%;height:4px;justify-self:center"></i><i class="acc" style="width:28%;height:8px;justify-self:center"></i>', heroS: '<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:4px;height:100%"><div style="display:grid;gap:3px;align-content:center"><i style="height:6px"></i><i style="height:4px;width:70%"></i></div><i class="acc"></i></div>',
-  formS: '<i style="width:70%;height:7px"></i><i style="width:70%;height:7px"></i><i class="acc" style="width:35%;height:7px"></i>', formF: '<i style="width:70%;height:6px"></i><i style="width:70%;height:6px"></i><i style="width:70%;height:12px"></i>',
-  cardT: '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;height:100%"><i class="acc" style="opacity:.3"></i><i class="acc" style="opacity:.3"></i><i class="acc" style="opacity:.3"></i></div>', cardL: '<div style="display:grid;grid-template-columns:1fr 2fr;gap:3px"><i class="acc" style="opacity:.3;height:14px"></i><i style="height:5px"></i></div><div style="display:grid;grid-template-columns:1fr 2fr;gap:3px"><i class="acc" style="opacity:.3;height:14px"></i><i style="height:5px"></i></div>', cardX: '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;height:100%"><i></i><i></i><i></i><i></i></div>',
-};
-function varCards(e) { return `<div class="vars">${e.variants.map(v => `<button class="var" draggable="true" data-entry="${e.key}" data-variant="${v.id}" title="${esc(v.name)}"><div class="pv">${PV[v.pv] || ''}</div><span>${esc(v.name)}</span></button>`).join('')}</div>`; }
-// Two top tabs: what goes into a text flow, and blocks that build a page.
+// Catalogue previews are drawn from the block itself: its variant tree in the Framework skeleton
+// (text → bars, picture → tinted box, button → accent pill, the real grid scaled down).
+function skel(e, v) { try { return sk(build(e, v.id)); } catch (_) { return ''; } }
+function sk(n) {
+  const r = k => resolve(n, k, 'desktop').v, K = () => (n.children || []).map(sk).join('');
+  const b = (w, h = 4, c = '') => `<i class="${c}" style="width:${w}%;height:${h}px"></i>`, pill = w => `<i class="acc pill" style="width:${w}%"></i>`;
+  const grid = (c, cells) => `<div class="sk-grid" style="grid-template-columns:repeat(${c},minmax(0,1fr))">${cells.join('')}</div>`;
+  switch (n.type) {
+    case 'layout.section': return `<div class="sk-sec" data-bg="${r('bg')}"><div class="sk-box" data-w="${r('width')}">${K() || b(100, 18)}</div></div>`;
+    case 'layout.container': return `<div class="sk-box" data-w="${r('width')}">${K() || b(100, 18)}</div>`;
+    case 'layout.columns': return grid(+r('cols'), n.children.map(x => `<div class="sk-col">${(x.children || []).map(sk).join('') || '<i class="sk-cell"></i>'}</div>`));
+    case 'layout.grid': return grid(+r('cols'), n.children.map(x => `<div class="sk-col">${sk(x)}</div>`));
+    case 'layout.area': return b(55, 6) + b(100) + b(90) + b(70);
+    case 'layout.spacer': return '<i class="sk-gap"></i>';
+    case 'marketing.features': return grid(+r('cols'), n.data.items.map(() => `<div class="sk-col"><i class="acc dot"></i>${b(70)}${b(90, 3)}</div>`));
+    case 'data.cards': { const c = +r('cols'); return grid(c, Array.from({ length: c }, () => n.variant === 'left' ? `<div class="sk-row"><i class="acc img" style="width:40%;height:16px"></i><div class="sk-col" style="flex:1">${b(90)}${b(60, 3)}</div></div>` : `<div class="sk-col">${n.variant === 'text' ? '' : '<i class="acc img" style="height:14px"></i>'}${b(85)}${b(60, 3)}</div>`)); }
+    case 'marketing.hero': {
+      const a = r('align'), t = n.children.filter(x => T[x.type].cat !== 'media').map(sk).join('');
+      return a === 'split' ? `<div class="sk-grid" style="grid-template-columns:1.2fr 1fr"><div class="sk-col" style="align-content:center">${t}</div><i class="acc img" style="height:100%"></i></div>` : `<div class="sk-col" style="${a === 'center' ? 'justify-items:center' : ''}">${t}</div>`;
+    }
+    case 'marketing.cta': return `<div class="sk-col" style="justify-items:center">${K()}</div>`;
+    case 'content.heading': { const l = r('level'); return b({ 1: 75, 2: 60, 3: 45 }[l], { 1: 8, 2: 6, 3: 5 }[l]); }
+    case 'content.paragraph': return r('size') === 'lead' ? b(85, 5) + b(55, 5) : b(95) + b(70);
+    case 'content.list': return b(55, 3) + b(48, 3) + b(52, 3);
+    case 'content.quote': return `<div class="sk-q">${b(85)}${b(60)}</div>`;
+    case 'content.alert': return '<i class="acc" style="width:100%;height:14px;opacity:.25"></i>';
+    case 'content.image': case 'content.video': return `<i class="acc img" style="aspect-ratio:${r('ratio') || '16/9'}"></i>`;
+    case 'content.button': return `<div class="sk-row sk-btn">${r('appearance') === 'outline' ? '<i class="pill line" style="width:34%"></i>' : pill(34)}${r('icon') ? '<i class="acc dot" style="width:8px;height:8px"></i>' : ''}</div>`;
+    case 'element.iconbutton': case 'element.icon': return '<i class="acc dot"></i>';
+    case 'element.badge': return '<i class="acc pill" style="width:20%;height:6px"></i>';
+    case 'element.divider': return '<i style="width:100%;height:1px"></i>';
+    case 'forms.form': return b(70, 7) + b(70, 7) + (r('fields') === 'full' ? b(70, 12) : '') + pill(30);
+    case 'parts.header': { const c = r('look') === 'center'; return `<div class="sk-row" style="${c ? 'justify-content:center' : ''}"><i class="acc dot"></i>${b(c ? 40 : 45, 4)}${r('search') ? '<i style="width:22%;height:8px;margin-left:auto"></i>' : ''}</div>`; }
+    case 'parts.footer': return `<div class="sk-row">${b(40, 3)}${b(20, 3)}</div>`;
+    case 'data.pagination': return `<div class="sk-row" style="justify-content:center"><i class="acc dot"></i><i class="dot"></i><i class="dot"></i></div>`;
+  }
+  return b(100, 12);
+}
+function varCards(e) { return `<div class="vars">${e.variants.map(v => `<button class="var" draggable="true" data-entry="${e.key}" data-variant="${v.id}" title="${esc(v.name)}"><div class="pv">${skel(e, v)}</div><span>${esc(v.name)}</span></button>`).join('')}</div>`; }
 // One catalogue: Text and Media are sections next to the others (owner, 2026-11-03).
-const SECTIONS = ['text', 'media', 'structure', 'parts', 'marketing', 'data', 'forms', 'saved'];
+const SECTIONS = ['text', 'media', 'elements', 'layout', 'parts', 'marketing', 'data', 'forms', 'saved'];
 const gicon = g => GROUPS.find(x => x[0] === g)[2];
-function itemRow(e, inPop, open = S.open[e.key]) {
+const inSec = (e, g) => e.cat === g || e.also.includes(g);
+function itemRow(e, inPop, open = S.open[e.key], sub = null) {
   const fav = S.fav.has(e.key);
-  return `<div class="lib-item" ${inPop ? '' : 'draggable="true"'} data-entry="${e.key}" role="option" tabindex="-1"><span class="ic t">${e.icon}</span><span class="nm">${esc(e.name)}${e.variants.length ? `<small>${e.variants.length} варианта</small>` : e.saved ? `<small>заготовка · ${esc(e.syn)}</small>` : e.site ? '<small>блок сайта</small>' : ''}</span>
+  return `<div class="lib-item" ${inPop ? '' : 'draggable="true"'} data-entry="${e.key}" role="option" tabindex="-1"><span class="ic t">${e.icon}</span><span class="nm">${esc(e.name)}${sub && e.cat !== sub ? `<small>из раздела «${GNAME[e.cat]}»</small>` : e.variants.length ? `<small>${e.variants.length} варианта</small>` : e.saved ? `<small>заготовка · ${esc(e.syn)}</small>` : e.site ? '<small>блок сайта</small>' : ''}</span>
     ${inPop ? '' : `<button class="star ${fav ? 'on' : ''}" data-fav="${e.key}" title="${fav ? 'Убрать из избранного' : 'В избранное'}"><span class="ic" style="font-variation-settings:'FILL' ${fav ? 1 : 0}">star</span></button>`}
     ${e.variants.length ? `<button class="more ${open ? 'on' : ''}" data-open="${e.key}" title="Варианты"><span class="ic">${open ? 'expand_less' : 'expand_more'}</span></button>` : ''}</div>${e.variants.length && open ? varCards(e) : ''}`;
 }
@@ -1312,9 +1461,9 @@ function libView(list, st, inPop) {
     return h + (pool.length ? '' : '<div class="empty-note">Ничего не нашлось</div>');
   }
   if (st.sub) { // one section, variants open
-    const it = pool.filter(e => e.cat === st.sub);
+    const it = pool.filter(e => inSec(e, st.sub));
     h += `<button class="back lib-item" data-back><span class="ic t">arrow_back</span><span class="nm"><b>${GNAME[st.sub]}</b></span></button>`;
-    h += it.map(e => itemRow(e, inPop, S.open[e.key] ?? true)).join('') || `<div class="empty-note">${st.sub === 'saved' ? 'Настройте блок и выберите «Сохранить как заготовку» в его меню' : 'Пусто'}</div>`;
+    h += it.map(e => itemRow(e, inPop, S.open[e.key] ?? true, st.sub)).join('') || `<div class="empty-note">${st.sub === 'saved' ? 'Настройте блок и выберите «Сохранить как заготовку» в его меню' : 'Пусто'}</div>`;
     return h;
   }
   const rec = S.recent.map(k => pool.find(e => e.key === k)).filter(Boolean).slice(0, 3);
@@ -1324,7 +1473,7 @@ function libView(list, st, inPop) {
   if (S.role === 'designer' && !S.build && !inPop) h += `<button class="btn newblock" data-newblock><span class="ic" style="font-size:18px">widgets</span>Создать свой блок</button>`;
   h += head('category', 'Разделы');
   for (const g of SECTIONS) {
-    const n = pool.filter(e => e.cat === g).length;
+    const n = pool.filter(e => inSec(e, g)).length;
     if (n || (g === 'saved' && !inPop)) h += `<div class="lib-item sub" data-sub="${g}" role="option" tabindex="-1"><span class="ic t">${gicon(g)}</span><span class="nm">${GNAME[g]}</span><span class="cnt">${n}</span><span class="ic" style="color:var(--faint)">chevron_right</span></div>`;
   }
   return h;
@@ -1496,7 +1645,7 @@ function pickerList() {
 function openPicker(anchor, ctx) {
   P.ctx = ctx; P.q = ''; P.act = 0;
   const pt = ctx.replace ? parentOf(ctx.replace)?.type : node(ctx.parent).type;
-  P.sub = pt === 'layout.page' ? null : pickerList().some(e => e.cat === 'text') ? 'text' : null;
+  P.sub = pt === 'layout.page' ? null : pickerList().some(e => inSec(e, 'text')) ? 'text' : null;
   anchor.closest('.ins')?.classList.add('open');
   drawPicker(pt);
   const r = anchor.getBoundingClientRect();
@@ -1625,9 +1774,10 @@ function paramsTab(n, ed) {
   const t = T[n.type];
   let h = '';
   if (t.variants) h += `<div class="fld"><span class="lb"><span class="ic">style</span>Вариант</span><select id="variantSel" ${ed ? '' : 'disabled'}>${t.variants.map(v => `<option value="${v.id}" ${v.id === n.variant ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select><span class="hint">Сменить вариант можно в любой момент: содержимое останется.</span></div>`;
+  if (t.sets?.length || t.smart) h += `<div class="sets"><span class="ic">link</span><span>${t.smart ? `Компонент <code>${t.smart}</code>: его параметры. ` : ''}Наборы: ${t.sets.map(x => SETS[x].name).join(' · ')}. Каждый параметр связан с SIMAI Framework.</span></div>`;
   const groups = [['content', 'Содержимое'], ['look', 'Вид'], ['layout', 'Расположение'], ['extra', 'Дополнительно']];
   for (const [g, gn] of groups) {
-    const fs = t.fields.filter(f => f.tab === g);
+    const fs = t.fields.filter(f => f.tab === g && (!f.when || f.when(n)));
     if (!fs.length) continue;
     h += `<div class="grp" style="margin-left:0">${gn}</div>`;
     for (const f of fs) h += field(n, f, ed);
@@ -1657,8 +1807,11 @@ function field(n, f, ed, pre = '') {
   if (f.kind === 'select') c = `<select data-set="${f.key}" data-nid="${n.id}" ${dis}>${f.choices.map(([k, l]) => `<option value="${k}" ${String(v) === k ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
   if (f.kind === 'number') c = `<input type="number" min="1" max="12" data-set="${f.key}" data-nid="${n.id}" value="${esc(v)}" ${dis}>`;
   if (f.kind === 'text') c = `<input type="text" data-set="${f.key}" data-nid="${n.id}" value="${esc(v)}" ${dis}>`;
+  if (f.kind === 'icon') c = `<select data-set="${f.key}" data-nid="${n.id}" ${dis}>${f.default === '' ? `<option value="" ${v ? '' : 'selected'}>Без значка</option>` : ''}${ICONS.map(k => `<option value="${k}" ${v === k ? 'selected' : ''}>${k}</option>`).join('')}</select>`;
   if (f.kind === 'toggle') c = `<div class="seg"><button data-set="${f.key}" data-nid="${n.id}" data-v="false" aria-pressed="${!v}" ${dis}>Нет</button><button data-set="${f.key}" data-nid="${n.id}" data-v="true" aria-pressed="${!!v}" ${dis}>Да</button></div>`;
   if (f.kind === 'mods') { const bad = String(v || '').split(/\s+/).filter(x => x && !okMod(x)); c = `<input type="text" data-set="${f.key}" data-nid="${n.id}" placeholder="например: lg:col-span-2 p-x-4" value="${esc(v)}" ${dis} spellcheck="false" style="font-family:ui-monospace,Menlo,monospace">${bad.length ? `<span class="hint" style="color:var(--error)">Нет в SIMAI Framework: ${esc(bad.join(', '))}. Эти классы в HTML не попадут.</span>` : '<span class="hint">Классы SIMAI Framework через пробел, с приставкой экрана: <code>md:</code>, <code>lg:</code>. Редактор проверяет каждый.</span>'}`; }
+  if (f.bind) c += `<span class="bind">SIMAI Framework: ${esc(f.bind)}</span>`;
+  if (f.gap) c += `<span class="hint" style="color:var(--warning, #9a6700)">${esc(f.gap)}</span>`;
   return `<div class="fld"><span class="lb">${esc(pre + f.label)}${f.responsive ? ` <span class="ic" title="Задаётся для каждого размера экрана">${{ desktop: 'desktop_windows', tablet: 'tablet_mac', phone: 'smartphone' }[S.bp]}</span>` : ''}${src}${xp}</span>${c}</div>`;
 }
 function setProp(id, key, raw) {
@@ -1783,10 +1936,10 @@ $('#path').addEventListener('click', ev => { const g = ev.target.closest('[data-
 /* ---------- HTML out: what a site prints, editor marks removed ---------- */
 const VOID = new Set(['input', 'img', 'br', 'hr']);
 function outHtml(n) {
-  const d = document.createElement('div'); d.innerHTML = draw(n);
+  const d = document.createElement('div'); OUT = true; try { d.innerHTML = draw(n); } finally { OUT = false; }
   d.querySelectorAll('.ins, .bound, .pbar, .cardnote, .hidden-parts, .slotph').forEach(x => x.remove());
   d.querySelectorAll('*').forEach(x => {
-    ['contenteditable', 'spellcheck', 'data-ph', 'data-key', 'data-id', 'data-cardtpl', 'data-label', 'data-slot', 'draggable', 'onclick', 'style', 'disabled', 'title', 'tabindex'].forEach(a => x.removeAttribute(a));
+    ['contenteditable', 'spellcheck', 'data-ph', 'data-key', 'data-id', 'data-cardtpl', 'data-label', 'data-slot', 'data-bg', 'data-width', 'data-bleed', 'draggable', 'onclick', 'style', 'disabled', 'title', 'tabindex'].forEach(a => x.removeAttribute(a));
     x.classList.remove('n', 'sel', 'hover', 'locked', 'tpl', 'tplin', 'txt', 'typing', 'moving', 'part', 'tplcard');
     if (!x.classList.length) x.removeAttribute('class');
   });

@@ -24,14 +24,14 @@ cannot start fails here too.
 | Target | Driver | What happens |
 |:---|:---|:---|
 | `--target component` (in `npm run e2e`) | `scripts/one-editor/component.mjs`, written in C2 | skipped until `framework.lock.json` names the component (`package.one_editor`) and its driver exists |
-| `--target prototype` (in `npm run e2e`) | `scripts/one-editor/prototype.mjs` | runs on [`prototypes/block-editor.html`](../prototypes/block-editor.html), the accepted behaviour (ui-control `7edfcb1`), to prove the scenarios themselves |
+| `--target prototype` (in `npm run e2e`) | `scripts/one-editor/prototype.mjs` | runs on [`prototypes/block-editor.html`](../prototypes/block-editor.html), the accepted behaviour (ui-control `cadcfa8`), to prove the scenarios themselves |
 
 ```sh
 node scripts/e2e-one-editor.mjs --target prototype [--only S05]
 ```
 
 On the prototype:
-- 18 scenarios run, with 133 checks;
+- 19 scenarios run, with 144 checks;
 - 3 need what only a host or the component has, and are skipped there;
 - 2 checks are known differences of the prototype (listed below); they are
   reported, not failed. The component must pass them.
@@ -41,7 +41,7 @@ On the prototype:
 | Id | What it proves | From |
 |:---|:---|:---|
 | S01 | Selection by depth: a click on text types; Esc goes text → block → area → section; Enter goes back down; a click on a frame chooses; hover shows the gutter | B, help |
-| S02 | One catalogue, one list with no tabs (owner, second review): favourites and recent above the sections Текст, Медиа, Структура, Части страницы, Маркетинг, Данные, Формы, Сохранённые; variants as pictures, «back», search over every section naming each result's section; Backspace in the search edits the search only; a click in the library inserting after the chosen block | B, help |
+| S02 | One catalogue, one list with no tabs (owner, second and third reviews): favourites and recent above the sections Текст, Медиа, Элементы, Макет, Части страницы, Маркетинг, Данные, Формы, Сохранённые; the new blocks in Макет and Элементы; the button in Элементы and in Текст, listed once by search; variants as pictures, «back», search over every section naming each result's section; Backspace in the search edits the search only; a click in the library inserting after the chosen block | B, help |
 | S03 | Insert three ways: the + between sections opens on the sections and puts a block in a section of its own; inside a text area it opens straight on Текст and hides what the area cannot take; `/` in an empty line opens on Текст, filters by name or synonym, and replaces the whole line; a drag from the library to the drop line | B, help |
 | S04 | Move: the gutter grip, Alt+↑↓ on a chosen block, Alt+Shift+↑↓ from text with the caret kept; a click on the grip chooses the block and opens its menu | B, help |
 | S05 | Columns: «Разделить на колонки» from the menu, one column on the phone, one undo reverts the split; a side drop puts two blocks side by side; inside a column it adds a column | B, help |
@@ -61,6 +61,7 @@ On the prototype:
 | S19 | A block's own items: the features' points move left and right, duplicate, go, «Добавить пункт» with the caret in the new title, an icon picked from a set, one undo | owner, second review |
 | S20 | Columns' +: a column added at the right edge, a duplicated column, the + gone at four, a removed column; `cols` follows the count; one undo | owner, second review |
 | S21 | Markdown habits: «## », «### », «# », «> », «1. », «- » at a paragraph's start turn it into that block; Enter on an empty last point leaves the list; one undo returns the paragraph; the list's «Вид» numbers it | owner, second review |
+| S22 | Visibility per screen: «Показывать на этом экране» off on the phone fades the block on the canvas, prints `hidden md:block`, and keeps a value in the Document | owner, third review |
 
 ## What the prototype does differently
 

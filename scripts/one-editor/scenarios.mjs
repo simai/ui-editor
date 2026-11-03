@@ -76,7 +76,7 @@ export const scenarios = [
     async run(d, check) {
       let lib = await d.library();
       check('the library is one list, with no tabs', lib.tabs.length === 0, JSON.stringify(lib.tabs));
-      check('its sections are Текст, Медиа, Структура, Части страницы, Маркетинг, Данные, Формы, Сохранённые', ['Текст', 'Медиа', 'Структура', 'Части страницы', 'Маркетинг', 'Данные', 'Формы', 'Сохранённые'].every((x) => lib.items.includes(x)), lib.items.join());
+      check('its sections are Текст, Медиа, Элементы, Макет, Части страницы, Маркетинг, Данные, Формы, Сохранённые', ['Текст', 'Медиа', 'Элементы', 'Макет', 'Части страницы', 'Маркетинг', 'Данные', 'Формы', 'Сохранённые'].every((x) => lib.items.includes(x)), lib.items.join());
       check('Favourites stand above the sections', lib.heads.indexOf('Избранное') >= 0 && lib.heads.indexOf('Избранное') < lib.heads.indexOf('Разделы'), lib.heads.join());
       await d.librarySection('Маркетинг');
       lib = await d.library();
@@ -84,9 +84,21 @@ export const scenarios = [
       check('and shows their variants as pictures', (await d.variants()).includes('С картинкой справа'));
       await d.libraryBack();
       check('«back» returns to the sections', (await d.library()).items.includes('Маркетинг'));
+      await d.librarySection('Макет');
+      lib = await d.library();
+      check('Макет holds the section, the columns, the text area, the container, the grid and the empty space', ['Секция', 'Колонки', 'Область текста', 'Контейнер', 'Сетка', 'Пустое место'].every((x) => lib.items.includes(x)), lib.items.join());
+      await d.librarySection('Элементы');
+      lib = await d.library();
+      check('Элементы holds the button, the icon button, the label and the icon', ['Кнопка', 'Кнопка-значок', 'Метка', 'Значок'].every((x) => lib.items.includes(x)), lib.items.join());
+      await d.librarySection('Текст');
+      check('a block may stand in two sections: the button shows in Текст too', (await d.library()).items.includes('Кнопка'));
+      await d.libraryBack();
       await d.librarySearch('кнопка');
       lib = await d.library();
-      check('search covers every section and names each result\'s section', lib.items.includes('Кнопка') && lib.items.includes('Призыв к действию') && lib.heads.includes('Текст') && lib.heads.includes('Маркетинг'), JSON.stringify(lib));
+      check('search covers every section and names each result\'s section', lib.items.includes('Кнопка') && lib.items.includes('Призыв к действию') && lib.heads.includes('Элементы') && lib.heads.includes('Маркетинг'), JSON.stringify(lib));
+      check('search lists a block in two sections once', lib.items.filter((x) => x === 'Кнопка').length === 1, lib.items.join());
+      await d.librarySearch('разделитель');
+      check('search finds the divider', (await d.library()).items.includes('Разделитель'));
       await d.librarySearch('');
       await d.librarySection('Текст');
       await d.favourite('Цитата');
@@ -398,7 +410,7 @@ export const scenarios = [
       const root = (await d.doc()).id;
       const features = await sectionOf(d, 'marketing.features');
       await d.seamPlus(root, (await childIds(d, root)).indexOf(features));
-      await d.pickerSection('Структура');
+      await d.pickerSection('Макет');
       await d.pick('Секция', 'С областью текста');
       const areas = await all(d, (n) => n.type === 'layout.area');
       check('a page holds a second text area', areas.length === 2, areas.length);
@@ -539,6 +551,24 @@ export const scenarios = [
       await d.choose(list.id);
       await d.setField('Вид', '1, 2, 3');
       check('the list\'s «Вид» makes it numbered', (await find(d, (n) => n.id === list.id)).props?.kind === 'ordered' && /<ol/u.test(await d.html(list.id)));
+    },
+  },
+  {
+    id: 'S22',
+    name: 'Visibility per screen: a block hidden on the phone is faded on the canvas and hidden by modifiers in the HTML',
+    from: ['owner, third review 2026-11-03: every block has «Показывать на этом экране»'],
+    async run(d, check) {
+      const a = await area(d);
+      await d.choose(a.paragraph.id);
+      check('every block offers «Показывать на этом экране»', (await d.panel()).fields.includes('Показывать на этом экране'), (await d.panel()).fields.join());
+      await d.screen('телефон');
+      await d.setField('Показывать на этом экране', 'Нет');
+      check('hidden on the phone, the block stays on the canvas, faded', await d.faded(a.paragraph.id));
+      await d.screen('компьютер');
+      check('on the desktop it is drawn as usual', !(await d.faded(a.paragraph.id)));
+      const html = await d.html(a.paragraph.id);
+      check('the HTML hides it on the phone and shows it from the tablet up, by modifiers', /\bhidden md:block\b/u.test(html), html.split('\n')[0]);
+      check('the Document keeps the value, not the classes', !JSON.stringify(await find(d, (n) => n.id === a.paragraph.id)).includes('hidden'));
     },
   },
   {

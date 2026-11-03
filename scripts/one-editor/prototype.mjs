@@ -1,5 +1,5 @@
 // The driver of the one-editor scenarios over the accepted prototype,
-// prototypes/block-editor.html (ui-control 7edfcb1). It proves the scenarios
+// prototypes/block-editor.html (ui-control cadcfa8). It proves the scenarios
 // run before the component exists; the component's driver replaces it in C2
 // and keeps the same verbs. Acts go through the pointer and the keyboard; only
 // reading the Document and what a host grants (rights, theme) reach into the
@@ -343,6 +343,8 @@ function driver(page) {
     /** Classes the canvas puts on a block (its modifiers for the screen shown). */
     classes: (id) => block(id).evaluate((element) => [...element.classList]),
     roleSwitch: () => page.locator('[aria-label*="Роль"], [data-role-switch]').count().then(Boolean),
+    /** A block hidden on the screen shown is drawn faded on the canvas. */
+    faded: (id) => block(id).evaluate((element) => element.classList.contains('offbp')),
     /** A template part is drawn paler than the page. */
     dimmed: (id) => block(id).evaluate((element) => element.classList.contains('tpl')),
     /** The variants shown as pictures in the library or the picker. */
