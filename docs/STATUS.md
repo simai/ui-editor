@@ -10,6 +10,8 @@
 | 2026-10-31 | The editor also edits Docara's blocks, and saves Markdown in Docara's syntax for documentation |
 | 2026-10-31 | Everything runs on Framework components; universal parts go to the free Framework, editor parts to Pro |
 | 2026-10-31 | The plan below; this repository; one shared PHP renderer for Docara and Larena |
+| 2026-11-03 | Text typed in a layout's area, in place |
+| 2026-11-03 | One block editor: layout and text in one editor over one Document; ui-editor writes its acceptance scenarios now and replaces the two modes after the ui-pro release |
 
 The full reasoning, the Framework and Docara threads' answers and the open
 points are kept in the dispatcher's control plane:
@@ -94,6 +96,17 @@ pair that brought `sf-content-editor`. The proofs of steps 0 and 1 hold on it.
 | The content is typed in place (the owner's decision of 2026-11-03): the Content mode puts `sf-content-editor` in the outlet on the canvas, the layout around it in view; a click on the chosen outlet opens it at the block clicked, a press on the layout outside it brings the layout back with that block chosen. A layout with no outlet types in the editor's own view | `scripts/e2e-content.mjs`, `scripts/e2e-shell.mjs` |
 | The seam's + offers the area for the content (`content.outlet`) while the layout has none; a heading and a paragraph typed in the new area are saved in the page's content, the area moves with ⌥↓, and after a reload the layout keeps it where it was moved and it shows what was typed | `scripts/e2e-content.mjs` |
 | The keyboard alone: Tab to the page's tree, the arrows to the outlet, Enter to type in place, Esc twice back to the tree with the outlet chosen; axe-core finds nothing in the Content mode in place at every size and scheme | `scripts/e2e-a11y.mjs` |
+
+## The one block editor, C1: acceptance scenarios
+
+Written 2026-11-03 from the accepted prototype (ui-control `5003b6b`, copied to
+`prototypes/block-editor.html`) and Part B of the assignment.
+
+| What | Proved by |
+|:---|:---|
+| 18 scenarios over a driver: selection by depth, one catalogue, three ways to insert, moving, columns, parameter origins per screen, data, the block builder, the template, host rights, named places, the site's theme, one undo, several text areas, output (JSON, HTML modifiers, Markdown), the host's store, keyboard and axe | `scripts/one-editor/scenarios.mjs`, listed in [ONE-EDITOR.md](ONE-EDITOR.md) |
+| On the prototype: 15 scenarios run, 104 checks pass; 3 skipped (Markdown, host store, axe); 2 known differences of the prototype reported | `scripts/e2e-one-editor.mjs --target prototype` |
+| On the component: all 18 skipped until the lock names it (C2) | `scripts/e2e-one-editor.mjs` |
 
 The side panels at about 800 px wide stand over the canvas edge, and that is
 intended: below 1024 px both panels start closed and slide over the canvas one

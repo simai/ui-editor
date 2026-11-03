@@ -11,7 +11,14 @@ content outlet and its content; the Layout mode selects, moves, copies, deletes
 and inserts blocks, and the outlet opens SIMAI Pro's `sf-content-editor` for
 typing in place, inside the outlet with the layout around it (a click on the
 chosen outlet, a double click or Enter; Esc twice or a press on the layout
-returns). Blocks, and the outlet itself, are inserted at the seam. The repository is private until it passes acceptance.
+returns). Blocks, and the outlet itself, are inserted at the seam.
+
+**Next: one block editor** (owner decision 2026-11-03). Layout and text become
+one editor over one Document, to be released in ui-pro. Its acceptance
+scenarios are written and proved on the accepted prototype
+([`docs/ONE-EDITOR.md`](docs/ONE-EDITOR.md)). They run on the component when it
+ships, and then it replaces the two modes. The repository is private until it
+passes acceptance.
 
 ## Two modes, one core
 
@@ -44,12 +51,14 @@ through one node, so an author never breaks the layout.
 |:---|:---|
 | [`docs/STATUS.md`](docs/STATUS.md) | Decisions, plan and what each step must prove |
 | [`docs/GAPS.md`](docs/GAPS.md) | What the pinned releases do not give yet, and who owns it |
+| [`docs/ONE-EDITOR.md`](docs/ONE-EDITOR.md) | The one block editor's acceptance scenarios, run on the prototype now and on the component after its release |
 | [`src/ui/`](src/ui) | The shell: the page, its wiring, the Layout mode's changes to a layout, the page store and the seeded pages (a layout and its content each) |
 | [`locales/`](locales) | The RU/EN dictionaries |
 | [`framework.lock.json`](framework.lock.json) | The pinned Framework release and Pro package, with their hashes |
 | [`scripts/`](scripts) | Fetch and verify the pins, build, serve, the checks and the end-to-end runs |
 | [`prototypes/block-canvas.html`](prototypes/block-canvas.html) | Behaviour accepted for the layout mode (toolbar above the block) |
 | [`prototypes/content-editor.html`](prototypes/content-editor.html) | Behaviour accepted for the content mode, with parameters and JSON, Markdown and HTML |
+| [`prototypes/block-editor.html`](prototypes/block-editor.html) | Behaviour accepted for the one block editor (ui-control `5003b6b`, 2026-11-03), the scenarios' reference |
 
 The prototypes are behaviour references in plain code, not code to copy.
 

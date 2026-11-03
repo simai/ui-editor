@@ -28,6 +28,12 @@ Pro package `pro-1fcb47404ee8` ([`framework.lock.json`](../framework.lock.json))
 | G-19 | No shared undo: `sf-content-editor` keeps its history inside (its `undo` and `redo` actions, no way to read or replace the stack), the overlay keeps none, and a page is two Documents; one ⌘Z over layout and content cannot be built by a host | ui-pro and the Framework, to agree | the layout has no undo; the content has the editor's own, which outlives a switch of mode but not a reload or another page | a history contract: the editor takes a host history (or emits steps a host can undo), and layout and content changes share it; or one Document holds both |
 | G-14 | `SF.Composition.render` refuses `blob:` picture addresses as `unsafe_url`, so the canvas cannot draw a picture kept in the browser | Framework, [simai/ui-source#71](https://github.com/simai/ui-source/issues/71) | `src/ui/app.ts` renders a stored picture (`media:<id>`) as `./media/<id>` and gives each such `img` its object URL after the render; a stored file is kept with the address `./media/<id>` and each such download link gets its object URL and its name | `render` takes a source resolver or allows the page's own `blob:` addresses; the swap goes |
 
+The one block editor (owner decision 2026-11-03, [ONE-EDITOR.md](ONE-EDITOR.md))
+answers G-18 and G-19 with one Document: text areas are `layout.area` blocks, as
+many as a page needs, and one history serves typing and structure. G-15 to G-17
+stay useful for the free overlay but are off the one editor's path. Their
+workarounds go when the one editor replaces the two modes (C2).
+
 ## What `ui-a7c68408a293` and `larena-7bc706e9a07f` closed
 
 Repinned 2026-11-01 from `ui-2194bce0e673` and `larena-5a2ae14a0ea0`.
