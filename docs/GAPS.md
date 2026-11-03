@@ -5,8 +5,8 @@ who owns it and what the editor does meanwhile. A Framework defect has a
 `simai/ui-source` issue; an editor part is ordered from `simai/ui-pro`. A gap
 closes when a pinned release brings the part and the workaround goes.
 
-Pinned: Framework `ui-2d39b617a719` (`@simai-studio/ui@5.20261102.1106`),
-Pro package `pro-1fcb47404ee8` ([`framework.lock.json`](../framework.lock.json)).
+Pinned: Framework `ui-b8e23367889f` (`@simai-studio/ui@5.20261103.1629`),
+Pro package `pro-c47fe37db37d` ([`framework.lock.json`](../framework.lock.json)).
 
 | Id | Gap | Owner | Meanwhile | Closes when |
 |:---|:---|:---|:---|:---|

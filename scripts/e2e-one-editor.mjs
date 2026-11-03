@@ -24,7 +24,8 @@ if (target === 'component') {
   const tag = lock.package.one_editor;
   if (!tag || !existsSync(join(ROOT, 'scripts/one-editor/component.mjs'))) {
     for (const s of chosen) console.log(`skip ${s.id} ${s.name}`);
-    console.log(`e2e: ${chosen.length} scenarios skipped: ${lock.package.release} has no one editor yet (Part B of the one-editor assignment)`);
+    const why = tag ? `the driver for ${tag} in ${lock.package.release} is not written yet (C2)` : `${lock.package.release} has no one editor yet (Part B of the one-editor assignment)`;
+    console.log(`e2e: ${chosen.length} scenarios skipped: ${why}`);
     process.exit(0);
   }
 }
