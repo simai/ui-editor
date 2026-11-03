@@ -73,9 +73,9 @@ try {
   const bar = await page.evaluate(() => {
     // A component's control is its first box: the button, or the segmented track.
     const controls = [...document.querySelectorAll('#top-bar > sf-button-icon, #top-bar > sf-button, #top-bar > sf-button-group')].map((host) => host.firstElementChild).filter((node) => node?.getClientRects().length);
-    return {count: controls.length, heights: [...new Set(controls.map((node) => Math.round(node.getBoundingClientRect().height)))]};
+    return {strip: Math.round(document.querySelector('#top-bar').getBoundingClientRect().height), count: controls.length, heights: [...new Set(controls.map((node) => Math.round(node.getBoundingClientRect().height)))]};
   });
-  check('every control of the top bar is 32 px high', bar.count === 2 && bar.heights.length === 1 && bar.heights[0] === 32, `${bar.count} controls, ${bar.heights.join()}`);
+  check('the host bar is a thin strip: 32 px, every control of it 24 px high', bar.strip === 32 && bar.count === 2 && bar.heights.length === 1 && bar.heights[0] === 24, `${bar.strip} px, ${bar.count} controls, ${bar.heights.join()}`);
 
   // ---------------------------------------------------------------- the width
   const start = await panel();

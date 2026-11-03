@@ -293,7 +293,9 @@ export const scenarios = [
       await d.choose(features);
       await d.libraryClick('Наш первый экран');
       const instance = await find(d, (n) => /^site\./u.test(n.type));
-      check('an instance is stored as its type and version, nothing else', instance?.version === 1 && !instance.slots, JSON.stringify(instance));
+      // The prototype keeps `version`; sf-editor keeps the composed type's version in its extension.
+      const version = instance?.version ?? instance?.extensions?.['simai.composition:composed']?.version;
+      check('an instance is stored as its type and version, nothing else', Boolean(version) && !instance.slots && !instance.data, JSON.stringify(instance));
       await d.choose(instance.id);
       check('the author sees only the exposed parameter', (await d.panel()).fields.join() === 'Фон', (await d.panel()).fields.join());
       await d.clickText(instance.id);

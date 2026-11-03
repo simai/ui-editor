@@ -35,7 +35,8 @@
     "about.text": "Вторая страница: список страниц хранится в этом браузере.",
     "new.text": "",
     "picture": "Картинка",
-    "footer": "© 2026 SIMAI. Все права защищены."
+    "footer": "© 2026 SIMAI. Все права защищены.",
+    "home.heroAction": "Подробнее"
   },
   "blocks": {
     "demo.header.name": "Шапка сайта",
@@ -84,7 +85,12 @@
     "demo.pagination.name": "Постраничная навигация",
     "demo.pagination.mode": "Вид",
     "demo.pagination.more": "Показать ещё",
-    "demo.footer.line": "© 2026 SIMAI. Все права защищены."
+    "demo.footer.line": "© 2026 SIMAI. Все права защищены.",
+    "demo.header.docs": "Документация",
+    "demo.header.prices": "Цены",
+    "demo.footer.links": "Политика · Контакты",
+    "demo.hero.action": "Кнопка",
+    "demo.hero.action_text": "Подробнее"
   },
   "sources": {
     "labels": {

@@ -16,12 +16,13 @@
   <script src="fw/core/js/core.js"></script>
 </head>
 <body>
-  <!-- Not a banner: the page on the canvas has its own header region. -->
+  <!-- Not a banner: the page on the canvas has its own header region. A thin
+       strip (32 px) above the editor's own bar: the host's page list and language. -->
   <div id="top-bar" class="top-bar flex items-cross-center gap-1/2 p-x-1" role="region" data-t-attr="aria-label:app.bar" aria-label="Редактор страниц">
-    <sf-button-icon id="toggle-left" icon="left_panel_close" appearance="ghost" scheme="on-surface" size="1/2" aria-controls="left-panel" data-t-attr="aria-label:panel.toggleLeft;title:panel.toggleLeftKey" aria-label="Панель страниц"></sf-button-icon>
-    <h1 class="top-title text-1/2 truncate m-0" data-t="app.title">SIMAI — редактор страниц</h1>
+    <sf-button-icon id="toggle-left" icon="left_panel_close" appearance="ghost" scheme="on-surface" size="1/3" aria-controls="left-panel" data-t-attr="aria-label:panel.toggleLeft;title:panel.toggleLeftKey" aria-label="Панель страниц"></sf-button-icon>
+    <h1 class="top-title text-small truncate m-0" data-t="app.title">SIMAI — редактор страниц</h1>
     <span class="grow"></span>
-    <sf-button-group id="language" appearance="segmented" plate="raised" size="1/2" data-t-attr="aria-label:language.label" aria-label="Язык интерфейса" items='[{"value":"ru","label":"RU"},{"value":"en","label":"EN"}]'></sf-button-group>
+    <sf-button-group id="language" appearance="segmented" plate="raised" size="1/3" data-t-attr="aria-label:language.label" aria-label="Язык интерфейса" items='[{"value":"ru","label":"RU"},{"value":"en","label":"EN"}]'></sf-button-group>
   </div>
 
   <div id="storage-state" class="storage-state p-x-1 p-y-1/2 text-1/2" role="status" data-t="storage.unavailable" hidden></div>

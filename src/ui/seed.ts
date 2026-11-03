@@ -9,7 +9,7 @@
 // `content.outlet` and the content it shows; `composePage` makes the one
 // Document from them, with the content in a text area where the outlet was.
 
-import {heading, paragraph, picture} from './blocks.ts';
+import {heading, lead, paragraph, picture} from './blocks.ts';
 import {seedText, type Language} from './i18n.ts';
 
 export interface CompositionNode {
@@ -49,7 +49,9 @@ function withIds(part: Part, id: string): CompositionNode {
   return node;
 }
 
-const section = (children: Part[], props?: Record<string, unknown>): Part => ({type: 'layout.section', ...(props ? {props} : {}), slots: {default: children}});
+/** A section with the prototype's spacing: 48 px above and below on a computer, and the sides the header and the footer keep (24 px). */
+const SPACE = {padding_y: {xs: 6, md: 8}, padding_x: 4};
+const section = (children: Part[], props?: Record<string, unknown>): Part => ({type: 'layout.section', props: {...SPACE, ...props}, slots: {default: children}});
 const area = (children: Part[]): Part => ({type: 'layout.area', slots: {default: children}});
 const list = (items: string[]): Part => ({type: 'content.list', slots: {items: items.map((value) => ({type: 'content.list-item', data: {content: [{type: 'text', value}]}}))}});
 
@@ -76,15 +78,15 @@ export function seedDocuments(language: Language): SeedPage[] {
       id: 'home',
       title: s('home.pageTitle'),
       document: pageDocument('home', language, [
-        section([{type: 'demo.hero', props: {align: 'split'}, slots: {default: [heading(1, s('home.heroTitle')), paragraph(s('home.heroLead'))], media: [picture(s('picture'))]}}]),
-        section([area([heading(2, s('home.areaTitle')), paragraph(s('home.areaText')), list([s('home.li1'), s('home.li2'), s('home.li3')]), {type: 'content.alert', slots: {default: [paragraph(s('home.alert'))]}}])]),
+        section([{type: 'demo.hero', props: {align: 'split'}, data: {action: s('home.heroAction')}, slots: {default: [heading(1, s('home.heroTitle')), lead(s('home.heroLead'))], media: [picture(s('picture'), '4/3')]}}], {background: 'container'}),
+        section([area([heading(2, s('home.areaTitle')), paragraph(s('home.areaText')), list([s('home.li1'), s('home.li2'), s('home.li3')]), {type: 'content.alert', props: {status: 'info', appearance: 'flat'}, slots: {default: [paragraph(s('home.alert'))]}}])], {width: 'narrow'}),
         section([
           heading(2, s('home.newsTitle')),
           {type: 'demo.cards', props: {cols: {xs: 1, md: 2, lg: 3}}, bindings: [{owner: 'host', ref: 'news', target: 'items'}], extensions: {'simai.composition:data': {items: {shape: 'cards', preset: 'default', limit: 3}}}},
           {type: 'demo.pagination', props: {mode: 'pages'}},
         ]),
         section([{type: 'layout.columns', props: {columns: {xs: 2}}, slots: {columns: [area([picture(s('picture'))]), area([heading(3, s('home.columnsTitle')), paragraph(s('home.columnsText'))])]}}]),
-        section([{type: 'demo.features'}]),
+        section([{type: 'demo.features', props: {cols: {xs: 1, md: 3}}}], {background: 'primary'}),
       ]),
     },
     {

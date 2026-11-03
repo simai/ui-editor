@@ -140,6 +140,29 @@ async function newPage() {
   await openPage(id);
 }
 
+/**
+ * The seeded pages speak the interface's language until someone changes them:
+ * a page still equal to its seed in the language left is seeded again in the
+ * new one. A page anyone edited keeps its words.
+ */
+async function followLanguage(from: Language, to: Language) {
+  if (from === to) return;
+  const was = new Map(seedDocuments(from).map((seed) => [seed.id, seed]));
+  const next = new Map(seedDocuments(to).map((seed) => [seed.id, seed]));
+  let changed = false;
+  for (const kept of state.pages) {
+    const old = was.get(kept.id);
+    const fresh = next.get(kept.id);
+    if (!old || !fresh || kept.title !== old.title || JSON.stringify(kept.document) !== JSON.stringify(old.document)) continue;
+    await save({...kept, title: fresh.title, document: fresh.document});
+    changed = true;
+  }
+  if (!changed) return;
+  showPages();
+  const current = page();
+  if (current) editor().document = current.document;
+}
+
 function wordsOfComponents() {
   $('#language').setAttribute('value', uiLanguage());
 }
@@ -151,9 +174,12 @@ async function start() {
   await Promise.all(USED.map((tag) => customElements.whenDefined(tag)));
   setUiLanguage(preferredLanguage());
   wordsOfComponents();
+  let spoken = uiLanguage();
   onUiLanguage((language) => {
     wordsOfComponents();
     giveSite(language);
+    void followLanguage(spoken, language);
+    spoken = language;
   });
 
   const store = await openPageStore();

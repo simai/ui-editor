@@ -15,7 +15,7 @@
     "framework:fetch": "node scripts/framework-fetch.mjs",
     "build": "node scripts/build-ui.mjs",
     "serve": "node scripts/serve.mjs",
-    "e2e": "node scripts/build-ui.mjs && node scripts/e2e-shell.mjs && node scripts/e2e-a11y.mjs && node scripts/e2e-one-editor.mjs && node scripts/e2e-one-editor.mjs --target prototype"
+    "e2e": "node scripts/build-ui.mjs && node scripts/e2e-shell.mjs && node scripts/e2e-a11y.mjs && node scripts/e2e-look.mjs && node scripts/e2e-one-editor.mjs && node scripts/e2e-one-editor.mjs --target prototype"
   },
   "devDependencies": {
     "@types/node": "24.19.1",

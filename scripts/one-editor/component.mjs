@@ -63,8 +63,10 @@ export const differs = {
   "S21: «1.» turns the paragraph into content.list": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S21: «>» turns the paragraph into content.quote": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S08: the scenario finished": "G-38: a site block made of a section holds only its content: the section's own parameters cannot be offered to the author",
-  "S01: a click on a block's frame, outside its text, chooses that block": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S05: new columns stand one under another on the phone": "G-36: a value equal to the type default prints no class: columns {xs 1, md 2} print md:grid-col-2 without grid-col-1",
+  "S06: a value nobody set comes from the type": "a difference: the seeded sections set their spacing until the Framework section prints it by default, docs/ONE-EDITOR.md",
+  "S12: a section with no value of its own takes the theme's": "a difference: the seeded sections set their spacing until the Framework section prints it by default, docs/ONE-EDITOR.md",
+  "S08: the author types in it, and the Document keeps only what differs": "G-40: text typed in a site block's instance is not kept: the instance stays {type, version}",
   "S06: the HTML prints Framework modifiers, mobile first, a prefix only where the value changes": "G-36: a value equal to the type default prints no class: columns {xs 1, md 2} print md:grid-col-2 without grid-col-1",
 };
 export const lacks = {};

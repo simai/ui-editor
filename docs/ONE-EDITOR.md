@@ -120,6 +120,12 @@ blocks side by side and adds a column (S05); a phone value leaves the desktop's
 ↓ chooses from the first block and axe finds nothing in any state (S18); the
 grip drag and the grip's menu (S04).
 
+With the seeded look of 2026-11-04 (sections with spacing and backgrounds,
+docs/STATUS.md): 91 checks pass and 38 are known (29 by G-20, G-21, G-23,
+G-25, G-26; 5 by G-36 to G-38 and the new G-40; 9 differences of design,
+two of them new: S06 and S12 find no section without its own spacing). S01's
+frame click passes now; S08 goes past «Секция · Фон» and stops at G-40.
+
 The driver follows 1.0.2's names: a catalogue option is the `li[role=option]`
 itself, named by `.sf-editor-option-name[data-label]`; an empty named place
 opens the catalogue narrowed to it, so the driver picks the picture there. The
@@ -136,7 +142,8 @@ apply as written.
 
 | Check | What sf-editor does |
 |:---|:---|
-| S01: a click on a section's frame chooses the section | a section draws no padding unless a value or the theme gives one, so in the demo site's default theme its text area fills it and there is no frame of its own to press; Esc or the path chooses it |
+| S06: a value nobody set comes from the type | the seeded sections set their spacing (visual parity, 2026-11-04), because the Framework's section prints none by default yet (the brief's item 8); the hero section's spacing is the block's own. Goes when the section has a default and the seed stops setting it |
+| S12: a section with no value of its own takes the theme's | the same: every seeded section sets its spacing, so none takes the compact theme's |
 | S05: the split leaves the new column empty | it puts a paragraph in the new column, so it can be typed in at once |
 | S10: an author inserts only inside the first text area | a columns block's columns are text areas (`layout.area`), so an author writes there too; the prototype's columns were layout only |
 | S15: the HTML has `p-y-8` and `gap-5` | those are the prototype's theme defaults; the demo site's theme sets none |

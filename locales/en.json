@@ -35,7 +35,8 @@
     "about.text": "The second page: the page list is kept in this browser.",
     "new.text": "",
     "picture": "Picture",
-    "footer": "© 2026 SIMAI. All rights reserved."
+    "footer": "© 2026 SIMAI. All rights reserved.",
+    "home.heroAction": "Learn more"
   },
   "blocks": {
     "demo.header.name": "Site header",
@@ -84,7 +85,12 @@
     "demo.pagination.name": "Pagination",
     "demo.pagination.mode": "Kind",
     "demo.pagination.more": "Show more",
-    "demo.footer.line": "© 2026 SIMAI. All rights reserved."
+    "demo.footer.line": "© 2026 SIMAI. All rights reserved.",
+    "demo.header.docs": "Docs",
+    "demo.header.prices": "Pricing",
+    "demo.footer.links": "Privacy · Contacts",
+    "demo.hero.action": "Button",
+    "demo.hero.action_text": "Learn more"
   },
   "sources": {
     "labels": {

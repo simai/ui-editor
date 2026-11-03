@@ -14,6 +14,7 @@ Pro package `pro-bff42cdcb4f4` (`sf-editor` 1.0.2, [`framework.lock.json`](../fr
 | G-04 | `layout.columns` names the asset `composition/layout`, but no stylesheet ships for `.sf-composition-columns` (still none in `ui-b8e23367889f`) | Framework, [simai/ui-source#61](https://github.com/simai/ui-source/issues/61) | the seeded columns are drawn by sf-editor with the grid utilities it prints | the stylesheet ships |
 | G-06 | No page-list part: rename, delete, order, a page's state. `sf-menu` lists the pages, but draws an item without `href` as plain text | ui-pro (an editor part), to order | each item gets `href="#page=<id>"` and the shell cancels `sf-menu-navigate` | ui-pro ships a page list over a storage port |
 | G-07 | No storage port for documents: the Framework keeps view preferences (`SF.Preferences`), not documents | ui-pro or the Framework, to agree | `src/ui/pages.ts` keeps pages in IndexedDB (`ui-editor` / `pages`), in memory when IndexedDB is refused; the shell copies a template change into every page | a port is released and the store moves behind it |
+| G-39 | `content.paragraph` declares the `lead` modifier, but its renderer prints none: `presentation: {modifiers: ['lead']}` draws a plain `<p>` | Framework (`ui-source`, composition renderers) | the seeded hero's lead keeps the modifier, and the demo hero sets its text column in the lead size (`text-2`) | the renderer prints the modifier; the hero's `text-2` goes |
 
 ### sf-editor in this shell (C2, rechecked on 1.0.2)
 
@@ -32,6 +33,12 @@ sf-editor) unless the row says otherwise; none has a workaround in the shell.
 | G-36 | A value equal to the type's default prints no class, even where a wider screen differs: columns `{xs: 1, md: 2}` print `md:grid-col-2` without `grid-col-1`, so on a phone the grid has one implicit `auto` column, which a wide child can stretch, not `grid-col-1` (`minmax(0, 1fr)`) | S05, S06 | the smallest screen's value is printed when a wider one differs |
 | G-37 | The + opens its catalogue at the window's top-left corner: it is anchored to the `sf-button-icon` host, which is `display: contents` and has no box. In this shell the corner is under the left panel, so the options there cannot be pressed | S03 (stops at the + inside a text area) | the catalogue stands beside the + |
 | G-38 | «Сделать блоком сайта» on a section makes a block of the section's content only (the hero): the builder has no section, so the section's own parameters («Фон») cannot be offered to the author | S08 (stops at «Секция · Фон») | a block made of a container keeps the container, or the difference is agreed |
+| G-40 | Text typed in a site block's instance is not kept: after typing in «Наш первый экран» on the page the instance is still `{type, extensions: {composed: {version}}}`, with no `data` | S08 (reached since the seeded hero section has a background, so «Секция · Фон» can be offered) | the instance keeps what the author typed, as only what differs |
+
+G-36 also reaches the demo blocks' own `cols` and `gap`: a value equal to
+the default prints nothing, so three cards or features stood in one column.
+Their renderers (`src/ui/blocks.ts`, `grid`) say the default themselves when
+the canvas gives one value; this goes with G-36.
 
 ## What sf-editor 1.0.2 closed
 
@@ -68,8 +75,10 @@ The four checks left unclassified by C2 were checked by hand:
 - **S01** (a click on a section's frame) is a difference of design: a section
   draws no padding unless a value or the theme gives one, so in the default
   theme its area fills it and there is no frame of its own to press; Esc or the
-  path chooses it.
-- **S03** stops at G-37, **S08** at G-38.
+  path chooses it. Since the seeded sections set their spacing (the look of
+  the page, 2026-11-04), the frame is there and S01 passes.
+- **S03** stops at G-37, **S08** at G-38. Since the seeded hero section has a
+  background, S08 offers «Секция · Фон» and goes on to G-40.
 
 ## What sf-editor 1.0.0 closed (C2)
 
