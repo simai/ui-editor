@@ -11,28 +11,57 @@ Pro package `pro-c47fe37db37d` ([`framework.lock.json`](../framework.lock.json))
 | Id | Gap | Owner | Meanwhile | Closes when |
 |:---|:---|:---|:---|:---|
 | G-01 | `sf-resizer` inside `sf-drawer` stands off the panel's edge: the panel keeps a scrollbar's room at both sides | Framework, [simai/ui-source#59](https://github.com/simai/ui-source/issues/59) (open) | `src/ui/app.css` lets the panel overflow and scrolls its body instead, as ui-mail does | a release fixes #59; the two rules go |
-| G-03 | `layout.page` renders `<main>`, so a page document on the editor's canvas nests a second main landmark | Framework, [simai/ui-source#60](https://github.com/simai/ui-source/issues/60) | the seeded documents have a `layout.section` root | render can draw a page without a top-level landmark |
-| G-04 | `layout.columns` names the asset `composition/layout`, but no stylesheet ships for `.sf-composition-columns` | Framework, [simai/ui-source#61](https://github.com/simai/ui-source/issues/61) | the seeded documents use no columns | the stylesheet ships |
-| G-05 | No properties panel for a selected node: the overlay selects, moves, copies and deletes, but nothing edits a node's data and props | Framework or ui-pro, to order (overlay 1.3.0 brought the toolbar, not a panel) | the right panel names the selected node's type and id | the overlay or ui-pro ships the panel |
-| G-06 | No page-list part: rename, delete, order, a page's state. `sf-menu` lists the pages, but draws an item without `href` as plain text | ui-pro (an editor part), to order | each item gets `href="#page=<id>"` and the editor cancels `sf-menu-navigate` | ui-pro ships a page list over a storage port |
-| G-07 | No storage port for documents: the Framework keeps view preferences (`SF.Preferences`), not documents | ui-pro or the Framework, to agree (the email editor's port is the nearest model) | `src/ui/pages.ts` keeps pages in IndexedDB (`ui-editor` / `pages`), in memory when IndexedDB is refused | a port is released and the store moves behind it |
-| G-08 | No edit operations over a Composition Document: the overlay sends intent (apply, move, insert) and the host changes the Document, but `SF.Composition` has no move, insert, remove or copy | Framework, to agree (the overlay's docs make it the host's) | `src/ui/document.ts`: locate, insert, remove, move, shift, duplicate with fresh ids, each returning a new Document | the Framework ships Document operations, or the overlay's docs settle that they stay the host's |
-| G-09 | The overlay's action keys (⌥↑ ⌥↓ ⌘D ⌫) do nothing after a block is chosen by pointer on a `for` canvas: focus stays on the scroller, and the overlay listens on its tree and toolbar only | Framework, [simai/ui-source#62](https://github.com/simai/ui-source/issues/62) | `src/ui/app.ts` hands such a key from the canvas scroller to the overlay's tree (`[role="tree"]`) as a new `keydown` | a release takes the keys after a pointer selection; the handler goes |
-| G-10 | `sf-tooltip` stands off its anchor inside `[data-sf-overlay-container]`: `contain: layout` makes the container the containing block of `position: fixed`, so the toolbar's tooltips stood a top bar low, over their buttons, and the grip could not be dragged | Framework, [simai/ui-source#63](https://github.com/simai/ui-source/issues/63) | the editor area is no container; `src/ui/app.css` puts the panels under the top bar with `--sf-drawer-block-start` and `--sf-drawer-dock-block-start` | not needed back: the drawer's own variables are the documented way; the issue stays for other hosts |
-| G-11 | No block picker: the seam's + needs a list of what can go there | ui-pro (plan step 5) | the + opens `sf-context-menu` with the starter types (heading, paragraph, section) that the parent's slot accepts by `SF.Composition.BUILTIN_TYPE_MANIFESTS`; `layout.columns` is left out while it has no stylesheet (G-04) | ui-pro releases the picker |
-| G-12 | `sf-composition-overlay-insert` names the place, not the + that was pressed, so a host cannot anchor its list to it | Framework, minor (not filed) | the editor finds the overlay's insertion button whose `data-key` is `<parent>\|<slot>\|<index>` and opens the list under its round mark (`.sf-composition-overlay-insert-mark`), internals that may change | the event carries its anchor, or the overlay opens a host list itself |
-| G-15 | `sf-content-editor` has no embedded form: in an outlet it is still a sheet, with the gutter's inline margin, its own title field and spacing, so the text moves 68 px right and 40 px down when the outlet opens, and the outlet grows by a third | ui-pro, to order (an embed setting: the gutter in the host's margin, the title optional, the rendered spacing) | `src/ui/app.css` takes the editor's own sheet background, padding and width off in the outlet; the shift stays | the editor can stand in a host's box as that box's text |
-| G-16 | `sf-composition-overlay` cannot be paused: hidden, it still takes every click on its canvas's blocks (capture, `preventDefault`, `stopPropagation`), so nothing inside a chosen block, an editor typing there included, gets a click | Framework, to file | while the editor types in place, `src/ui/app.ts` attaches the overlay to an idle element and attaches it back to the canvas after | the overlay has a detach or a passive state, or hands a node over to an embedded editor as its `edit` does for inline text |
-| G-17 | The overlay sends no intent to open a chosen block (a click on it again, a double click, Enter): the host cannot learn it from the overlay, which keeps the canvas's clicks | Framework, to file | `src/ui/app.ts` listens on the window in the capture phase for the second click and the double click, and on the scroller for Enter | the overlay sends an open intent with the node and the point |
-| G-18 | One area for the content per layout: `render` takes one content and refuses a second `content.outlet` (`outlet_duplicate`); a layout cannot hold several text areas, each with its own content | Framework, to agree | the + offers the outlet only while the layout has none; every page has one content | a region type, or named outlets, each bound to a `structured-content` Document |
-| G-19 | No shared undo: `sf-content-editor` keeps its history inside (its `undo` and `redo` actions, no way to read or replace the stack), the overlay keeps none, and a page is two Documents; one ⌘Z over layout and content cannot be built by a host | ui-pro and the Framework, to agree | the layout has no undo; the content has the editor's own, which outlives a switch of mode but not a reload or another page | a history contract: the editor takes a host history (or emits steps a host can undo), and layout and content changes share it; or one Document holds both |
-| G-14 | `SF.Composition.render` refuses `blob:` picture addresses as `unsafe_url`, so the canvas cannot draw a picture kept in the browser | Framework, [simai/ui-source#71](https://github.com/simai/ui-source/issues/71) | `src/ui/app.ts` renders a stored picture (`media:<id>`) as `./media/<id>` and gives each such `img` its object URL after the render; a stored file is kept with the address `./media/<id>` and each such download link gets its object URL and its name | `render` takes a source resolver or allows the page's own `blob:` addresses; the swap goes |
+| G-04 | `layout.columns` names the asset `composition/layout`, but no stylesheet ships for `.sf-composition-columns` (still none in `ui-b8e23367889f`) | Framework, [simai/ui-source#61](https://github.com/simai/ui-source/issues/61) | the seeded columns are drawn by sf-editor with the grid utilities it prints | the stylesheet ships |
+| G-06 | No page-list part: rename, delete, order, a page's state. `sf-menu` lists the pages, but draws an item without `href` as plain text | ui-pro (an editor part), to order | each item gets `href="#page=<id>"` and the shell cancels `sf-menu-navigate` | ui-pro ships a page list over a storage port |
+| G-07 | No storage port for documents: the Framework keeps view preferences (`SF.Preferences`), not documents | ui-pro or the Framework, to agree | `src/ui/pages.ts` keeps pages in IndexedDB (`ui-editor` / `pages`), in memory when IndexedDB is refused; the shell copies a template change into every page | a port is released and the store moves behind it |
 
-The one block editor (owner decision 2026-11-03, [ONE-EDITOR.md](ONE-EDITOR.md))
-answers G-18 and G-19 with one Document: text areas are `layout.area` blocks, as
-many as a page needs, and one history serves typing and structure. G-15 to G-17
-stay useful for the free overlay but are off the one editor's path. Their
-workarounds go when the one editor replaces the two modes (C2).
+### sf-editor 1.0.0 in this shell (C2)
+
+Found by the one-editor scenarios (`scripts/e2e-one-editor.mjs`, the
+component driver's `differs` names each failing check's gap) and the shell's
+own runs. All are ui-pro's (`simai/ui-pro`, sf-editor) unless the row says
+otherwise; none has a workaround in the shell.
+
+| Id | Gap | Scenarios | Closes when |
+|:---|:---|:---|:---|
+| G-20 | The catalogue has two tabs (Текст, Блоки) and the fixed groups; there is no one list with the sections Текст, Медиа, Элементы, Макет, Части страницы, Маркетинг, Данные, Формы, Сохранённые, no «back», and search does not name a result's section. The built-in types have no button, icon button, label, icon, container, grid or empty space, and no section «с областью текста», so the + between sections cannot open on sections | S02 (9 checks), S03 (3), S14 | the owner's one-list catalogue, with Part A's Элементы and Макет types |
+| G-21 | `layout.section` has no variants, so no value can come from a variant («вариант») and «сбросить» has nothing to return to | S06 (2) | the built-in section has variants (Part A) |
+| G-22 | A value set for one screen that equals the type's default clears the block's value on every screen: columns `{xs: 2}`, set to 1 on the phone, lose their `columns` prop, and the desktop shows 1 | S06 (3) | a screen value is stored for that screen whatever the default |
+| G-23 | The Data tab has a mapping preset («Как задано в источнике»), not the shape's fields mapped to the source's; a pagination seeded beside a list follows none («Блок в этой секции» is empty) and the Document has no binding to say it | S07 (3) | the field mapping, and the Document's form of a runtime binding a host can seed |
+| G-24 | An empty named place (the split hero's `media`) draws neither its `empty_key` prompt nor a + of its own | S11 | a named slot's empty place is drawn like an empty parent's |
+| G-25 | No editing of a block's own items in place (the features' points, a columns block's + at the right edge, «Добавить пункт», icons) | S19, S20 | the owner's second review is built |
+| G-26 | Content blocks (a paragraph) have no visibility per screen; only sections and areas have «Скрыт» | S22 | every block has it |
+| G-27 | After «Изменить шаблон» every render of sf-editor fails (`TypeError: Cannot read properties of null (reading 'insertBefore')` in the lit template) and a page the host sets later is not drawn until a reload | `scripts/e2e-shell.mjs` (a known check) | the template edit renders |
+| G-28 | The first press of «Результат» after a load draws the dialog but does not open it (`open()` runs before `sf-modal` is defined); the second press opens it | S05, S06, S15, S16, S21 (the driver presses again) | the dialog opens on the first press |
+| G-29 | Refused own classes are reported as «Не приняты: [object Object]», not by name | S15 | the refused classes are named |
+| G-30 | With the focus on the canvas and nothing chosen, ↓ chooses nothing | S18 | the arrows choose from the first block |
+| G-31 | axe: the library's group headings skip a level (`heading-order`); the editor's bar, canvas and help stand outside any landmark (`region`); the catalogue's options hold buttons (`nested-interactive`); a heading being typed has a role a heading may not have (`aria-allowed-role`); the site template dimmed to 55 %, a value's origin and the catalogue's quiet type names fail contrast (`color-contrast`) | S18 (5 states), `scripts/e2e-a11y.mjs` (allowed there by this id) | each passes axe |
+| G-35 | On a phone (390 px) and at 400 % zoom (320 px) the editor's bar keeps its width (478 px: screens, undo, «Изменить шаблон», «Результат»), so the page scrolls sideways by 88 and 158 px | `scripts/e2e-a11y.mjs` (a known check) | the bar wraps or folds its actions |
+| G-32 | Where the canvas leaves a block little room, the gutter (52 px) stands over the start of its line, and a press there goes to the gutter, not the text | S01 and every text click (the driver presses past the gutter) | the gutter never covers a block's text |
+| G-33 | «Разделить на колонки» takes more than one undo | S05 | one undo reverts the split |
+| G-34 | A block dragged from the library to another block's right edge goes into the column above it, not beside it, and inside a column adds no column | S05 (2) | the side drop puts blocks side by side |
+
+Not classified yet, to check by hand before they are named gaps or driver
+fixes: S01's click on a section's frame when its area fills it, S03 after the
++ (the «/» list), S04's grip drag of a list (the grip found is a point's), S08
+(the builder's «expose» switch is not found).
+
+## What sf-editor 1.0.0 closed (C2)
+
+Repinned 2026-11-03 to `pro-c47fe37db37d` on `ui-b8e23367889f`. The one editor
+replaced the Layout and Content modes, and with them:
+
+- **G-15 to G-19** and their workarounds: the content's own sheet styles, the
+  overlay parked while typing, the second-click listeners, one outlet per
+  layout, two histories. A page is one Document; text areas are `layout.area`
+  blocks, as many as it needs, and one undo serves typing and structure (S13).
+- **G-05** (no properties panel), **G-08** (no Document operations, and
+  `src/ui/document.ts`): sf-editor edits the Document and has its parameters panel.
+- **G-03**: the page's root is `layout.regions`, its main region the page's
+  `main` landmark; the shell has none of its own.
+- **G-09 to G-12**, the overlay's: the overlay is not used.
+- **G-14** and `src/ui/media.ts`: the one editor keeps no files (files are
+  only in `sf-editor-content`, as the Framework's letter says).
 
 ## What `ui-a7c68408a293` and `larena-7bc706e9a07f` closed
 

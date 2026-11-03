@@ -109,11 +109,29 @@ its fixes and the width parts, copied to
 |:---|:---|
 | 22 scenarios over a driver: selection by depth, one catalogue, three ways to insert, moving, columns, parameter origins per screen, data, the block builder, the template, host rights, named places, the site's theme, one undo, several text areas, output (JSON, HTML modifiers, Markdown), the host's store, keyboard and axe, a block's own items, the columns' +, Markdown habits, visibility per screen | `scripts/one-editor/scenarios.mjs`, listed in [ONE-EDITOR.md](ONE-EDITOR.md) |
 | On the prototype: 19 scenarios run, 146 checks pass; 3 skipped (Markdown output, host store, axe); no known differences left | `scripts/e2e-one-editor.mjs --target prototype` |
-| On the component: all 22 skipped until the lock names it (C2) | `scripts/e2e-one-editor.mjs` |
+| On the component: all 22 skipped until the lock names it (C2, below) | `scripts/e2e-one-editor.mjs` |
 
 The side panels at about 800 px wide stand over the canvas edge, and that is
 intended: below 1024 px both panels start closed and slide over the canvas one
 at a time (`src/ui/shell.ts`), so the canvas keeps its whole width; at 1024 px
 and wider both are docked beside it.
+
+## The one block editor, C2: sf-editor replaces the two modes
+
+Built 2026-11-03 on `pro-c47fe37db37d` (`sf-editor` 1.0.0) over
+`ui-b8e23367889f`. The Layout and Content modes, their tests
+(`e2e-layout`, `e2e-content`, `e2e-content-ux`) and the G-15 to G-19
+workarounds are gone; the proofs of the steps above stand for the commits
+before C2. The rollback is to revert C2: a page kept before it keeps its
+`layout` and `content` beside the composed `document`.
+
+| What | Proved by |
+|:---|:---|
+| A page is one Composition Document (`ui-layout`): the site template's header and footer regions around the page's main region; sf-editor draws every node | `scripts/e2e-shell.mjs` |
+| The host gives the demo site's types (variants, renderers, editor manifests, words), the theme and the rights, and answers the source port with three demo sources | `scripts/e2e-one-editor.mjs` (S07, S09, S10, S12) |
+| Every change sf-editor sends is kept in IndexedDB and outlives a reload; a template change goes into every page; a new page takes the template; a page kept as a layout and its content opens as one Document | `scripts/e2e-shell.mjs` |
+| The top bar, the page list's panel (resize, ⌘\, remembered, no tab stop when closed, sliding below 1024 px), RU/EN | `scripts/e2e-shell.mjs` |
+| The acceptance scenarios on the component: 22 run, 70 checks pass, 52 known (each named by its gap, a difference of design, or 5 not classified yet), none failed | `scripts/e2e-one-editor.mjs`, [ONE-EDITOR.md](ONE-EDITOR.md) |
+| axe-core at every size and scheme with nothing chosen, a block chosen, typing and the + open: nothing but sf-editor's own (G-31, allowed by id); the editor's bar scrolls the page sideways on a phone (G-35, known) | `scripts/e2e-a11y.mjs` |
 
 What is missing is in [GAPS.md](GAPS.md).

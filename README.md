@@ -5,33 +5,25 @@ The reference page editor for SIMAI Framework and SIMAI Pro, in the line of
 pages before products take them: the email editor (`simai/ui-mail`), Larena's
 layout editor and documentation editing in Docara.
 
-**Status: step 5, the Content mode, built 2026-11-01** on Framework
-`ui-b8e23367889f` and Pro `pro-c47fe37db37d`: a page is a layout with one
-content outlet and its content; the Layout mode selects, moves, copies, deletes
-and inserts blocks, and the outlet opens SIMAI Pro's `sf-content-editor` for
-typing in place, inside the outlet with the layout around it (a click on the
-chosen outlet, a double click or Enter; Esc twice or a press on the layout
-returns). Blocks, and the outlet itself, are inserted at the seam.
+**Status: one block editor, C2, 2026-11-03** on Framework `ui-b8e23367889f`
+and Pro `pro-c47fe37db37d`: a page is one Composition Document, layout and
+text in one tree, edited by SIMAI Pro's `sf-editor` 1.0.0 (the owner's decision
+of 2026-11-03). The shell gives it the page, the demo site's own blocks, the
+site's theme, the person's rights and the demo data sources, and keeps every
+change it sends. The two modes are gone. The acceptance scenarios run on the
+component ([`docs/ONE-EDITOR.md`](docs/ONE-EDITOR.md)); what it does not do yet
+is listed as gaps, scenario by scenario ([`docs/GAPS.md`](docs/GAPS.md)). The
+repository is private until it passes acceptance.
 
-**Next: one block editor** (owner decision 2026-11-03). Layout and text become
-one editor over one Document, to be released in ui-pro. Its acceptance
-scenarios are written and proved on the accepted prototype
-([`docs/ONE-EDITOR.md`](docs/ONE-EDITOR.md)). They run on the component when it
-ships, and then it replaces the two modes. The repository is private until it
-passes acceptance.
+## One editor, one Document
 
-## Two modes, one core
-
-- **Layout.** Arrange and configure the parts of a page: the selection frame, a
-  toolbar above the block, insertion between blocks and a properties panel
-  (`sf-composition-overlay`).
-- **Content.** Write: a flow of typing, Enter for a new block, `/` for the block
-  menu, a bar over selected text and block parameters (`sf-content-editor` from
-  SIMAI Pro).
-
-Both edit one format, the SIMAI Framework Composition Document: profile
-`ui-layout` for layouts, `structured-content` for content. A layout holds content
-through one node, so an author never breaks the layout.
+A page is a SIMAI Framework Composition Document (profile `ui-layout`): the
+site template's header and footer regions around the page's main region, with
+sections, columns and text areas (`layout.area`) as blocks and the text inside
+them. One editor edits it by depth: a click on text types, Esc climbs to the
+block, its area, its section. One undo history serves typing and structure.
+Who may change the layout and the template is the host's grant; an author
+writes in the text areas.
 
 ## Rules
 
@@ -51,13 +43,13 @@ through one node, so an author never breaks the layout.
 |:---|:---|
 | [`docs/STATUS.md`](docs/STATUS.md) | Decisions, plan and what each step must prove |
 | [`docs/GAPS.md`](docs/GAPS.md) | What the pinned releases do not give yet, and who owns it |
-| [`docs/ONE-EDITOR.md`](docs/ONE-EDITOR.md) | The one block editor's acceptance scenarios, run on the prototype now and on the component after its release |
-| [`src/ui/`](src/ui) | The shell: the page, its wiring, the Layout mode's changes to a layout, the page store and the seeded pages (a layout and its content each) |
+| [`docs/ONE-EDITOR.md`](docs/ONE-EDITOR.md) | The one block editor's acceptance scenarios, run on the prototype and on `sf-editor` |
+| [`src/ui/`](src/ui) | The shell: the page, its wiring to `sf-editor`, the demo site's blocks and data sources, the page store and the seeded pages |
 | [`locales/`](locales) | The RU/EN dictionaries |
 | [`framework.lock.json`](framework.lock.json) | The pinned Framework release and Pro package, with their hashes |
 | [`scripts/`](scripts) | Fetch and verify the pins, build, serve, the checks and the end-to-end runs |
-| [`prototypes/block-canvas.html`](prototypes/block-canvas.html) | Behaviour accepted for the layout mode (toolbar above the block) |
-| [`prototypes/content-editor.html`](prototypes/content-editor.html) | Behaviour accepted for the content mode, with parameters and JSON, Markdown and HTML |
+| [`prototypes/block-canvas.html`](prototypes/block-canvas.html) | Behaviour accepted for the former layout mode (toolbar above the block) |
+| [`prototypes/content-editor.html`](prototypes/content-editor.html) | Behaviour accepted for the former content mode, with parameters and JSON, Markdown and HTML |
 | [`prototypes/block-editor.html`](prototypes/block-editor.html) | Behaviour accepted for the one block editor (ui-control `0bb8dc4`, 2026-11-03), the scenarios' reference |
 
 The prototypes are behaviour references in plain code, not code to copy.

@@ -1,11 +1,15 @@
-// The pages a first visit starts with. A page is two Composition Documents of
-// the Framework's builtin types: its layout (profile `ui-layout`), which holds
-// one `content.outlet`, and its content (profile `structured-content`, root
-// `content.document`), which SF.Composition.render draws in the outlet's place
-// and sf-content-editor types in. The layout's root is a `layout.section`, not
-// a `layout.page`: the page type renders a <main>, and the canvas already
-// stands inside the editor's own main (docs/GAPS.md, G-03).
+// The pages a first visit starts with. A page is one Composition Document
+// (profile `ui-layout`): layout and text are one tree, edited by sf-editor
+// (the owner's one-block-editor decision of 2026-11-03). The root is
+// `layout.regions` with the site template around the page: a header region
+// (banner), the page's own main region and a footer region (contentinfo).
+// The demo site's own blocks (`demo.*`) are src/ui/blocks.ts.
+//
+// Pages kept before the one editor had two documents, a layout with one
+// `content.outlet` and the content it shows; `composePage` makes the one
+// Document from them, with the content in a text area where the outlet was.
 
+import {heading, paragraph, picture} from './blocks.ts';
 import {seedText, type Language} from './i18n.ts';
 
 export interface CompositionNode {
@@ -14,10 +18,12 @@ export interface CompositionNode {
   data?: Record<string, unknown>;
   props?: Record<string, unknown>;
   slots?: Record<string, CompositionNode[]>;
+  bindings?: Record<string, unknown>[];
+  extensions?: Record<string, unknown>;
 }
 
 export interface CompositionDocument {
-  schema: 'simai.composition.document.v1';
+  schema: 'simai.composition.document' | 'simai.composition.document.v1';
   schema_version?: number;
   id: string;
   profile: 'ui-layout' | 'structured-content';
@@ -25,73 +31,86 @@ export interface CompositionDocument {
   root: CompositionNode;
 }
 
-const text = (value: string) => [{type: 'text', value}];
-const heading = (id: string, level: number, value: string): CompositionNode => ({id, type: 'content.heading', data: {level, content: text(value)}});
-const paragraph = (id: string, value: string): CompositionNode => ({id, type: 'content.paragraph', data: {content: text(value)}});
-const section = (id: string, children: CompositionNode[]): CompositionNode => ({id, type: 'layout.section', slots: {default: children}});
-const outlet = (id: string): CompositionNode => ({id, type: 'content.outlet'});
-const item = (id: string, value: string): CompositionNode => ({id, type: 'content.list-item', data: {content: text(value)}});
-
 export interface SeedPage {
   id: string;
   title: string;
-  layout: CompositionDocument;
-  content: CompositionDocument;
+  document: CompositionDocument;
 }
 
-/** A page's content: a `content.document` under the page's title. */
-export function contentDocument(id: string, title: string, language: Language, blocks: CompositionNode[]): CompositionDocument {
-  return {schema: 'simai.composition.document.v1', id: `${id}-content`, profile: 'structured-content', locale: language, root: {id: `${id}-document`, type: 'content.document', data: {title}, slots: {default: blocks}}};
+type Part = Omit<CompositionNode, 'id' | 'slots'> & {slots?: Record<string, Part[]>};
+
+/** Gives every node of a part an id from the page's id and its place: home-3-1-2. */
+function withIds(part: Part, id: string): CompositionNode {
+  const node: CompositionNode = {...part, id} as CompositionNode;
+  if (part.slots) {
+    let n = 0;
+    node.slots = Object.fromEntries(Object.entries(part.slots).map(([slot, children]) => [slot, children.map((child) => withIds(child, `${id}-${(n += 1)}`))]));
+  }
+  return node;
+}
+
+const section = (children: Part[], props?: Record<string, unknown>): Part => ({type: 'layout.section', ...(props ? {props} : {}), slots: {default: children}});
+const area = (children: Part[]): Part => ({type: 'layout.area', slots: {default: children}});
+const list = (items: string[]): Part => ({type: 'content.list', slots: {items: items.map((value) => ({type: 'content.list-item', data: {content: [{type: 'text', value}]}}))}});
+
+/** The site template around a page's main region: the same on every page. */
+function regions(id: string, language: Language, main: Part[]): CompositionNode {
+  return withIds({
+    type: 'layout.regions',
+    slots: {regions: [
+      {type: 'layout.region', props: {name: 'header', landmark: 'banner'}, slots: {default: [{type: 'demo.header', props: {look: 'row', search: true}}]}},
+      {type: 'layout.region', props: {name: 'main', landmark: 'main'}, slots: {default: main}},
+      {type: 'layout.region', props: {name: 'footer', landmark: 'contentinfo'}, slots: {default: [{type: 'demo.footer', slots: {default: [paragraph(seedText(language, 'footer'))]}}]}},
+    ]},
+  }, id);
+}
+
+export function pageDocument(id: string, language: Language, main: Part[]): CompositionDocument {
+  return {schema: 'simai.composition.document', schema_version: 1, id, profile: 'ui-layout', locale: language, root: regions(id, language, main)};
 }
 
 export function seedDocuments(language: Language): SeedPage[] {
   const s = (key: string) => seedText(language, key);
-  const doc = (id: string, root: CompositionNode): CompositionDocument => ({schema: 'simai.composition.document.v1', id, profile: 'ui-layout', locale: language, root});
   return [
     {
       id: 'home',
       title: s('home.pageTitle'),
-      layout: doc('home', section('home-root', [
-        section('home-hero', [heading('home-title', 1, s('home.title')), paragraph('home-lead', s('home.lead'))]),
-        section('home-layout', [heading('home-layout-title', 2, s('home.layoutTitle')), paragraph('home-layout-text', s('home.layoutText'))]),
-        section('home-content', [heading('home-content-title', 2, s('home.contentTitle')), paragraph('home-content-text', s('home.contentText'))]),
-        outlet('home-outlet'),
-      ])),
-      content: contentDocument('home', s('home.pageTitle'), language, [
-        paragraph('home-p1', s('home.p1')),
-        heading('home-h2', 2, s('home.h2')),
-        {id: 'home-list', type: 'content.list', slots: {items: [item('home-li1', s('home.li1')), item('home-li2', s('home.li2')), item('home-li3', s('home.li3'))]}},
-        paragraph('home-p2', s('home.p2')),
+      document: pageDocument('home', language, [
+        section([{type: 'demo.hero', props: {align: 'split'}, slots: {default: [heading(1, s('home.heroTitle')), paragraph(s('home.heroLead'))], media: [picture(s('picture'))]}}]),
+        section([area([heading(2, s('home.areaTitle')), paragraph(s('home.areaText')), list([s('home.li1'), s('home.li2'), s('home.li3')]), {type: 'content.alert', slots: {default: [paragraph(s('home.alert'))]}}])]),
+        section([
+          heading(2, s('home.newsTitle')),
+          {type: 'demo.cards', props: {cols: {xs: 1, md: 2, lg: 3}}, bindings: [{owner: 'host', ref: 'news', target: 'items'}], extensions: {'simai.composition:data': {items: {shape: 'cards', preset: 'default', limit: 3}}}},
+          {type: 'demo.pagination', props: {mode: 'pages'}},
+        ]),
+        section([{type: 'layout.columns', props: {columns: {xs: 2}}, slots: {columns: [area([picture(s('picture'))]), area([heading(3, s('home.columnsTitle')), paragraph(s('home.columnsText'))])]}}]),
+        section([{type: 'demo.features'}]),
       ]),
     },
     {
       id: 'about',
       title: s('about.title'),
-      layout: doc('about', section('about-root', [outlet('about-outlet')])),
-      content: contentDocument('about', s('about.title'), language, [paragraph('about-text', s('about.text'))]),
+      document: pageDocument('about', language, [section([area([heading(1, s('about.title')), paragraph(s('about.text'))])])]),
     },
   ];
 }
 
-/** An empty page: a layout of one section around the outlet, and content of one empty paragraph under the title. */
+/** An empty page: the site template, and one section with an empty text area. */
 export function blankPage(id: string, title: string, language: Language): SeedPage {
-  return {
-    id,
-    title,
-    layout: {schema: 'simai.composition.document.v1', id, profile: 'ui-layout', locale: language, root: section(`${id}-root`, [outlet(`${id}-outlet`)])},
-    content: contentDocument(id, title, language, [{id: `${id}-p1`, type: 'content.paragraph', data: {content: []}}]),
-  };
+  return {id, title, document: pageDocument(id, language, [section([area([heading(1, title), paragraph('')])])])};
 }
 
-/** The types the Layout mode's simple list offers, until ui-pro's block picker
-    (plan step 5): the outlet is the area where the page's content stands. */
-export const STARTER_TYPES = ['content.heading', 'content.paragraph', 'layout.section', 'content.outlet'] as const;
-
-/** A new node of one of STARTER_TYPES, with words in the page's language. */
-export function starterNode(type: (typeof STARTER_TYPES)[number], id: (base: string) => string, language: Language): CompositionNode {
-  const s = (key: string) => seedText(language, key);
-  if (type === 'content.heading') return heading(id('heading'), 2, s('starter.heading'));
-  if (type === 'content.paragraph') return paragraph(id('paragraph'), s('starter.paragraph'));
-  if (type === 'content.outlet') return outlet(id('outlet'));
-  return section(id('section'), [paragraph(id('paragraph'), s('starter.paragraph'))]);
+/** The one Document of a page kept as a layout and its content: the content's blocks in a text area where the outlet stood. */
+export function composePage(id: string, layout: CompositionDocument, content: CompositionDocument, language: Language): CompositionDocument {
+  const blocks = content.root.slots?.default ?? [];
+  const swap = (node: CompositionNode): CompositionNode => {
+    if (node.type === 'content.outlet') return {id: node.id, type: 'layout.area', slots: {default: blocks}};
+    if (!node.slots) return node;
+    return {...node, slots: Object.fromEntries(Object.entries(node.slots).map(([slot, children]) => [slot, children.map(swap)]))};
+  };
+  const main = swap(layout.root);
+  const document = pageDocument(id, language, []);
+  const mainRegion = document.root.slots!.regions![1]!;
+  mainRegion.slots = {default: [main]};
+  return document;
 }

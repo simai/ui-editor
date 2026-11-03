@@ -58,7 +58,7 @@ export function translate(root: ParentNode = document) {
   for (const node of root.querySelectorAll<HTMLElement>('[data-t-attr]')) {
     // An sf-button moves the data-* its author wrote to its native button;
     // the label belongs to the host, so the attribute goes there.
-    const target = node.closest<HTMLElement>('sf-button, sf-icon-button') ?? node;
+    const target = node.closest<HTMLElement>('sf-button, sf-button-icon') ?? node;
     for (const pair of node.dataset.tAttr!.split(';')) {
       const [attribute, key] = pair.split(':');
       if (attribute && key) target.setAttribute(attribute, t(key));

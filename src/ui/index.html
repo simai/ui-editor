@@ -16,19 +16,18 @@
   <script src="fw/core/js/core.js"></script>
 </head>
 <body>
-  <header id="top-bar" class="top-bar flex items-cross-center gap-1/2 p-x-1">
-    <sf-icon-button id="toggle-left" icon="left_panel_close" appearance="ghost" scheme="on-surface" size="1/2" aria-controls="left-panel" data-t-attr="aria-label:panel.toggleLeft;title:panel.toggleLeftKey" aria-label="Панель страниц"></sf-icon-button>
+  <!-- Not a banner: the page on the canvas has its own header region. -->
+  <div id="top-bar" class="top-bar flex items-cross-center gap-1/2 p-x-1" role="region" data-t-attr="aria-label:app.bar" aria-label="Редактор страниц">
+    <sf-button-icon id="toggle-left" icon="left_panel_close" appearance="ghost" scheme="on-surface" size="1/2" aria-controls="left-panel" data-t-attr="aria-label:panel.toggleLeft;title:panel.toggleLeftKey" aria-label="Панель страниц"></sf-button-icon>
     <h1 class="top-title text-1/2 truncate m-0" data-t="app.title">SIMAI — редактор страниц</h1>
     <span class="grow"></span>
-    <sf-button-group id="mode" appearance="segmented" plate="raised" size="1/2" value="layout" data-t-attr="aria-label:mode.label" aria-label="Режим"></sf-button-group>
-    <span class="grow"></span>
     <sf-button-group id="language" appearance="segmented" plate="raised" size="1/2" data-t-attr="aria-label:language.label" aria-label="Язык интерфейса" items='[{"value":"ru","label":"RU"},{"value":"en","label":"EN"}]'></sf-button-group>
-    <sf-icon-button id="toggle-right" icon="right_panel_close" appearance="ghost" scheme="on-surface" size="1/2" aria-controls="right-panel" data-t-attr="aria-label:panel.toggleRight;title:panel.toggleRightKey" aria-label="Панель свойств"></sf-icon-button>
-  </header>
+  </div>
 
   <div id="storage-state" class="storage-state p-x-1 p-y-1/2 text-1/2" role="status" data-t="storage.unavailable" hidden></div>
 
-  <main id="editor" class="editor" data-sf-drawer-dock-host>
+  <!-- No main landmark here: the page on the canvas has its own main region. -->
+  <div id="editor" class="editor" data-sf-drawer-dock-host>
     <sf-drawer id="left-panel" docked open show-close="false" gutter="var(--sf-space-1)" placement="inline-start" width="var(--pages-width, var(--sf-f8))" data-t-attr="label:panel.pages" label="Страницы">
       <div id="pages-pane" class="flex flex-col gap-1/2">
         <h2 class="pane-title m-0" data-t="panel.pages">Страницы</h2>
@@ -41,37 +40,9 @@
     </sf-drawer>
 
     <div class="canvas-area">
-      <section id="layout-view" class="canvas-scroll" tabindex="0" data-t-attr="aria-label:canvas.label" aria-label="Холст страницы">
-        <!-- Before the canvas, in its scroller: the tree comes first in the Tab
-             order, and the frames and the toolbar scroll with the blocks. -->
-        <sf-composition-overlay id="overlay" for="canvas" placement="top" data-t-attr="label:canvas.tree" label="Структура страницы"></sf-composition-overlay>
-        <div id="canvas" class="canvas"></div>
-        <p id="canvas-problems" class="problems text-1/2" role="alert" hidden></p>
-      </section>
-      <section id="content-view" class="canvas-scroll">
-        <sf-content-editor id="content-editor" class="canvas" parameters="host" data-t-attr="label:content.label" label="Содержимое страницы"></sf-content-editor>
-      </section>
+      <sf-editor id="page-editor" preferences-key="ui-editor" data-t-attr="label:canvas.label" label="Страница"></sf-editor>
     </div>
-
-    <sf-drawer id="right-panel" docked open show-close="false" gutter="var(--sf-space-1)" placement="inline-end" width="var(--props-width, var(--sf-g0))" data-t-attr="label:panel.properties" label="Свойства">
-      <div id="props-pane" class="flex flex-col gap-1/2">
-        <h2 class="pane-title m-0" data-t="panel.properties">Свойства</h2>
-        <p id="props-empty" class="muted text-1/2 m-0" data-t="props.empty">Выберите часть страницы на холсте.</p>
-        <dl id="props" class="props text-1/2 m-0" hidden>
-          <dt data-t="props.type">Тип</dt><dd id="props-type"></dd>
-          <dt data-t="props.id">Идентификатор</dt><dd id="props-id"></dd>
-        </dl>
-        <p id="props-later" class="muted text-1/2 m-0" data-t="props.later"></p>
-        <div id="props-block" class="flex flex-col gap-1/2" hidden>
-          <p id="props-block-type" class="text-1/2 m-0"></p>
-          <div id="props-fields" class="flex flex-col gap-1/2"></div>
-        </div>
-      </div>
-      <sf-resizer id="resizer-right" edge="inline-start" data-t-attr="label:panel.resizeProperties" label="Ширина панели свойств" target=".sf-drawer-panel" min="var(--sf-f6)" max="var(--sf-g5)" property="--props-width" storage-key="ui-editor.props"></sf-resizer>
-    </sf-drawer>
-
-    <sf-context-menu id="insert-menu" popup size="1/2" data-t-attr="aria-label:insert.label" aria-label="Что вставить"></sf-context-menu>
-  </main>
+  </div>
   <script type="module" src="app.js"></script>
 </body>
 </html>

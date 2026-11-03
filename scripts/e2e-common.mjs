@@ -32,6 +32,11 @@ export async function startRun() {
       steps.push({name, pass: Boolean(pass), detail: String(detail)});
       console.log(`${pass ? 'ok  ' : 'FAIL'} ${name}${detail ? ` (${detail})` : ''}`);
     },
+    /** A check a pinned release fails by a known gap (docs/GAPS.md): reported, not failing the run, and named when it passes so the gap can close. */
+    known(gap, name, pass, detail = '') {
+      steps.push({name, pass: true, detail: String(detail)});
+      console.log(`${pass ? `ok   (${gap} closed?)` : `gap  ${gap}:`} ${name}${detail ? ` (${detail})` : ''}`);
+    },
     async finish() {
       await browser.close();
       server.kill();

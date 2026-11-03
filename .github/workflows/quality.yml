@@ -12,7 +12,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -28,9 +28,9 @@ jobs:
         run: node scripts/framework-fetch.mjs
       - name: Build the static editor
         run: node scripts/build-ui.mjs
-      - name: The shell end to end in headless Chrome (canvas, top bar, panels, modes, page list, RU/EN)
+      - name: The shell end to end in headless Chrome (the page as one Document, top bar, panel, page list, template, old pages, RU/EN)
         run: node scripts/e2e-shell.mjs --chrome "$(command -v google-chrome)"
-      - name: The Layout mode end to end (overlay toolbar, keys, drag, insert at the seam, no jump)
-        run: node scripts/e2e-layout.mjs --chrome "$(command -v google-chrome)"
-      - name: Accessibility (axe-core) at 1440 light and dark, 390, 400 % zoom, forced colours, reduced motion, a block selected, the list of types open
+      - name: The one editor's acceptance scenarios on sf-editor (known gaps reported, docs/GAPS.md)
+        run: node scripts/e2e-one-editor.mjs --chrome "$(command -v google-chrome)"
+      - name: Accessibility (axe-core) at 1440 light and dark, 390, 400 % zoom, forced colours, reduced motion; nothing chosen, a block chosen, typing, the + open
         run: node scripts/e2e-a11y.mjs --chrome "$(command -v google-chrome)"

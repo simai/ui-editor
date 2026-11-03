@@ -1,14 +1,14 @@
 /* The editor shell. Layout inside a region comes from Framework utilities in
-   the markup (flex, gap-*, p-*, items-*); the side panels are sf-drawer inside
-   the editor area. This file keeps only what no utility or component says.
-   Values are Framework tokens. */
+   the markup (flex, gap-*, p-*, items-*); the page list is sf-drawer beside
+   sf-editor, which brings its own panels. This file keeps only what no
+   utility or component says. Values are Framework tokens. */
 html, body { margin: 0; block-size: 100%; }
-/* The panels stand under the top bar, docked or sliding (sf-drawer's own
+/* The page list stands under the top bar, docked or sliding (sf-drawer's own
    variables). The editor area is no data-sf-overlay-container: a container is
-   the containing block of everything fixed in it, and the overlay's tooltips
-   would stand a top bar lower than their buttons (docs/GAPS.md, G-10). */
+   the containing block of everything fixed in it, and tooltips would stand a
+   top bar lower than their buttons (simai/ui-source#63). */
 :root { --sf-drawer-block-start: var(--sf-d2); --sf-drawer-dock-block-start: var(--sf-d2); }
-body { background: var(--sf-surface-0); color: var(--sf-on-surface); display: flex; flex-direction: column; min-block-size: 100vh; }
+body { background: var(--sf-surface-0); color: var(--sf-on-surface); display: flex; flex-direction: column; block-size: 100vh; overflow: hidden; }
 .muted { color: var(--sf-on-surface-variant); }
 
 /* Top bar: one row of size-1/2 controls (32 px), 48 px high. */
@@ -16,38 +16,12 @@ body { background: var(--sf-surface-0); color: var(--sf-on-surface); display: fl
 .top-title { font-weight: var(--sf-font-weight-medium); min-inline-size: 0; }
 .storage-state { border-block-end: var(--sf-px) solid var(--sf-outline-variant); background: var(--sf-surface-1); }
 
-/* The editor area holds the panels and the canvas between them. */
+/* The editor area holds the page list and sf-editor, which fills the rest. */
 .editor { flex: 1; display: flex; min-block-size: 0; position: relative; }
-.canvas-area { flex: 1; min-inline-size: 0; display: flex; flex-direction: column; background: var(--sf-surface-1); }
-.canvas-scroll { flex: 1; overflow: auto; padding: var(--sf-space-2); box-sizing: border-box; }
-/* The overlay's toolbar stands above the selected block (placement="top"):
-   the scroller keeps its height and gap above the canvas, so the first block
-   has room for it too. */
-#layout-view { padding-block-start: calc(var(--sf-d0) + var(--sf-space-1)); }
-.canvas { max-inline-size: var(--sf-h2); margin-inline: auto; padding: var(--sf-space-2); background: var(--sf-surface-0); border-radius: var(--sf-radius--surface); box-sizing: border-box; }
-.canvas section { display: flex; flex-direction: column; gap: var(--sf-space-1); padding-block: var(--sf-space-1\/2); }
-.canvas h1, .canvas h2, .canvas p { margin: 0; }
-.problems { color: var(--sf-error); overflow-wrap: anywhere; }
-/* The Content view shows in the Content mode only, and only for a layout with
-   no outlet: otherwise the editor types in place, in the outlet on the canvas.
-   It carries no `hidden`, so sf-content-editor loads with the page
-   (src/ui/app.ts, setMode). */
-body:not([data-mode="content"]) #content-view,
-body[data-inplace] #content-view,
-body[data-mode="content"]:not([data-inplace]) #layout-view { display: none; }
-/* In place the editor is no sheet of its own: the canvas around it is. */
-.canvas [data-sf-outlet] > #content-editor { max-inline-size: none; margin: 0; padding: 0; background: none; border-radius: 0; }
-body[data-inplace] .canvas [data-sf-outlet] { outline-style: solid; outline-color: var(--sf-primary); cursor: auto; }
-/* The outlet on the layout's canvas: where the content stands, a double click
-   away from typing. */
-.canvas [data-sf-outlet] { outline: var(--sf-px) dashed var(--sf-outline-variant); outline-offset: var(--sf-space-1\/4); border-radius: var(--sf-radius--surface); cursor: text; }
-.canvas [data-sf-outlet] article { display: flex; flex-direction: column; gap: var(--sf-space-1); }
-.canvas [data-sf-outlet] :is(h1, h2, h3, ul, ol, blockquote) { margin: 0; }
+.canvas-area { flex: 1; min-inline-size: 0; display: flex; flex-direction: column; }
+.canvas-area > sf-editor > .sf-editor { flex: 1; min-block-size: 0; }
 
 .pane-title { font-size: var(--sf-text--size-1); font-weight: var(--sf-font-weight-bold); }
-.props { display: grid; grid-template-columns: auto 1fr; gap: var(--sf-space-1\/4) var(--sf-space-1); }
-.props dt { color: var(--sf-on-surface-variant); }
-.props dd { margin: 0; overflow-wrap: anywhere; }
 
 /* The edge of a panel shows where it can be dragged. The panel keeps a
    scrollbar's room at both sides and sf-resizer stands inside that room: the
@@ -57,3 +31,8 @@ body[data-inplace] .canvas [data-sf-outlet] { outline-style: solid; outline-colo
 .sf-drawer-panel:has(> .sf-drawer-body > sf-resizer) > .sf-drawer-body { overflow-y: auto; min-block-size: 0; flex: 1; }
 sf-resizer { --sf-resizer-line-color: var(--sf-outline-variant); }
 body[data-layout="narrow"] sf-resizer { display: none; }
+
+/* The demo site's own blocks (src/ui/blocks.ts) are the host's: a picture in
+   a card keeps to the card's width on a phone. */
+.demo-card { min-inline-size: 0; }
+.demo-card img { max-inline-size: 100%; block-size: auto; }

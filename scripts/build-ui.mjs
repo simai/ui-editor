@@ -5,7 +5,7 @@
 //   node scripts/build-ui.mjs
 //
 // dist/ is a static site: index.html, app.js (one esbuild bundle of src/ui),
-// app.css, the pinned Framework distr/ under fw/ and the pinned Pro package
+// app.css, the demo picture under demo/, the pinned Framework distr/ under fw/ and the pinned Pro package
 // under pkg/. Relative paths only, so it works at a site root and in a subfolder.
 import {cpSync, existsSync, mkdirSync, readFileSync, rmSync} from 'node:fs';
 import {dirname, join} from 'node:path';
@@ -36,6 +36,8 @@ await build({
 });
 cpSync(join(ROOT, 'src/ui/index.html'), join(out, 'index.html'));
 cpSync(join(ROOT, 'src/ui/app.css'), join(out, 'app.css'));
+// The demo site's picture, which its blocks and sources show.
+cpSync(join(ROOT, 'src/ui/demo'), join(out, 'demo'), {recursive: true});
 cpSync(framework, join(out, 'fw'), {recursive: true});
 cpSync(pro, join(out, lock.package.base), {recursive: true});
 console.log(`editor: dist/ built against ${lock.pair} and ${lock.package.release}`);

@@ -9,8 +9,8 @@ in `simai/ui-control`, and the assignment is `ONE-EDITOR-ASSIGNMENT.md`:
 - **Part B:** the editor, one Smart component in ui-pro;
 - **Part C:** this repository.
 
-This page is Part C1: the prototype's flows turned into end-to-end scenarios
-against the future component.
+This page is Part C: the prototype's flows turned into end-to-end scenarios
+(C1), run on the released component in this repository's shell (C2).
 
 ## How the scenarios run
 
@@ -23,7 +23,7 @@ cannot start fails here too.
 
 | Target | Driver | What happens |
 |:---|:---|:---|
-| `--target component` (in `npm run e2e`) | `scripts/one-editor/component.mjs`, written in C2 | skipped until `framework.lock.json` names the component (`package.one_editor`) and its driver exists |
+| `--target component` (in `npm run e2e` and CI) | `scripts/one-editor/component.mjs` | runs on `sf-editor` 1.0.0 (`package.one_editor` in `framework.lock.json`) in the built shell; a check the component fails is reported with its gap, not failed |
 | `--target prototype` (in `npm run e2e`) | `scripts/one-editor/prototype.mjs` | runs on [`prototypes/block-editor.html`](../prototypes/block-editor.html), the accepted behaviour (ui-control `0bb8dc4`), to prove the scenarios themselves |
 
 ```sh
@@ -73,23 +73,54 @@ C1's reports found five defects of the prototype; ui-control fixed them all:
 The prototype driver's `differs` map is empty; a check the prototype fails
 again fails the run.
 
-## C2: what the component's driver needs
+## C2: on sf-editor 1.0.0
 
-C2 writes `scripts/one-editor/component.mjs` with the same verbs and sets
-`package.one_editor` in the lock. It needs these from Parts A and B:
+`pro-c47fe37db37d` on `ui-b8e23367889f`, 2026-11-03. The shell is the host
+(`src/ui/app.ts`):
+- the page as one Document;
+- the demo site's types made by the block author kit's pattern
+  (`src/ui/blocks.ts`): header, footer, hero, features, call to action, cards
+  and pagination, with their variants, renderers, editor manifests and words;
+- the theme and the rights;
+- the demo sources through `connectPort` (`src/ui/sources.ts`): news, products
+  and offers in the cards shape;
+- every `change` kept, a template change copied into every page.
 
-- **The Document:** the editor's one Document, read back as
-  `composition-document` v1, the way `globalThis.serialize(S.doc)` gives it
-  here.
-- **A host grant of rights,** so S10 can run without a role switch.
-- **The site's theme set by the host,** for S12.
-- **The source port with demo sources,** for S07.
-- **Markdown of a text area,** for S16.
-- **A change event the host can store,** for S17.
-- **The interface words of the scenarios.** They are the prototype's Russian
-  words: «Разделить на колонки», «Сделать блок из этого…», the section names,
-  the origin names. The component's RU dictionary should keep them, or the driver
-  maps them.
+The run: 22 scenarios, 70 checks pass and 52 are known. Each known check names
+its gap in the driver's `differs` (G-20 to G-34, [GAPS.md](GAPS.md)), a
+difference of design below, or «not classified yet» (5 checks). None fails the
+run; a known check that starts to pass prints ok.
 
-The two modes and the G-15 to G-19 workarounds stay until these scenarios pass
-on the component ([GAPS.md](GAPS.md)).
+What passes: selection by depth, typing into the Document, Esc and Enter
+through the depth (S01); the template locked, its explicit edit and «Готово»
+(S09); an author's rights and the lock's reason from the host (S10); the
+theme's default and a block's own value (S12); one undo history for typing and
+moves (S13); values, not classes, in the Document (S15); Markdown of an area
+(S16); the page over a reload (S17); Tab to the canvas (S18).
+
+The driver reads the component the scenarios' way, in its header:
+- the names of the demo types (`demo.hero` is `marketing.hero`);
+- the page as its main region with the template's parts;
+- a heading's `data.level`, a list's `ordered` and its points;
+- the prototype's field names, values and origins mapped to sf-editor's:
+  «Отступ сверху и снизу» with S/M/L as 5/6/8, «Скрыт» as «Показывать на
+  этом экране» the other way round, «Блок» as «этот блок», «Экран» as the
+  screen;
+- the menu's «Сделать блоком сайта» for «Сделать блок из этого…».
+
+### Differences of design
+
+Not gaps: sf-editor does these on purpose, and the prototype's check does not
+apply as written.
+
+| Check | What sf-editor does |
+|:---|:---|
+| S05: the split leaves the new column empty | it puts a paragraph in the new column, so it can be typed in at once |
+| S10: an author inserts only inside the first text area | a columns block's columns are text areas (`layout.area`), so an author writes there too; the prototype's columns were layout only |
+| S15: the HTML has `p-y-8` and `gap-5` | those are the prototype's theme defaults; the demo site's theme sets none |
+| S21: the paragraph is replaced by the new block | «## », «> » and «1. » change the block in place and keep its id |
+
+The two modes and the G-15 to G-19 workarounds are gone: the scenarios run on
+the component, and the rollback is the commit before C2 (pages kept since keep
+their `layout` and `content` beside the new `document`, so the old shell still
+reads them).

@@ -3,69 +3,157 @@
     "app.title": "SIMAI — page editor",
     "panel.toggleLeft": "Pages panel",
     "panel.toggleLeftKey": "Pages panel (⌘\\)",
-    "panel.toggleRight": "Properties panel",
-    "panel.toggleRightKey": "Properties panel (⌥⌘\\)",
     "panel.pages": "Pages",
-    "panel.properties": "Properties",
     "panel.resizePages": "Width of the pages panel",
-    "panel.resizeProperties": "Width of the properties panel",
-    "mode.label": "Mode",
-    "mode.layout": "Layout",
-    "mode.content": "Content",
     "language.label": "Interface language",
     "pages.new": "New page",
     "pages.untitled": "New page {n}",
     "pages.local": "Pages are kept in this browser only.",
     "pages.list": "Pages",
     "canvas.label": "Page canvas",
-    "canvas.tree": "Page structure",
-    "canvas.invalid": "The page document did not pass the check: {n}",
-    "canvas.emptyPicture": "This picture waits for its file: open the content to add it",
-    "canvas.emptyFile": "This file waits to be added: open the content to add it",
-    "canvas.badBlock": "The {type} block did not pass the check and is not shown: fix it in the page content",
-    "props.empty": "Choose a part of the page on the canvas.",
-    "props.type": "Type",
-    "props.id": "Id",
-    "props.later": "Property fields come with the overlay's properties panel.",
-    "props.emptyContent": "Choose a block: Esc, a click left of the block or on a picture.",
-    "props.noFields": "This block has no parameters.",
-    "media.refused": "The file could not be kept in the browser.",
-    "type.layout.section": "Section",
-    "type.layout.page": "Page",
-    "type.layout.columns": "Columns",
-    "type.content.heading": "Heading",
-    "type.content.paragraph": "Paragraph",
-    "type.content.figure": "Picture",
-    "type.content.file": "File",
     "storage.unavailable": "The browser storage is unavailable: pages will not outlive this tab.",
-    "action.drag": "Drag",
-    "action.up": "Move up",
-    "action.down": "Move down",
-    "action.duplicate": "Duplicate",
-    "action.remove": "Delete",
-    "insert.label": "What to insert",
-    "insert.heading": "Block types",
-    "content.label": "Page content",
-    "type.content.outlet": "Page content",
-    "outlet.open": "Click the chosen area, double click it or press Enter to type here"
+    "theme.default": "Site theme",
+    "theme.compact": "Compact",
+    "rights.layout": "The site’s designer changes it; you write in the text areas.",
+    "app.bar": "Page editor"
   },
   "seed": {
-    "home.title": "SIMAI page editor",
-    "home.lead": "This page is a SIMAI Framework Composition Document, drawn by SF.Composition.render.",
-    "home.layoutTitle": "The Layout mode",
-    "home.layoutText": "Choose a block on the canvas: sf-composition-overlay draws the frame, the toolbar above the block and the insertion places.",
-    "home.contentTitle": "The Content mode",
-    "home.contentText": "The Page content block below is where the layout puts the page’s text. Click it once to choose it, again to type right here; Esc twice or a click on the layout brings the layout back.",
+    "site": "SIMAI Studio",
+    "home.pageTitle": "Home",
+    "home.heroTitle": "A page of blocks, in one editor",
+    "home.heroLead": "Layout and text are one tree of blocks. Click text to type, click its edge to choose the block.",
+    "home.areaTitle": "How to work here",
+    "home.areaText": "Click any text and type. Click beside the text or on a block’s edge to choose the block: its parameters are on the right. Esc goes a level up, Enter goes in.",
+    "home.li1": "Point between blocks: a + offers what fits that place.",
+    "home.li2": "Drag a block from the library on the left, or click it: it lands after the chosen one.",
+    "home.li3": "Type “/” in an empty line for the catalogue.",
+    "home.alert": "Undo is one history: Cmd+Z undoes typed text and a moved section alike.",
+    "home.newsTitle": "News",
+    "home.columnsTitle": "Columns are blocks too",
+    "home.columnsText": "A column holds anything but a section. The number of columns is set for the desktop, the tablet and the phone apart.",
     "about.title": "About",
-    "about.text": "The second page shows that the page list is kept in the browser and switches the document on the canvas.",
-    "starter.heading": "A new heading",
-    "starter.paragraph": "A new paragraph.",
-    "home.pageTitle": "How a page is made",
-    "home.p1": "This text is the page’s content document. The same SF.Composition.render draws it, and sf-content-editor from SIMAI Pro types in it.",
-    "home.h2": "What to try",
-    "home.li1": "Press Enter at the end of a line for a new paragraph.",
-    "home.li2": "Type “## ” in an empty line to make it a heading.",
-    "home.li3": "Type “/” in an empty line for the list of block kinds.",
-    "home.p2": "Select a word: a bar over it gives bold, italic, code and link."
+    "about.text": "The second page: the page list is kept in this browser.",
+    "new.text": "",
+    "picture": "Picture",
+    "footer": "© 2026 SIMAI. All rights reserved."
+  },
+  "blocks": {
+    "demo.header.name": "Site header",
+    "demo.header.menu": "With a menu",
+    "demo.header.with_search": "With a menu and search",
+    "demo.header.centre": "Logo in the centre",
+    "demo.header.look": "Arrangement",
+    "demo.header.search": "Search",
+    "demo.header.products": "Products",
+    "demo.header.news": "News",
+    "demo.header.contacts": "Contacts",
+    "demo.header.nav": "Site menu",
+    "demo.footer.name": "Footer",
+    "demo.footer.text": "Text",
+    "demo.hero.name": "Hero",
+    "demo.hero.left": "Text on the left",
+    "demo.hero.center": "Centred",
+    "demo.hero.split": "With a picture on the right",
+    "demo.hero.align": "Arrangement",
+    "demo.hero.text": "Text",
+    "demo.hero.media": "Picture",
+    "demo.hero.media_empty": "A picture or a video",
+    "demo.hero.title": "The hero’s heading",
+    "demo.hero.lead": "A line or two about what matters.",
+    "demo.features.name": "Features",
+    "demo.features.cols": "Columns",
+    "demo.features.gap": "Gap",
+    "demo.features.fast": "Fast",
+    "demo.features.fast_text": "A page is put together in minutes.",
+    "demo.features.blocks": "Made of blocks",
+    "demo.features.blocks_text": "Ready variants for every task.",
+    "demo.features.safe": "Safe",
+    "demo.features.safe_text": "An author cannot break the layout.",
+    "demo.cta.name": "Call to action",
+    "demo.cta.plain": "Heading and text",
+    "demo.cta.text": "Text",
+    "demo.cta.title": "Ready to start?",
+    "demo.cta.lead": "Leave a request, we answer within a day.",
+    "demo.cards.name": "Cards",
+    "demo.cards.top": "Picture on top",
+    "demo.cards.text": "Four in a row",
+    "demo.cards.cols": "Columns",
+    "demo.cards.gap": "Gap",
+    "demo.cards.empty": "Nothing here yet",
+    "demo.cards.failed": "The source did not answer; the rest of the page works",
+    "demo.pagination.name": "Pagination",
+    "demo.pagination.mode": "Kind",
+    "demo.pagination.more": "Show more",
+    "demo.footer.line": "© 2026 SIMAI. All rights reserved."
+  },
+  "sources": {
+    "labels": {
+      "news": "News — Bitrix · the News infoblock",
+      "products": "Products — Larena · the Product model",
+      "promo": "Offers — Larena · the Promo model",
+      "preset": "As the source sets it"
+    },
+    "rows": {
+      "news": [
+        {
+          "title": "A new editor is out",
+          "text": "Layout and text are now edited in one place.",
+          "date": "3 November"
+        },
+        {
+          "title": "SIMAI Framework 1.3",
+          "text": "New content blocks and one undo history.",
+          "date": "28 October"
+        },
+        {
+          "title": "A webinar for authors",
+          "text": "How to put pages together from ready variants.",
+          "date": "21 October"
+        },
+        {
+          "title": "The block catalogue",
+          "text": "Groups, search and favourites in the library.",
+          "date": "14 October"
+        },
+        {
+          "title": "Letters from the same blocks",
+          "text": "The email editor uses the same standard.",
+          "date": "7 October"
+        },
+        {
+          "title": "Documentation in Markdown",
+          "text": "Docara keeps the file byte for byte.",
+          "date": "30 September"
+        },
+        {
+          "title": "Data sources",
+          "text": "Bitrix, Larena and mail answer through the port.",
+          "date": "23 September"
+        }
+      ],
+      "products": [
+        {
+          "title": "SIMAI Pro licence",
+          "text": "The page and email editors and the admin.",
+          "date": "24,000 ₽"
+        },
+        {
+          "title": "Turnkey roll-out",
+          "text": "The site moved and the team trained.",
+          "date": "from 150,000 ₽"
+        },
+        {
+          "title": "Support",
+          "text": "An answer within a working day.",
+          "date": "9,000 ₽ a month"
+        },
+        {
+          "title": "The block catalogue",
+          "text": "Marketing blocks and variants.",
+          "date": "12,000 ₽"
+        }
+      ],
+      "promo": []
+    }
   }
 }

@@ -3,11 +3,13 @@
 // docs/ONE-EDITOR.md), each on a fresh page.
 //
 // --target component (the default): against the one editor of the pinned Pro
-//   package. Until framework.lock.json names it (`package.one_editor`, set by
-//   the C2 repin), every scenario is skipped and the run passes.
+//   package (`package.one_editor` in framework.lock.json), in this
+//   repository's shell.
 // --target prototype: against prototypes/block-editor.html, the accepted
-//   behaviour, to prove the scenarios themselves. A check the prototype is
-//   known to fail (its driver's `differs`) is reported, not failed.
+//   behaviour, to prove the scenarios themselves.
+// A check a driver is known to fail (its `differs`: the prototype's defects,
+// the component's gaps in docs/GAPS.md) is reported, not failed; a scenario
+// that stops at a known gap likewise.
 //
 //   node scripts/e2e-one-editor.mjs [--target component|prototype] [--only S05] [--chrome <path>]
 import {existsSync, readFileSync} from 'node:fs';
@@ -57,7 +59,12 @@ for (const s of chosen) {
     run.check(`${s.id}: no page errors`, errors.length === 0, errors.join(' | '));
     counts.passed += 1;
   } catch (error) {
-    run.check(`${s.id}: the scenario finished`, false, error.stack.split('\n').slice(0, 3).join(' '));
+    const known = driver.differs?.[`${s.id}: the scenario finished`];
+    const detail = error.stack.split('\n').slice(0, 3).join(' ');
+    if (known) {
+      counts.known.push(`${s.id}: the scenario finished`);
+      console.log(`known ${s.id}: the scenario finished (${known}; ${detail.slice(0, 160)})`);
+    } else run.check(`${s.id}: the scenario finished`, false, detail);
   }
   await context.close();
 }

@@ -1,22 +1,28 @@
 // The page list, kept in this browser's IndexedDB: database `ui-editor`, store
-// `pages`, one record per page {id, title, layout, content, created, updated},
-// listed in the order they were made. Version 2 of the database started the list
+// `pages`, one record per page {id, title, document, created, updated},
+// listed in the order they were made. A record kept before the one editor has
+// {layout, content} and no document: the reader composes its document
+// (src/ui/seed.ts, composePage) and the next write adds it, leaving the two
+// old documents in place. Version 2 of the database started the list
 // again: the pages of version 1 had one layout document and no content, and
-// were the seeded demo pages. Version 3 adds the store `media`, the pictures a
-// page's content names (src/ui/media.ts), and keeps the pages. When IndexedDB
+// were the seeded demo pages. Version 3 added the store `media`, the pictures
+// the content editor kept; the one editor keeps none, and the store stays for a
+// rollback. When IndexedDB
 // is refused (a private window, a blocked origin) the list lives in memory for
 // the tab and the shell says so.
 
-import type {CompositionDocument} from './seed.ts';
+import {composePage, type CompositionDocument} from './seed.ts';
 
 export interface Page {
   id: string;
-  /** The page's title in the list: its content's `data.title`. */
+  /** The page's title in the list. */
   title: string;
-  /** The page's frame (`ui-layout`), with one `content.outlet`. */
-  layout: CompositionDocument;
-  /** What the outlet holds (`structured-content`, root `content.document`). */
-  content: CompositionDocument;
+  /** The page: one Composition Document (`ui-layout`), layout and text in one tree. */
+  document: CompositionDocument;
+  /** A page kept before the one editor: its frame with one `content.outlet`, kept as it was so a rollback reads it. */
+  layout?: CompositionDocument;
+  /** …and what that outlet held. */
+  content?: CompositionDocument;
   /** ISO time the page was made: the list's order, which an edit keeps. Pages kept before step 1 have none. */
   created?: string;
   /** ISO time of the last write. */
@@ -63,7 +69,9 @@ function open(): Promise<IDBDatabase> {
   });
 }
 
-const inOrder = (pages: Page[]) => pages.sort((a, b) => (a.created ?? a.updated).localeCompare(b.created ?? b.updated) || a.id.localeCompare(b.id));
+/** A page as the editor reads it: with its one Document, composed for a record kept before it. */
+const current = (page: Page): Page => (page.document || !page.layout || !page.content ? page : {...page, document: composePage(page.id, page.layout, page.content, page.layout.locale === 'en' ? 'en' : 'ru')});
+const inOrder = (pages: Page[]) => pages.map(current).sort((a, b) => (a.created ?? a.updated).localeCompare(b.created ?? b.updated) || a.id.localeCompare(b.id));
 
 function memoryStore(): PageStore {
   const pages = new Map<string, Page>();
