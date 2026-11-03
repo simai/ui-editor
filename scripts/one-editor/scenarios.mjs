@@ -71,14 +71,13 @@ export const scenarios = [
   },
   {
     id: 'S02',
-    name: 'One catalogue: the Text and Blocks tabs, sections with variants, search over both, favourites and recent',
-    from: ['B: one catalogue, tabs Text and Blocks, sections, variants, search, favourites and recent', 'help: «Библиотека слева: две вкладки»'],
+    name: 'One catalogue: recent, favourites and sections in one list, variants, search over every section',
+    from: ['B: one catalogue: sections, variants, search, favourites and recent', 'owner, second review 2026-11-03: no Text/Blocks tabs, one list of sections'],
     async run(d, check) {
       let lib = await d.library();
-      check('the library has the two tabs Текст and Блоки', lib.tabs.map((t) => t.name).join() === 'Текст,Блоки', JSON.stringify(lib.tabs));
-      await d.libraryTab('Блоки');
-      lib = await d.library();
-      check('Блоки opens on its sections', ['Структура', 'Части страницы', 'Маркетинг', 'Данные', 'Формы', 'Сохранённые'].every((s) => lib.items.includes(s)), lib.items.join());
+      check('the library is one list, with no tabs', lib.tabs.length === 0, JSON.stringify(lib.tabs));
+      check('its sections are Текст, Медиа, Структура, Части страницы, Маркетинг, Данные, Формы, Сохранённые', ['Текст', 'Медиа', 'Структура', 'Части страницы', 'Маркетинг', 'Данные', 'Формы', 'Сохранённые'].every((x) => lib.items.includes(x)), lib.items.join());
+      check('Favourites stand above the sections', lib.heads.indexOf('Избранное') >= 0 && lib.heads.indexOf('Избранное') < lib.heads.indexOf('Разделы'), lib.heads.join());
       await d.librarySection('Маркетинг');
       lib = await d.library();
       check('a section lists its types', lib.items.includes('Первый экран'), lib.items.join());
@@ -87,20 +86,28 @@ export const scenarios = [
       check('«back» returns to the sections', (await d.library()).items.includes('Маркетинг'));
       await d.librarySearch('кнопка');
       lib = await d.library();
-      check('search covers both tabs and names each result\'s tab and group', lib.items.includes('Кнопка') && lib.items.includes('Призыв к действию') && lib.heads.some((h) => h.startsWith('Текст')) && lib.heads.some((h) => h.startsWith('Блоки')), JSON.stringify(lib));
+      check('search covers every section and names each result\'s section', lib.items.includes('Кнопка') && lib.items.includes('Призыв к действию') && lib.heads.includes('Текст') && lib.heads.includes('Маркетинг'), JSON.stringify(lib));
       await d.librarySearch('');
-      await d.libraryTab('Текст');
+      await d.librarySection('Текст');
       await d.favourite('Цитата');
+      await d.libraryBack();
       lib = await d.library();
-      check('a star puts a block in Favourites, on top of its tab', lib.favourites.includes('Цитата') && lib.heads.some((h) => h.includes('Избранное')), JSON.stringify(lib));
+      check('a star puts a block in Favourites', lib.favourites.includes('Цитата') && lib.heads.includes('Избранное'), JSON.stringify(lib));
       const a = await area(d);
+      await d.choose(a.paragraph.id);
+      await d.focusLibrarySearch();
+      await d.type('аб');
+      await d.press('Backspace');
+      await d.press('Backspace');
+      check('Backspace in the library\'s search edits the search, not the page', Boolean(await find(d, (n) => n.id === a.paragraph.id)));
+      for (let i = 0; i < 3 && !(await find(d, (n) => n.id === a.paragraph.id)); i += 1) await d.undo();
       await d.choose(a.paragraph.id);
       await d.libraryClick('Заметка');
       const after = await childIds(d, a.id);
       const inserted = await find(d, (n) => n.parent === a.id && n.type === 'content.alert' && n.index === after.indexOf(a.paragraph.id) + 1);
       check('a click in the library inserts the block after the chosen one', Boolean(inserted), after.join());
       await d.press('Escape');
-      check('what was inserted shows in Recent', (await d.library()).heads.some((h) => h.includes('Недавние')));
+      check('what was inserted shows in Recent', (await d.library()).heads.includes('Недавние'));
     },
   },
   {
@@ -113,7 +120,7 @@ export const scenarios = [
       const sections = await childIds(d, root);
       await d.seamPlus(root, sections.indexOf(a.section) + 1);
       let picker = await d.picker();
-      check('between sections the + opens on Блоки', picker?.tabs.find((t) => t.pressed)?.name === 'Блоки', JSON.stringify(picker?.tabs));
+      check('between sections the + opens on the list of sections', picker?.section === null && picker.items.includes('Маркетинг'), JSON.stringify(picker));
       await d.pickerSection('Маркетинг');
       await d.pick('Призыв к действию');
       const cta = await find(d, (n) => n.type === 'marketing.cta');
@@ -123,7 +130,7 @@ export const scenarios = [
 
       await d.seamPlus(a.id, 1);
       picker = await d.picker();
-      check('inside a text area the + opens on Текст', picker?.tabs.find((t) => t.pressed)?.name === 'Текст' || (!picker?.tabs.length && picker?.items.includes('Абзац')), JSON.stringify(picker?.tabs));
+      check('inside a text area the + opens straight on Текст', picker?.section === 'Текст' && picker.items.includes('Абзац'), JSON.stringify(picker));
       check('what the place cannot accept is not offered', !picker.items.includes('Секция') && !picker.items.includes('Первый экран') && !picker.items.includes('Шапка сайта'), picker.items.join());
       await d.pick('Цитата');
       const quote = await find(d, (n) => n.parent === a.id && n.type === 'content.quote');
@@ -134,7 +141,7 @@ export const scenarios = [
       const empty = await d.typing();
       check('Enter at the end of a paragraph opens a new one with the caret', empty && empty !== a.paragraph.id);
       await d.type('/');
-      check('/ in an empty line opens the list of text blocks', Boolean(await d.picker()));
+      check('/ in an empty line opens straight on Текст', (await d.picker())?.section === 'Текст', JSON.stringify(await d.picker()));
       // A synonym in Latin letters: the list knows a block by its other names too.
       await d.type('alert');
       check('typing after / filters the list, by name or synonym', (await d.picker())?.items[0] === 'Заметка', JSON.stringify(await d.picker()));
@@ -147,7 +154,7 @@ export const scenarios = [
       const heading = a.heading;
       await d.libraryDrag('Список', heading.id, 'after');
       const list = (await all(d, (n) => n.parent === a.id && n.type === 'content.list')).find((n) => n.id !== a.list.id);
-      check('a block dragged from the library lands where the drop line showed', list && list.index === (await childIds(d, a.id)).indexOf(heading.id) + 1, JSON.stringify(list));
+      check('a block dragged from the library lands where the drop line showed', list && list.index === (await childIds(d, a.id)).indexOf(heading.id) + 1, JSON.stringify(list) + ' ' + nodes(await d.doc()).filter((n) => n.parent === a.id).map((n) => n.type).join());
     },
   },
   {
@@ -269,7 +276,6 @@ export const scenarios = [
       await d.expose('Секция · Фон');
       await d.builderName('Наш первый экран');
       await d.builderSave();
-      await d.libraryTab('Блоки');
       await d.librarySection('Маркетинг');
       check('the site block is in the library', (await d.library()).items.includes('Наш первый экран'));
       const features = await sectionOf(d, 'marketing.features');
@@ -399,15 +405,16 @@ export const scenarios = [
       const fresh = areas.find((n) => !(n.slots?.default ?? []).length);
       await d.seamPlus(fresh.id, 0);
       await d.pick('Заголовок');
+      const heading = await d.typing();
+      check('the + inside the empty area inserts into it', (await find(d, (n) => n.id === heading))?.parent === fresh.id);
       await d.type('Заголовок в области');
       await d.press('Enter');
       await d.type('Абзац в области.');
-      const inside = await all(d, (n) => n.parent === fresh.id);
-      check('a heading and a paragraph typed in it are in the one Document', inside[0]?.type === 'content.heading' && textOf(inside[0]) === 'Заголовок в области' && inside[1]?.type === 'content.paragraph' && textOf(inside[1]) === 'Абзац в области.', JSON.stringify(inside));
-      await d.press('Escape');
-      await d.press('Escape');
-      await d.press('Escape');
+      const typed = await find(d, (n) => n.id === heading);
+      const next = (await all(d, (n) => n.parent === typed?.parent))[typed?.index + 1];
+      check('a heading and a paragraph typed there are in the one Document', typed?.type === 'content.heading' && textOf(typed) === 'Заголовок в области' && next?.type === 'content.paragraph' && textOf(next) === 'Абзац в области.', JSON.stringify([typed, next]));
       const section = fresh.parent;
+      for (let i = 0; i < 3 && (await d.selected()) !== section; i += 1) await d.press('Escape');
       const at = (await childIds(d, root)).indexOf(section);
       check('Esc climbs to its section', (await d.selected()) === section);
       await d.press('Alt+ArrowUp');
@@ -427,6 +434,111 @@ export const scenarios = [
       check('an unknown class is reported to the editor', await d.shows('Нет в SIMAI Framework: bogus-class'));
       const html = await d.html(section);
       check('the HTML has the section\'s modifiers and the own one, no inline style, no unknown class', /\bp-y-8\b/u.test(html) && /\bgap-5\b/u.test(html) && /\blg:p-x-4\b/u.test(html) && !/style=/u.test(html) && !html.includes('bogus-class'), html.split('\n').slice(0, 3).join(' '));
+    },
+  },
+  {
+    id: 'S19',
+    name: 'A block\'s own items: the features\' points move, duplicate, go and come, and take an icon from a set',
+    from: ['owner, second review 2026-11-03: feature items (icon picker, left/right/duplicate/delete, «Добавить пункт»)'],
+    async run(d, check) {
+      const features = await find(d, (n) => n.type === 'marketing.features');
+      const items = async () => (await find(d, (n) => n.id === features.id)).data.items;
+      const first = await items();
+      await d.itemAction(features.id, 0, 'right');
+      let now = await items();
+      check('«Правее» swaps a point with the next', now[0].title === first[1].title && now[1].title === first[0].title, now.map((i) => i.title).join());
+      await d.itemAction(features.id, 1, 'left');
+      check('«Левее» puts it back', (await items()).map((i) => i.title).join() === first.map((i) => i.title).join());
+      await d.itemAction(features.id, 0, 'dup');
+      now = await items();
+      check('«Дублировать» copies a point next to it', now.length === first.length + 1 && now[1].title === first[0].title);
+      await d.itemAction(features.id, 1, 'del');
+      check('«Удалить» removes a point', (await items()).length === first.length);
+      await d.addItem(features.id);
+      now = await items();
+      check('«Добавить пункт» adds an empty point and the caret waits in its title', now.length === first.length + 1 && now.at(-1).title === '' && (await d.typing()) === features.id);
+      await d.type('Новый пункт');
+      check('what is typed is the new point\'s title', plain((await items()).at(-1).title) === 'Новый пункт');
+      await d.press('Escape');
+      await d.pickIcon(features.id, 0, 'rocket_launch');
+      check('a point\'s icon is picked from the set', (await items())[0].icon === 'rocket_launch');
+      await d.undo();
+      check('one undo takes the icon back', (await items())[0].icon === first[0].icon);
+    },
+  },
+  {
+    id: 'S20',
+    name: 'Columns: the + at the right edge adds a column; a duplicate or a removal keeps the count',
+    from: ['owner, second review 2026-11-03: the columns\' +, duplicating and removing a column updates the count'],
+    async run(d, check) {
+      const columns = await find(d, (n) => n.type === 'layout.columns');
+      const state = async () => {
+        const node = await find(d, (n) => n.id === columns.id);
+        return {count: node.slots.default.length, cols: node.props?.cols};
+      };
+      await d.addColumn(columns.id);
+      let now = await state();
+      check('the + adds a column and the count follows', now.count === 3 && now.cols === '3', JSON.stringify(now));
+      const added = await d.selected();
+      check('the new column is chosen', (await find(d, (n) => n.id === added))?.type === 'layout.column');
+      await d.press('ControlOrMeta+d');
+      now = await state();
+      check('a duplicated column is a fourth, the count follows', now.count === 4 && now.cols === '4', JSON.stringify(now));
+      check('at four columns the + goes', !(await d.block(columns.id).locator(':scope > .cadd').count()));
+      await d.press('Backspace');
+      now = await state();
+      check('a removed column takes the count down', now.count === 3 && now.cols === '3', JSON.stringify(now));
+      await d.undo();
+      check('one undo brings it back', (await state()).count === 4);
+    },
+  },
+  {
+    id: 'S21',
+    name: 'Markdown habits: «- », «1. », «# », «## », «### » and «> » at a paragraph\'s start turn it into that block; Enter on an empty last point leaves a list',
+    from: ['owner, second review 2026-11-03: Markdown shortcuts, one undo returns the paragraph, the list\'s «Вид»'],
+    async run(d, check) {
+      const a = await area(d);
+      const fresh = async (mark) => {
+        await d.clickText(a.paragraph.id);
+        await d.press('Enter');
+        const id = await d.typing();
+        await d.type(mark);
+        return id;
+      };
+      const shaped = async (old) => {
+        const ids = await childIds(d, a.id);
+        const now = await d.typing();
+        return {gone: !ids.includes(old), node: await find(d, (n) => n.id === now)};
+      };
+      for (const [mark, type, test] of [
+        ['## ', 'content.heading', (n) => n.props?.level === '2'],
+        ['### ', 'content.heading', (n) => n.props?.level === '3'],
+        ['# ', 'content.heading', (n) => n.props?.level === '1'],
+        ['> ', 'content.quote', () => true],
+        ['1. ', 'content.list', (n) => n.props?.kind === 'ordered'],
+      ]) {
+        const old = await fresh(mark);
+        const got = await shaped(old);
+        check(`«${mark.trim()}» turns the paragraph into ${type}${type === 'content.heading' ? ' ' + mark.trim().length : ''}`, got.gone && got.node?.type === type && test(got.node), JSON.stringify(got.node));
+        await d.press('Escape');
+      }
+      const old = await fresh('- ');
+      const list = (await shaped(old)).node;
+      check('«- » turns it into a bulleted list with the caret in it', list?.type === 'content.list' && (list.props?.kind ?? 'bullet') === 'bullet', JSON.stringify(list));
+      await d.type('Пункт');
+      await d.press('Enter');
+      await d.press('Enter');
+      const after = await d.typing();
+      const items = (await find(d, (n) => n.id === list.id)).data.items;
+      check('Enter on an empty last point leaves the list for a new paragraph', after !== list.id && (await find(d, (n) => n.id === after))?.type === 'content.paragraph' && items.map(plain).join() === 'Пункт', items.join());
+      await d.type('# ');
+      const heading = await d.typing();
+      await d.undo();
+      const back = await find(d, (n) => n.id === after);
+      check('one undo returns the paragraph', back?.type === 'content.paragraph' && !(await find(d, (n) => n.id === heading && n.type === 'content.heading')), JSON.stringify(back));
+      await d.choose(list.id);
+      await d.setField('Вид', '1, 2, 3');
+      check('the list\'s «Вид» makes it numbered', (await find(d, (n) => n.id === list.id)).props?.kind === 'ordered' && /<ol/u.test(await d.html(list.id)));
     },
   },
   {

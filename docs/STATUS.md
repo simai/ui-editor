@@ -99,14 +99,15 @@ pair that brought `sf-content-editor`. The proofs of steps 0 and 1 hold on it.
 
 ## The one block editor, C1: acceptance scenarios
 
-Written 2026-11-03 from the accepted prototype (ui-control `5003b6b`, copied to
+Written 2026-11-03 from the accepted prototype (ui-control `5003b6b`, then
+`7edfcb1` after the owner's second review, copied to
 `prototypes/block-editor.html`) and Part B of the assignment.
 
 | What | Proved by |
 |:---|:---|
-| 18 scenarios over a driver: selection by depth, one catalogue, three ways to insert, moving, columns, parameter origins per screen, data, the block builder, the template, host rights, named places, the site's theme, one undo, several text areas, output (JSON, HTML modifiers, Markdown), the host's store, keyboard and axe | `scripts/one-editor/scenarios.mjs`, listed in [ONE-EDITOR.md](ONE-EDITOR.md) |
-| On the prototype: 15 scenarios run, 104 checks pass; 3 skipped (Markdown, host store, axe); 2 known differences of the prototype reported | `scripts/e2e-one-editor.mjs --target prototype` |
-| On the component: all 18 skipped until the lock names it (C2) | `scripts/e2e-one-editor.mjs` |
+| 21 scenarios over a driver: selection by depth, one catalogue, three ways to insert, moving, columns, parameter origins per screen, data, the block builder, the template, host rights, named places, the site's theme, one undo, several text areas, output (JSON, HTML modifiers, Markdown), the host's store, keyboard and axe, a block's own items, the columns' +, Markdown habits | `scripts/one-editor/scenarios.mjs`, listed in [ONE-EDITOR.md](ONE-EDITOR.md) |
+| On the prototype: 18 scenarios run, 133 checks pass; 3 skipped (Markdown output, host store, axe); 2 known differences of the prototype reported | `scripts/e2e-one-editor.mjs --target prototype` |
+| On the component: all 21 skipped until the lock names it (C2) | `scripts/e2e-one-editor.mjs` |
 
 The side panels at about 800 px wide stand over the canvas edge, and that is
 intended: below 1024 px both panels start closed and slide over the canvas one

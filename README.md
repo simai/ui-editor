@@ -58,7 +58,7 @@ through one node, so an author never breaks the layout.
 | [`scripts/`](scripts) | Fetch and verify the pins, build, serve, the checks and the end-to-end runs |
 | [`prototypes/block-canvas.html`](prototypes/block-canvas.html) | Behaviour accepted for the layout mode (toolbar above the block) |
 | [`prototypes/content-editor.html`](prototypes/content-editor.html) | Behaviour accepted for the content mode, with parameters and JSON, Markdown and HTML |
-| [`prototypes/block-editor.html`](prototypes/block-editor.html) | Behaviour accepted for the one block editor (ui-control `5003b6b`, 2026-11-03), the scenarios' reference |
+| [`prototypes/block-editor.html`](prototypes/block-editor.html) | Behaviour accepted for the one block editor (ui-control `7edfcb1`, 2026-11-03), the scenarios' reference |
 
 The prototypes are behaviour references in plain code, not code to copy.
 

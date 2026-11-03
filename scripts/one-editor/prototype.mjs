@@ -1,5 +1,5 @@
 // The driver of the one-editor scenarios over the accepted prototype,
-// prototypes/block-editor.html (ui-control 5003b6b). It proves the scenarios
+// prototypes/block-editor.html (ui-control 7edfcb1). It proves the scenarios
 // run before the component exists; the component's driver replaces it in C2
 // and keeps the same verbs. Acts go through the pointer and the keyboard; only
 // reading the Document and what a host grants (rights, theme) reach into the
@@ -13,8 +13,8 @@ const URL = pathToFileURL(join(ROOT, 'prototypes/block-editor.html')).href;
 export const name = 'prototype';
 /** Checks the prototype is known to fail, with why; the component must pass them. */
 export const differs = {
-  'S03: Enter turns the empty line into the chosen block': 'after «/» and a search the prototype keeps the typed line and inserts the block above it; it removes the line only for a bare «/»',
-  'S04: dragging the grip moves the block to the drop line': 'the gutter calls preventDefault on mousedown, so Chrome never starts a drag from the grip; the toolbar\'s handle, which is exempt, drags',
+  'S14: the + inside the empty area inserts into it': 'an empty container\'s seam lies under the next seam of its parent, whose + button, invisible until hovered, still takes the click: the block lands after the area, in the section',
+  'S02: Backspace in the library\'s search edits the search, not the page': 'the page\'s keys listen on the document and skip only text blocks, so Backspace in the search field deletes the chosen block',
 };
 /** What the prototype cannot show; such scenarios are skipped here, never on the component. */
 export const lacks = {
@@ -43,7 +43,7 @@ function driver(page) {
   const block = (id) => page.locator(`#frame [data-id="${id}"]`).first();
   const settle = (ms = 150) => page.waitForTimeout(ms);
   // To the middle of the canvas: its bottom edge is under the sticky path bar.
-  const reveal = (locator) => locator.evaluate((element) => element.scrollIntoView({block: 'center'}));
+  const reveal = (locator) => locator.evaluate((element) => element.scrollIntoView({block: 'center', behavior: 'instant'}));
   const pop = page.locator('#pop.on');
 
   const d = {
@@ -68,8 +68,12 @@ function driver(page) {
     clickText: async (id) => {
       await reveal(d.text(id));
       const box = await d.text(id).boundingBox();
-      // After the last letter: the last line's end (End is no caret key on macOS).
-      await page.mouse.click(box.x + box.width - 2, box.y + box.height - 4);
+      // The caret goes after the last letter (End is no caret key on macOS).
+      // A click on the first line's start stays clear of the toolbar and the seams;
+      // then the end of the text by the keyboard.
+      const line = await d.text(id).evaluate((element) => parseFloat(getComputedStyle(element).lineHeight) || 24);
+      await page.mouse.click(box.x + 4, box.y + line / 2);
+      await page.keyboard.press(process.platform === 'darwin' ? 'Meta+ArrowDown' : 'Control+End');
       await settle();
     },
     /** A click on the block's own frame, outside its text and its children. */
@@ -125,9 +129,11 @@ function driver(page) {
     seamPlus: async (parent, index) => {
       const seam = page.locator(`#frame .ins[data-parent="${parent}"][data-index="${index}"]`);
       await reveal(seam);
-      await seam.hover();
+      // The pointer on the seam shows its +, at the seam's middle; the click lands there.
+      const box = await seam.boundingBox();
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, {steps: 4});
       await settle(200);
-      await seam.locator('button').click();
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
       await settle();
     },
     /** The open picker (+ or /): its tabs, the names it lists and the place it names. */
@@ -135,15 +141,12 @@ function driver(page) {
       const box = document.querySelector('#pop.on');
       if (!box) return null;
       return {
+        section: box.querySelector('[data-back] .nm b')?.textContent ?? null,
         tabs: [...box.querySelectorAll('[data-libtab]')].map((b) => ({name: b.textContent.trim(), pressed: b.getAttribute('aria-pressed') === 'true'})),
         items: [...box.querySelectorAll('.lib-item .nm')].map((n) => n.firstChild.textContent.trim()),
         heads: [...box.querySelectorAll('.grp')].map(words),
       };
     }),
-    pickerTab: async (tab) => {
-      await pop.locator('[data-libtab]', {hasText: tab}).click();
-      await settle();
-    },
     pickerSection: async (section) => {
       await pop.locator('[data-sub]', {hasText: section}).click();
       await settle();
@@ -168,15 +171,13 @@ function driver(page) {
         favourites: [...box.querySelectorAll('.star.on')].map((s) => s.closest('.lib-item').querySelector('.nm').firstChild.textContent.trim()),
       };
     }),
-    libraryTab: async (tab) => {
-      await page.locator('#left [data-libtab]', {hasText: tab}).click();
-      await settle();
-    },
     librarySection: async (section) => {
+      if (await page.locator('#left [data-back]').count()) await d.libraryBack();
       await page.locator('#left [data-sub]', {hasText: section}).click();
       await settle();
     },
     libraryBack: async () => {
+      if (!(await page.locator('#left [data-back]').count())) return;
       await page.locator('#left [data-back]').click();
       await settle();
     },
@@ -184,22 +185,46 @@ function driver(page) {
       await page.locator('#q').fill(query);
       await settle();
     },
-    libraryItem: (entry) => page.locator('#left .lib-item[data-entry]', {has: page.locator('.nm', {hasText: entry})}).first(),
+    focusLibrarySearch: async () => {
+      await page.locator('#q').click();
+      await settle();
+    },
+    /** An entry not in view (inside a closed section) is found by the search, as a person would. */
+    findEntry: async (entry) => {
+      if (await d.libraryItem(entry).count()) return async () => {};
+      await d.librarySearch(entry);
+      // Cleared without Backspace: in the prototype that key also deletes the chosen block (see differs).
+      return async () => {
+        await page.locator('#q').evaluate((input) => {
+          input.value = '';
+          input.dispatchEvent(new Event('input', {bubbles: true}));
+        });
+        await settle();
+      };
+    },
+    // By the whole name: «Список» is not «Список карточек» (a subtitle follows the name with no space).
+    libraryItem: (entry) => page.locator('#left .lib-item[data-entry]', {has: page.locator('.nm', {hasText: new RegExp(`^${entry.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')}(?! )`, 'u')})}).first(),
     favourite: async (entry) => {
+      const done = await d.findEntry(entry);
       await d.libraryItem(entry).locator('[data-fav]').click();
       await settle();
+      await done();
     },
     /** A click in the library inserts after the chosen block. */
     libraryClick: async (entry) => {
+      const done = await d.findEntry(entry);
       await d.libraryItem(entry).locator('.nm').click();
       await settle(250);
+      await done();
     },
     libraryDrag: async (entry, target, where) => {
+      const done = await d.findEntry(entry);
       await d.libraryItem(entry).scrollIntoViewIfNeeded();
       const box = await d.libraryItem(entry).boundingBox();
       await page.mouse.move(box.x + 30, box.y + box.height / 2);
       await page.mouse.down();
       await drop(target, where);
+      await done();
     },
     /** The chosen block's menu (from the toolbar's «Ещё» or the grip). */
     toolbarMenu: async () => {
@@ -326,6 +351,35 @@ function driver(page) {
     mapping: () => page.evaluate(() => Object.fromEntries([...document.querySelectorAll('#right [data-map]')].map((s) => [s.dataset.map, s.value]))),
     /** The blocks a + may insert into, for the current rights. */
     seams: () => page.locator('#frame .ins').evaluateAll((all) => [...new Set(all.map((z) => z.dataset.parent))]),
+    /** A block's own items (the features' points): hover one, then its bar's action. */
+    itemAction: async (id, index, action) => {
+      await reveal(block(id));
+      await block(id).locator('.f').nth(index).hover();
+      await page.locator(`#frame [data-id="${id}"] [data-fi="${action}:${index}"]`).click();
+      await settle(250);
+    },
+    addItem: async (id) => {
+      await reveal(block(id));
+      await block(id).hover();
+      await settle(200);
+      await block(id).locator('.fadd').click();
+      await settle(250);
+    },
+    pickIcon: async (id, index, icon) => {
+      await reveal(block(id));
+      await block(id).locator(`.fic[data-icon="${index}"]`).click();
+      await settle();
+      await page.locator(`#menu.on [data-pick-icon="${id}:${index}:${icon}"]`).click();
+      await settle(250);
+    },
+    /** The + at the right edge of a columns block. */
+    addColumn: async (id) => {
+      await reveal(block(id));
+      await block(id).hover();
+      await settle(200);
+      await block(id).locator(':scope > .cadd').click();
+      await settle(250);
+    },
     /** An empty named place of a block (the split hero's picture) offers its button. */
     slotAdd: async (id) => {
       await block(id).locator('[data-addin]').click();
@@ -337,7 +391,8 @@ function driver(page) {
   async function drop(target, where) {
     await reveal(block(target));
     const box = await block(target).boundingBox();
-    const x = where === 'left' ? box.x + 10 : where === 'right' ? box.x + box.width - 10 : box.x + box.width / 2;
+    // 25 px inside the side: in the side's drop band, clear of the columns' + at the right edge.
+    const x = where === 'left' ? box.x + 25 : where === 'right' ? box.x + box.width - 25 : box.x + box.width / 2;
     const y = where === 'before' ? box.y + 2 : where === 'after' ? box.y + box.height - 2 : box.y + box.height / 2;
     await page.mouse.move(x, y, {steps: 8});
     await settle(150);
