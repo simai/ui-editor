@@ -112,7 +112,6 @@ export const scenarios = [
       await d.press('Backspace');
       await d.press('Backspace');
       check('Backspace in the library\'s search edits the search, not the page', Boolean(await find(d, (n) => n.id === a.paragraph.id)));
-      for (let i = 0; i < 3 && !(await find(d, (n) => n.id === a.paragraph.id)); i += 1) await d.undo();
       await d.choose(a.paragraph.id);
       await d.libraryClick('Заметка');
       const after = await childIds(d, a.id);

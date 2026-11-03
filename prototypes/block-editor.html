@@ -189,6 +189,11 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .ins::before { content: ''; position: absolute; left: 8px; right: 8px; top: 4px; height: 2px; background: var(--primary); opacity: 0; border-radius: 1px; }
 .ins:hover::before, .ins.over::before, .ins.open::before { opacity: 1; }
 .ins:hover > button, .ins.open > button, .ins > button:focus-visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.ins > button { pointer-events: none; }
+.ins:hover > button, .ins.open > button, .ins > button:focus-visible { pointer-events: auto; }
+/* an empty place keeps its own seam clear of the parent's next one */
+.frame :is(.b-area, .b-column, .b-container > .wf > .wc):not(:has(> .n)) { min-height: 48px; }
+.dragging .cadd, .dragging .gadd { display: none; }
 .ins.over::before { height: 4px; top: 3px; }
 .dragging .ins { height: 18px; margin: -9px 0; }
 .dragging .ins::before { opacity: .25; }
@@ -201,15 +206,16 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .b-section[data-bg="soft"] { background: var(--surface-1); }
 .b-section[data-bg="primary"] { background: var(--primary); color: var(--on-primary); }
 .b-section[data-bg="primary"] .b-button > a { background: var(--on-primary); color: var(--primary); }
-.b-section > .inner { max-width: 920px; margin: 0 auto; }
-.b-section[data-width="narrow"] > .inner { max-width: 680px; }
-.b-section[data-width="wide"] > .inner { max-width: 1120px; }
-.b-section[data-width="full"] > .inner { max-width: none; }
+.b-section > .wf > .inner { max-width: 920px; margin: 0 auto; }
+.b-section[data-width="narrow"] > .wf > .inner { max-width: 680px; }
+.b-section[data-width="wide"] > .wf > .inner { max-width: 1120px; }
+.b-section[data-width="full"] > .wf > .inner { max-width: none; }
 .frame { container-type: inline-size; }
 .frame [data-bleed="true"] { width: 100cqw; max-width: none; margin-inline: calc(50% - 50cqw); }
-.b-container { margin-inline: auto; width: 100%; }
-.b-container[data-width="narrow"] { max-width: 600px; }
-.b-container[data-width="wide"] { max-width: 1120px; }
+.b-container { width: 100%; }
+.b-container > .wf { margin-inline: auto; }
+.b-container[data-width="narrow"] > .wf > .wc { max-width: 600px; margin-inline: auto; }
+.b-container[data-width="wide"] > .wf { max-width: 1120px; }
 .b-grid { position: relative; }
 .b-grid > .gadd { position: absolute; right: -14px; bottom: -14px; }
 .b-spacer { background: repeating-linear-gradient(135deg, transparent 0 6px, var(--state-hover) 6px 7px); border-radius: 4px; }
@@ -504,13 +510,13 @@ const SETS = {
   background: { name: 'Фон', fields: [{ key: 'bg', label: 'Фон', tab: 'look', kind: 'seg', choices: [['none', 'Нет'], ['soft', 'Мягкий'], ['primary', 'Акцент']], default: 'none', mod: v => ({ none: '', soft: 'bg-surface-container', primary: 'bg-primary' })[v], bind: 'утилита bg-*' }] },
   spacing: { name: 'Отступы', fields: [
     { key: 'pad', label: 'Отступы сверху и снизу', tab: 'layout', kind: 'seg', choices: SZ, default: 'l', responsive: true, mod: v => 'p-y-' + { s: 5, m: 6, l: 8 }[v], bind: 'утилита p-y-*' },
-    { key: 'gap', label: 'Промежуток между блоками', tab: 'layout', kind: 'seg', choices: SZ, default: 'm', responsive: true, part: 'inner', mod: v => 'gap-' + { s: 3, m: 5, l: 7 }[v], bind: 'утилита gap-*' }] },
-  width: { name: 'Ширина', fields: [{ key: 'width', label: 'Ширина содержимого', tab: 'layout', kind: 'select', choices: [['narrow', 'Узкая, для текста'], ['normal', 'Обычная'], ['wide', 'Широкая'], ['full', 'Во всю ширину']], default: 'normal', part: 'inner', mod: v => ({ narrow: 'container max-w-prose', normal: 'container', wide: 'container max-container-7', full: 'container-flush' })[v], bind: 'утилиты container, max-w-*' }] },
+    { key: 'gap', label: 'Промежуток между блоками', tab: 'layout', kind: 'seg', choices: SZ, default: 'm', responsive: true, part: 'content', mod: v => 'gap-' + { s: 3, m: 5, l: 7 }[v], bind: 'утилита gap-*' }] },
+  width: { name: 'Ширина', fields: [{ key: 'width', label: 'Ширина содержимого', tab: 'layout', kind: 'select', choices: [['narrow', 'Узкая, для текста'], ['normal', 'Обычная'], ['wide', 'Широкая'], ['full', 'Во всю ширину']], default: 'normal', multi: true, mod: v => ({ narrow: { frame: 'container m-inline-auto', content: 'max-w-prose m-inline-auto' }, normal: { frame: 'container m-inline-auto' }, wide: { root: 'max-container-7', frame: 'container m-inline-auto' }, full: {} })[v], bind: 'утилиты container, m-inline-auto, max-container-7, max-w-prose: на блоке, рамке и содержимом' }] },
   grid: { name: 'Сетка', fields: [
     { key: 'cols', label: 'Колонок', tab: 'layout', kind: 'seg', choices: COLS, default: '2', responsive: true, mod: v => 'grid-col-' + v, bind: 'утилита grid-col-*' },
     { key: 'gap', label: 'Промежуток', tab: 'layout', kind: 'seg', choices: SZ, default: 'l', responsive: true, mod: v => 'gap-' + { s: 3, m: 5, l: 6 }[v], bind: 'утилита gap-*' }] },
   align: { name: 'Выравнивание', fields: [{ key: 'talign', label: 'Выравнивание', tab: 'layout', kind: 'seg', choices: [['start', 'Слева'], ['center', 'По центру'], ['end', 'Справа']], default: 'start', responsive: true, quiet: true, mod: v => 'text-' + v, bind: 'утилита text-*' }] },
-  bleed: { name: 'Выход за контейнер', fields: [{ key: 'bleed', label: 'Выйти на всю ширину', tab: 'layout', kind: 'toggle', default: false, gap: 'Во Framework нет модификатора «выйти из контейнера». Записано как пробел; в HTML пока не попадает.' }] },
+  bleed: { name: 'Выход за контейнер', fields: [{ key: 'bleed', label: 'Выйти на всю ширину', tab: 'layout', kind: 'toggle', default: false, mod: v => v ? 'container-breakout' : '', bind: 'утилита container-breakout' }] },
   visibility: { name: 'Видимость', fields: [{ key: 'show', label: 'Показывать на этом экране', tab: 'extra', kind: 'toggle', default: true, responsive: true, quiet: true, out: true, mod: (v, n) => v ? (T[n.type].display || 'block') : 'hidden', bind: 'утилиты hidden, block с md:, lg:' }] },
 };
 // Fields: tab, kind (select|seg|number|toggle|text|icon), choices, default, responsive, mod (value → class), bind (what in Framework).
@@ -534,7 +540,7 @@ const T = {
   'layout.area': { name: 'Область текста', icon: 'edit_note', cat: 'layout', container: true, syn: 'контент текст страницы outlet',
     hint: 'Здесь автор пишет текст страницы. Остальной макет для автора закреплён.', fields: [] },
   'layout.container': { name: 'Контейнер', icon: 'width_normal', cat: 'layout', container: true, syn: 'ширина обёртка container',
-    hint: 'Держит часть секции в своей ширине: например, узкий текст в широкой секции.', fields: [], sets: ['width'], setDefaults: { width: 'narrow' }, setPart: { width: 'root' } },
+    hint: 'Держит часть секции в своей ширине: например, узкий текст в широкой секции.', fields: [], sets: ['width'], setDefaults: { width: 'narrow' } },
   'layout.grid': { name: 'Сетка', icon: 'grid_on', cat: 'layout', container: true, syn: 'плитка grid галерея', display: 'grid',
     hint: 'Одинаковые ячейки. «+» в конце добавляет ещё одну такую же.', fields: [], sets: ['grid'], setDefaults: { cols: '3', gap: 'm' },
     kids: [{ type: 'content.image', props: { ratio: '1/1' } }, { type: 'content.image', props: { ratio: '1/1' } }, { type: 'content.image', props: { ratio: '1/1' } }] },
@@ -632,9 +638,10 @@ const okMod = c => MODRE.test(c);
 function modClasses(n, part = 'root') {
   const out = part === 'root' && T[n.type].base ? [T[n.type].base] : [];
   for (const f of T[n.type].fields) {
-    if (!f.mod || (f.part || 'root') !== part) continue;
+    if (!f.mod || (!f.multi && (f.part || 'root') !== part)) continue;
     if (f.out && !OUT) continue; // the canvas shows a hidden block faded; the HTML hides it
-    if (!f.responsive) { const c = f.mod(val(n, f.key), n); if (c) out.push(c); continue; }
+    // a multi field (width) reaches several parts: the block, its frame and its content
+    if (!f.responsive) { let c = f.mod(val(n, f.key), n); if (f.multi) c = c?.[part]; if (c) out.push(c); continue; }
     if (f.quiet && BPX.every(([bp]) => String(resolve(n, f.key, bp).v) === String(f.default))) continue;
     let prev = null;
     for (const [bp, pre] of BPX) { const c = f.mod(resolve(n, f.key, bp).v, n); if (c && c !== prev) out.push(pre + c); prev = c; }
@@ -851,6 +858,8 @@ function kids(n) {
   return h;
 }
 
+// A block with a width prints two parts inside itself, as SIMAI Framework names them: frame and content.
+const parts = (n, cc) => `<div class="wf ${modClasses(n, 'frame')}" data-sf-composition-part="frame"><div class="${cc} ${modClasses(n, 'content')}" data-sf-composition-part="content">${kids(n)}</div></div>`;
 function draw(n) {
   const t = T[n.type];
   if (n.template && S.meta.tpl === 'none') return '';
@@ -863,11 +872,11 @@ function draw(n) {
   const at = `class="${cls.join(' ')}" data-id="${n.id}"${val(n, 'bleed') ? ' data-bleed="true"' : ''}`, oc = mc ? ` class="${mc}"` : '';
   switch (n.type) {
     case 'layout.page': return kids(n);
-    case 'layout.section': return `<section ${at} data-bg="${val(n, 'bg')}" data-width="${val(n, 'width')}"><div class="inner grid ${modClasses(n, 'inner')}">${kids(n)}</div></section>`;
+    case 'layout.section': return `<section ${at} data-bg="${val(n, 'bg')}" data-width="${val(n, 'width')}">${parts(n, 'inner grid')}</section>`;
     case 'layout.columns': return `<div ${at}>${(n.children || []).map(draw).join('')}${canInsertInto(n.id) && n.children.length < 4 ? `<button class="cadd" data-addcol="${n.id}" title="Добавить колонку"><span class="ic">add</span></button>` : ''}</div>`;
     case 'layout.column': return `<div ${at}>${kids(n)}</div>`;
     case 'layout.area': return `<div ${at} data-label="Область текста">${kids(n)}</div>`;
-    case 'layout.container': return `<div ${at} data-width="${val(n, 'width')}">${kids(n)}</div>`;
+    case 'layout.container': return `<div ${at} data-width="${val(n, 'width')}">${parts(n, 'wc')}</div>`;
     case 'layout.grid': return `<div ${at}>${n.children.map(draw).join('')}${canInsertInto(n.id) ? `<button class="cadd gadd" data-addin="${n.id}" title="Ещё одна ячейка"><span class="ic">add</span></button>` : ''}</div>`;
     case 'layout.spacer': return `<div ${at}></div>`;
     case 'content.heading': { const l = val(n, 'level'); return `<div ${at}>${txt(n, 'text', 'h' + l, 'Заголовок', 'b-heading" data-level="' + l)}</div>`; }
@@ -1155,6 +1164,7 @@ document.addEventListener('keydown', ev => {
   if ($('#pop').classList.contains('on')) return pickerKeys(ev);
   if ($('#modal').classList.contains('on')) { if (ev.key === 'Escape') closeModal(); return; }
   if ($('#menu').classList.contains('on')) { if (ev.key === 'Escape') closeMenu(); return; }
+  if (document.activeElement?.matches('input, textarea, select')) return; // the search field and the form keep their keys
   const inText = document.activeElement?.classList.contains('txt');
   if (ev.key === 'Escape') { // one level up
     ev.preventDefault();
@@ -1788,7 +1798,7 @@ function paramsTab(n, ed) {
       <button class="btn" style="margin-top:8px;width:100%" data-pa="${S.cardEdit === n.id ? 'done' : 'edit'}" ${ed ? '' : 'disabled'}>${S.cardEdit === n.id ? 'Готово' : 'Изменить карточку на странице'}</button>
       <div class="hint" style="margin-top:6px">Карточка одна на весь список: правите первую — остальные повторяют. Данные в неё приходят из источника.</div>`;
   }
-  const mc = [modClasses(n), modClasses(n, 'inner')].filter(Boolean).join(' · ');
+  const mc = [['', 'root'], ['рамка: ', 'frame'], ['содержимое: ', 'content']].map(([l, p]) => (c => c && l + c)(modClasses(n, p))).filter(Boolean).join(' · ');
   if (mc) h += `<div class="grp" style="margin-left:0">В HTML станет</div><div class="mods">${esc(mc)}</div>`;
   if (!t.fields.some(f => f.kind !== 'mods') && !t.variants) h += `<div class="hint" style="margin-top:12px">У этого блока нет параметров.${T[n.type].text ? ' Текст правится прямо на странице.' : ''}</div>`;
   if (t.fields.some(f => f.responsive)) h += `<div class="note"><span class="ic" style="font-size:16px">devices</span> Поля со значком экрана задаются отдельно для размера, выбранного вверху. Сейчас: <b>${BPN[S.bp]}</b>. Планшет наследует компьютер, телефон — планшет.</div>`;
@@ -1940,7 +1950,7 @@ function outHtml(n) {
   d.querySelectorAll('.ins, .bound, .pbar, .cardnote, .hidden-parts, .slotph').forEach(x => x.remove());
   d.querySelectorAll('*').forEach(x => {
     ['contenteditable', 'spellcheck', 'data-ph', 'data-key', 'data-id', 'data-cardtpl', 'data-label', 'data-slot', 'data-bg', 'data-width', 'data-bleed', 'draggable', 'onclick', 'style', 'disabled', 'title', 'tabindex'].forEach(a => x.removeAttribute(a));
-    x.classList.remove('n', 'sel', 'hover', 'locked', 'tpl', 'tplin', 'txt', 'typing', 'moving', 'part', 'tplcard');
+    x.classList.remove('wf', 'wc', 'inner', 'n', 'sel', 'hover', 'locked', 'tpl', 'tplin', 'txt', 'typing', 'moving', 'part', 'tplcard');
     if (!x.classList.length) x.removeAttribute('class');
   });
   // the editor wraps a text block in a frame; the site prints the text element alone

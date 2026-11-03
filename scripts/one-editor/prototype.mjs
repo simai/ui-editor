@@ -1,5 +1,5 @@
 // The driver of the one-editor scenarios over the accepted prototype,
-// prototypes/block-editor.html (ui-control cadcfa8). It proves the scenarios
+// prototypes/block-editor.html (ui-control 0bb8dc4). It proves the scenarios
 // run before the component exists; the component's driver replaces it in C2
 // and keeps the same verbs. Acts go through the pointer and the keyboard; only
 // reading the Document and what a host grants (rights, theme) reach into the
@@ -12,10 +12,7 @@ const URL = pathToFileURL(join(ROOT, 'prototypes/block-editor.html')).href;
 
 export const name = 'prototype';
 /** Checks the prototype is known to fail, with why; the component must pass them. */
-export const differs = {
-  'S14: the + inside the empty area inserts into it': 'an empty container\'s seam lies under the next seam of its parent, whose + button, invisible until hovered, still takes the click: the block lands after the area, in the section',
-  'S02: Backspace in the library\'s search edits the search, not the page': 'the page\'s keys listen on the document and skip only text blocks, so Backspace in the search field deletes the chosen block',
-};
+export const differs = {};
 /** What the prototype cannot show; such scenarios are skipped here, never on the component. */
 export const lacks = {
   host: 'the prototype has no host: nothing is stored, a reload starts over',
@@ -193,7 +190,6 @@ function driver(page) {
     findEntry: async (entry) => {
       if (await d.libraryItem(entry).count()) return async () => {};
       await d.librarySearch(entry);
-      // Cleared without Backspace: in the prototype that key also deletes the chosen block (see differs).
       return async () => {
         await page.locator('#q').evaluate((input) => {
           input.value = '';

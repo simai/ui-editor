@@ -24,17 +24,15 @@ cannot start fails here too.
 | Target | Driver | What happens |
 |:---|:---|:---|
 | `--target component` (in `npm run e2e`) | `scripts/one-editor/component.mjs`, written in C2 | skipped until `framework.lock.json` names the component (`package.one_editor`) and its driver exists |
-| `--target prototype` (in `npm run e2e`) | `scripts/one-editor/prototype.mjs` | runs on [`prototypes/block-editor.html`](../prototypes/block-editor.html), the accepted behaviour (ui-control `cadcfa8`), to prove the scenarios themselves |
+| `--target prototype` (in `npm run e2e`) | `scripts/one-editor/prototype.mjs` | runs on [`prototypes/block-editor.html`](../prototypes/block-editor.html), the accepted behaviour (ui-control `0bb8dc4`), to prove the scenarios themselves |
 
 ```sh
 node scripts/e2e-one-editor.mjs --target prototype [--only S05]
 ```
 
 On the prototype:
-- 19 scenarios run, with 144 checks;
-- 3 need what only a host or the component has, and are skipped there;
-- 2 checks are known differences of the prototype (listed below); they are
-  reported, not failed. The component must pass them.
+- 19 scenarios run, with 146 checks;
+- 3 need what only a host or the component has, and are skipped there.
 
 ## The scenarios
 
@@ -63,19 +61,17 @@ On the prototype:
 | S21 | Markdown habits: «## », «### », «# », «> », «1. », «- » at a paragraph's start turn it into that block; Enter on an empty last point leaves the list; one undo returns the paragraph; the list's «Вид» numbers it | owner, second review |
 | S22 | Visibility per screen: «Показывать на этом экране» off on the phone fades the block on the canvas, prints `hidden md:block`, and keeps a value in the Document | owner, third review |
 
-## What the prototype does differently
+## What the prototype did differently
 
-These are differences of the prototype, not of the decision. The component
-must pass these checks.
+C1's reports found five defects of the prototype; ui-control fixed them all:
+- the grip drag (`4e623b9`);
+- «/» with a search replacing the whole line, and the help's tablet modifier
+  (`7edfcb1`);
+- Backspace in the library's search deleting the chosen block, and an empty
+  text area's own + covered by its parent's next seam (`347071e`).
 
-| Check | What the prototype does |
-|:---|:---|
-| S02: Backspace in the library's search | deletes the chosen block on the page: the page's keys listen on the document and skip only text blocks, not the search field |
-| S14: the + inside an empty text area | inserts after the area, into its section: the area's seam lies under its parent's next seam, whose + button, invisible until hovered, still takes the click |
-
-Fixed in ui-control after C1's first report: the grip drag (`4e623b9`), «/»
-with a search replacing the whole line, and the help's tablet modifier
-(`7edfcb1`). S03, S04 and S06 now check them on the prototype too.
+The prototype driver's `differs` map is empty; a check the prototype fails
+again fails the run.
 
 ## C2: what the component's driver needs
 

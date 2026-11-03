@@ -100,13 +100,14 @@ pair that brought `sf-content-editor`. The proofs of steps 0 and 1 hold on it.
 ## The one block editor, C1: acceptance scenarios
 
 Written 2026-11-03 from the accepted prototype (ui-control `5003b6b`, then
-`cadcfa8` after the owner's second and third reviews, copied to
+`cadcfa8` after the owner's second and third reviews, then `0bb8dc4` with
+its fixes and the width parts, copied to
 `prototypes/block-editor.html`) and Part B of the assignment.
 
 | What | Proved by |
 |:---|:---|
 | 22 scenarios over a driver: selection by depth, one catalogue, three ways to insert, moving, columns, parameter origins per screen, data, the block builder, the template, host rights, named places, the site's theme, one undo, several text areas, output (JSON, HTML modifiers, Markdown), the host's store, keyboard and axe, a block's own items, the columns' +, Markdown habits, visibility per screen | `scripts/one-editor/scenarios.mjs`, listed in [ONE-EDITOR.md](ONE-EDITOR.md) |
-| On the prototype: 19 scenarios run, 144 checks pass; 3 skipped (Markdown output, host store, axe); 2 known differences of the prototype reported | `scripts/e2e-one-editor.mjs --target prototype` |
+| On the prototype: 19 scenarios run, 146 checks pass; 3 skipped (Markdown output, host store, axe); no known differences left | `scripts/e2e-one-editor.mjs --target prototype` |
 | On the component: all 22 skipped until the lock names it (C2) | `scripts/e2e-one-editor.mjs` |
 
 The side panels at about 800 px wide stand over the canvas edge, and that is
