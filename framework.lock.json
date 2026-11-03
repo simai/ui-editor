@@ -29,21 +29,29 @@
   },
   "package": {
     "name": "pro",
-    "release": "pro-c47fe37db37d",
+    "release": "pro-bff42cdcb4f4",
     "repository": "simai/ui-pro",
     "source": {
       "repository": "simai/ui-pro",
-      "commit": "c47fe37db37d04679ffdeb26b348f0feefcd6eb8"
+      "commit": "bff42cdcb4f4d3ca26d7eb2cfa48c477711c7277"
     },
-    "tar": "https://github.com/simai/ui-pro/releases/download/pro-c47fe37db37d/package-pro.tar",
-    "tar_sha256": "d23fe707b492c08a473d54507ab454cfa9c34af4d79863e57509222d637b0f37",
-    "receipt": "https://github.com/simai/ui-pro/releases/download/pro-c47fe37db37d/package-receipt.json",
-    "receipt_sha256": "a05e7192be1c10c38edee45825830dfbfd686acb58bc153ada44e73d255f9740",
+    "tar": "https://github.com/simai/ui-pro/releases/download/pro-bff42cdcb4f4/package-pro.tar",
+    "tar_sha256": "b997467dda17eb3becbc926d6c90e05976f7953360a94c1c9f917277d9680bcb",
+    "receipt": "https://github.com/simai/ui-pro/releases/download/pro-bff42cdcb4f4/package-receipt.json",
+    "receipt_sha256": "f0a9a188d7f17db3464b39d0a8d1518cbd4158b816fd31ba8234308245d273d4",
     "base": "pkg/pro/smart",
     "one_editor": "sf-editor",
     "licence": "PolyForm-Small-Business-1.0.0 OR PolyForm-Noncommercial-1.0.0 OR LicenseRef-SIMAI-Commercial"
   },
   "history": [
+    {
+      "pair": "ui-b8e23367889f",
+      "npm": "5.20261103.1629",
+      "package": "pro-c47fe37db37d",
+      "pinned_on": "2026-11-03",
+      "replaced_on": "2026-11-04",
+      "why": "sf-editor 1.0.0, the one block editor"
+    },
     {
       "pair": "ui-2d39b617a719",
       "npm": "5.20261102.1106",

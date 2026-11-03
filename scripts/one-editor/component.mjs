@@ -23,10 +23,10 @@ import {ROOT, load} from '../e2e-common.mjs';
 
 export const name = 'component';
 /**
- * Checks sf-editor 1.0.0 fails in this shell: each names its gap in
- * docs/GAPS.md, a difference of design (docs/ONE-EDITOR.md), or a failure not
- * classified yet. Reported by the run, not failed; a check here that passes is
- * printed as ok, so its line can go.
+ * Checks sf-editor 1.0.2 fails in this shell: each names its gap in
+ * docs/GAPS.md or a difference of design (docs/ONE-EDITOR.md). Reported by
+ * the run, not failed; a check here that passes is printed as ok, so its line
+ * can go.
  */
 export const differs = {
   "S02: Favourites stand above the sections": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
@@ -42,34 +42,19 @@ export const differs = {
   "S03: a block between sections stands in a section of its own, at that seam": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
   "S03: between sections the + opens on the list of sections": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
   "S03: inside a text area the + opens straight on Текст": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S03: the scenario finished": "not classified yet: driver or component, to check by hand",
+  "S03: the scenario finished": "G-37: the + opens its catalogue at the window's top-left corner, under the host's left panel",
   "S14: a page holds a second text area": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
   "S14: the scenario finished": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
   "S06: a value from the variant says so": "G-21: layout.section has no variants",
   "S06: «сбросить» returns the inherited value": "G-21: layout.section has no variants",
-  "S06: on the phone a value is set for the phone only": "G-22: a screen value equal to the type default clears the value on every screen",
-  "S06: the desktop keeps its value": "G-22: a screen value equal to the type default clears the value on every screen",
-  "S06: the HTML prints Framework modifiers, mobile first, a prefix only where the value changes": "G-22: a screen value equal to the type default clears the value on every screen",
   "S07: its Data tab names the list it reads": "G-23: the Data tab: a preset, no field mapping; a seeded pagination follows no list",
   "S07: its fields are mapped by the host's preset": "G-23: the Data tab: a preset, no field mapping; a seeded pagination follows no list",
   "S07: the pagination is bound to the list, not to a source": "G-23: the Data tab: a preset, no field mapping; a seeded pagination follows no list",
-  "S11: the empty place offers «Картинка или видео»": "G-24: an empty named place draws no prompt and has no + of its own",
-  "S11: the scenario finished": "G-24: an empty named place draws no prompt and has no + of its own",
   "S19: the scenario finished": "G-25: no editing of a block's own items in place",
   "S20: the scenario finished": "G-25: no editing of a block's own items in place",
   "S22: every block offers «Показывать на этом экране»": "G-26: content blocks have no visibility per screen",
   "S22: the scenario finished": "G-26: content blocks have no visibility per screen",
-  "S15: an unknown class is reported to the editor": "G-29: refused classes read «[object Object]»",
   "S15: the HTML has the section's modifiers and the own one, no inline style, no unknown class": "a difference: differs by design, docs/ONE-EDITOR.md",
-  "S18: ↓ chooses the next block": "G-30: with nothing chosen, ↓ on the canvas chooses nothing",
-  "S18: axe: a block chosen": "G-31: axe: the library's heading order, the editor outside landmarks, the dimmed template's contrast",
-  "S18: axe: nothing chosen": "G-31: axe: the library's heading order, the editor outside landmarks, the dimmed template's contrast",
-  "S18: axe: the + list open": "G-31: axe: the library's heading order, the editor outside landmarks, the dimmed template's contrast",
-  "S18: axe: the Data tab": "G-31: axe: the library's heading order, the editor outside landmarks, the dimmed template's contrast",
-  "S18: axe: typing": "G-31: axe: the library's heading order, the editor outside landmarks, the dimmed template's contrast",
-  "S05: one undo reverts the split": "G-33: «Разделить на колонки» takes more than one undo",
-  "S05: a block dropped at the right edge of another stands beside it": "G-34: a side drop from the library inserts into the column above, not beside",
-  "S05: a side drop inside a column adds a column": "G-34: a side drop from the library inserts into the column above, not beside",
   "S05: the menu splits the block into two columns, the block in the left one": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S10: an author inserts only inside text areas": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S21: «###» turns the paragraph into content.heading 3": "a difference: differs by design, docs/ONE-EDITOR.md",
@@ -77,10 +62,10 @@ export const differs = {
   "S21: «#» turns the paragraph into content.heading 1": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S21: «1.» turns the paragraph into content.list": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S21: «>» turns the paragraph into content.quote": "a difference: differs by design, docs/ONE-EDITOR.md",
-  "S04: dragging the grip moves the block to the drop line": "not classified yet: driver or component, to check by hand",
-  "S04: the scenario finished": "not classified yet: driver or component, to check by hand",
-  "S08: the scenario finished": "not classified yet: driver or component, to check by hand",
-  "S01: a click on a block's frame, outside its text, chooses that block": "not classified yet: driver or component, to check by hand",
+  "S08: the scenario finished": "G-38: a site block made of a section holds only its content: the section's own parameters cannot be offered to the author",
+  "S01: a click on a block's frame, outside its text, chooses that block": "a difference: differs by design, docs/ONE-EDITOR.md",
+  "S05: new columns stand one under another on the phone": "G-36: a value equal to the type default prints no class: columns {xs 1, md 2} print md:grid-col-2 without grid-col-1",
+  "S06: the HTML prints Framework modifiers, mobile first, a prefix only where the value changes": "G-36: a value equal to the type default prints no class: columns {xs 1, md 2} print md:grid-col-2 without grid-col-1",
 };
 export const lacks = {};
 
@@ -201,14 +186,11 @@ function driver(page, origin) {
     clickText: async (id) => {
       await reveal(block(id));
       const box = await block(id).boundingBox();
-      // The pointer comes onto the line first; the gutter it shows may stand
-      // over the line's start when the canvas leaves it no room (see GAPS), so
-      // the press lands just past the gutter.
+      // The pointer comes onto the line first and shows the gutter beside it, then presses the line's start.
       const y = box.y + Math.min(10, box.height / 2);
       await page.mouse.move(box.x + 4, y, {steps: 3});
       await settle(150);
-      const x = Math.max(box.x + 4, await gutterEnd() + 4);
-      await page.mouse.click(x, y);
+      await page.mouse.click(box.x + 4, y);
       await page.keyboard.press(process.platform === 'darwin' ? 'Meta+ArrowDown' : 'Control+End');
       await settle();
     },
@@ -284,8 +266,8 @@ function driver(page, origin) {
       return {
         section: null,
         tabs: [...box.querySelectorAll('sf-button-group button')].map((b) => ({name: b.textContent.trim(), pressed: b.getAttribute('aria-pressed') === 'true' || b.getAttribute('aria-checked') === 'true'})),
-        items: [...box.querySelectorAll('[role="option"] sf-button')].map((b) => b.getAttribute('text') ?? b.textContent.trim()),
-        heads: [...box.querySelectorAll('[role="option"] .sf-editor-quiet')].map((s) => s.textContent.trim()),
+        items: [...box.querySelectorAll('li[role="option"] .sf-editor-option-name')].map((name) => name.dataset.label ?? name.textContent.trim()),
+        heads: [...box.querySelectorAll('li[role="option"] .sf-editor-option-note')].map((s) => s.textContent.trim()),
       };
     }),
     /** A section of the catalogue: sf-editor has two tabs (Текст, Блоки); a section by another name is not there. */
@@ -294,13 +276,13 @@ function driver(page, origin) {
       if (await tab.count()) await tab.first().click();
       await settle();
     },
-    /** Pick an entry by name; with a variant, the variant (its type's name beside it). */
+    /** Pick an entry by name; with a variant, the variant (its type's name beside it). An option is the li itself. */
     pick: async (entry, variant) => {
-      const options = pop.locator('[role="option"]');
+      const options = pop.locator('li[role="option"]');
       const wanted = variant
-        ? options.filter({has: page.locator(`sf-button[text="${variant}"]`)}).filter({has: page.locator('.sf-editor-quiet', {hasText: exact(entry)})})
-        : options.filter({has: page.locator(`sf-button[text="${entry}"]`)});
-      if (await wanted.count()) await wanted.first().locator('button').click();
+        ? options.filter({has: page.locator(`.sf-editor-option-name[data-label="${variant}"]`)}).filter({has: page.locator('.sf-editor-option-note', {hasText: exact(entry)})})
+        : options.filter({has: page.locator(`.sf-editor-option-name[data-label="${entry}"]`)});
+      if (await wanted.count()) await wanted.first().click();
       await settle(300);
     },
     pickerSearch: async (query) => {
@@ -441,16 +423,18 @@ function driver(page, origin) {
       await right.locator('sf-button-group button', {hasText: state}).first().click();
       await settle();
     },
-    /** What the page prints on a site: the «Результат» dialog's HTML (the whole page; sf-editor prints no single block). */
-    html: async () => d.output('HTML'),
+    /** What the page prints on a site: the «Результат» dialog's HTML. sf-editor prints the whole page; a block's part is cut from it. */
+    html: async (id) => {
+      const whole = await d.output('HTML');
+      if (!id) return whole;
+      return page.evaluate(([text, wanted]) => new DOMParser().parseFromString(text, 'text/html').querySelector(`[data-sf-composition-id="${wanted}"]`)?.outerHTML ?? '', [whole, id]);
+    },
     markdown: async () => d.output('Markdown'),
     output: async (tab) => {
       const opened = () => page.evaluate(() => (document.querySelector('.sf-editor-output-body')?.getBoundingClientRect().width ?? 0) > 0);
-      // The first press after a load draws the dialog but does not open it (G-28): a person presses again.
-      for (let i = 0; i < 2 && !(await opened()); i += 1) {
-        await page.locator(`${ed} .sf-editor-bar-end sf-button`).last().locator('button').click();
-        await settle(400);
-      }
+      await page.locator(`${ed} .sf-editor-bar-end sf-button`).last().locator('button').click();
+      await settle(400);
+      if (!(await opened())) throw new Error('«Результат» did not open the dialog');
       // sf-modal shows its content outside the editor's element.
       await page.locator(`.sf-editor-output-body sf-tabs sf-button[text="${tab}"] button`).first().click();
       await page.locator(`.sf-editor-output-text[aria-label="${tab}"]`).waitFor();
@@ -458,6 +442,8 @@ function driver(page, origin) {
       const text = await page.locator('.sf-editor-output-text').first().textContent();
       await page.keyboard.press('Escape');
       await settle();
+      // The dialog gives focus back to «Результат» on the bar, where the editor's keys rest; a person goes back to the page.
+      await page.evaluate(() => document.querySelector('#page-editor .sf-editor-canvas')?.focus({preventScroll: true}));
       return text ?? '';
     },
     screen: async (which) => {
@@ -489,8 +475,11 @@ function driver(page, origin) {
     },
     builder: () => model((editor) => (editor.builder ? {name: editor.builder.name ?? '', root: editor.builder.from ?? editor.builder.root ?? editor.model.selected ?? null} : null)),
     /** In the builder: tick what the author may change («Секция · Фон» names the field). */
+    /** «Секция · Фон»: the builder opens on the copy's first block; a person goes up to the named block (Esc), then exposes its field. */
     expose: async (label) => {
-      const field = label.split(' · ').pop();
+      const [owner, field] = label.includes(' · ') ? label.split(' · ') : [null, label];
+      await page.evaluate(() => document.querySelector('#page-editor .sf-editor-canvas')?.focus({preventScroll: true}));
+      for (let i = 0; owner && i < 3 && !(await d.panel()).title.startsWith(owner); i += 1) await d.press('Escape');
       await right.locator('.sf-editor-field').filter({has: page.locator(`[label="${field}"]`)}).locator('sf-switch.sf-editor-expose').locator('input, [role="switch"]').first().click();
       await settle();
     },
@@ -524,7 +513,7 @@ function driver(page, origin) {
     /** The variants shown in the library or the catalogue: entries of a type's variant. */
     variants: () => page.evaluate(() => [
       ...[...document.querySelectorAll('#page-editor .sf-editor-left .sf-editor-item')].filter((item) => item.dataset.item?.includes('#')).map((item) => item.querySelector('.sf-editor-item-name')?.getAttribute('text')),
-      ...[...document.querySelectorAll('#page-editor .sf-editor-pop [role="option"]')].filter((option) => option.querySelector('.sf-editor-quiet')?.textContent.trim()).map((option) => option.querySelector('sf-button')?.getAttribute('text')),
+      ...[...document.querySelectorAll('#page-editor .sf-editor-pop li[role="option"]')].filter((option) => option.dataset.item?.includes('#')).map((option) => option.querySelector('.sf-editor-option-name')?.dataset.label),
     ]),
     /** The Data tab's field mapping: the shape's field → the source's field. */
     mapping: () => page.evaluate(() => Object.fromEntries([...document.querySelectorAll('#page-editor .sf-editor-mapping sf-dropdown')].map((s) => [s.getAttribute('label'), String(s.value ?? '')]))),
@@ -538,7 +527,7 @@ function driver(page, origin) {
       for (const empty of editor.querySelectorAll('[data-sf-editor-empty]')) if (!editor.model.placeLock(empty.dataset.sfEditorEmpty)) out.add(empty.dataset.sfEditorEmpty);
       return [...out];
     }),
-    /** A block's own items: sf-editor 1.0.0 edits none in place, so these do nothing. */
+    /** A block's own items: sf-editor 1.0.2 edits none in place, so these do nothing. */
     itemAction: async () => {},
     addItem: async () => {},
     pickIcon: async () => {},
@@ -548,9 +537,14 @@ function driver(page, origin) {
       await right.locator('.sf-editor-actions sf-button', {hasText: 'колонк'}).locator('button').first().click();
       await settle(300);
     },
-    /** An empty named place of a block (the split hero's picture) offers what it takes. */
+    /** An empty named place of a block (the split hero's picture): pressing it opens the catalogue narrowed to what the place takes; the picture is picked from it. */
     slotAdd: async (id) => {
       await block(id).locator('[data-sf-editor-empty]').first().click();
+      await settle(300);
+      const options = pop.locator('li[role="option"]');
+      const picture = options.filter({has: page.locator('.sf-editor-option-name[data-label="Изображение"]')});
+      if (await picture.count()) await picture.first().click();
+      else if (await options.count()) await options.first().click();
       await settle(300);
     },
     reload: async () => {
@@ -607,7 +601,8 @@ function driver(page, origin) {
   async function ownPoint(id, fallback = 'middle') {
     await reveal(block(id));
     const box = await block(id).boundingBox();
-    const edges = [[0.5, 2], [0.5, box.height - 2], [box.width - 2, 0.5], [0.85, 2], [0.15, box.height - 2]];
+    // Its edges first, and its start beside the children (a list's markers stand there).
+    const edges = [[0.5, 2], [0.5, box.height - 2], [box.width - 2, 0.5], [0.85, 2], [0.15, box.height - 2], [4, 0.25], [4, 0.5], [4, 0.75]];
     const grid = [];
     for (let fy = 0.05; fy < 1; fy += 0.15) for (let fx = 0.05; fx < 1; fx += 0.15) grid.push([fx, fy]);
     const points = [...edges, ...grid].map(([fx, fy]) => [box.x + (fx <= 1 ? box.width * fx : fx), box.y + (fy <= 1 ? box.height * fy : fy)]);
@@ -618,12 +613,6 @@ function driver(page, origin) {
     // With no point of its own, the block's right edge (a frame click) or its middle (a hover).
     return at ?? (fallback === 'edge' ? [box.x + box.width - 2, box.y + box.height / 2] : [box.x + box.width / 2, box.y + box.height / 2]);
   }
-
-  /** Where the shown gutter ends on the screen, or 0. */
-  const gutterEnd = () => page.evaluate(() => {
-    const gutter = document.querySelector('#page-editor .sf-editor-gutter');
-    return gutter && !gutter.hidden ? gutter.getBoundingClientRect().right : 0;
-  });
 
   /** Move the held pointer onto the target and let go: above or below it, or at its side. */
   async function drop(target, where) {

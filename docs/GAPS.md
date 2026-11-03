@@ -6,7 +6,7 @@ who owns it and what the editor does meanwhile. A Framework defect has a
 closes when a pinned release brings the part and the workaround goes.
 
 Pinned: Framework `ui-b8e23367889f` (`@simai-studio/ui@5.20261103.1629`),
-Pro package `pro-c47fe37db37d` ([`framework.lock.json`](../framework.lock.json)).
+Pro package `pro-bff42cdcb4f4` (`sf-editor` 1.0.2, [`framework.lock.json`](../framework.lock.json)).
 
 | Id | Gap | Owner | Meanwhile | Closes when |
 |:---|:---|:---|:---|:---|
@@ -15,36 +15,61 @@ Pro package `pro-c47fe37db37d` ([`framework.lock.json`](../framework.lock.json))
 | G-06 | No page-list part: rename, delete, order, a page's state. `sf-menu` lists the pages, but draws an item without `href` as plain text | ui-pro (an editor part), to order | each item gets `href="#page=<id>"` and the shell cancels `sf-menu-navigate` | ui-pro ships a page list over a storage port |
 | G-07 | No storage port for documents: the Framework keeps view preferences (`SF.Preferences`), not documents | ui-pro or the Framework, to agree | `src/ui/pages.ts` keeps pages in IndexedDB (`ui-editor` / `pages`), in memory when IndexedDB is refused; the shell copies a template change into every page | a port is released and the store moves behind it |
 
-### sf-editor 1.0.0 in this shell (C2)
+### sf-editor in this shell (C2, rechecked on 1.0.2)
 
 Found by the one-editor scenarios (`scripts/e2e-one-editor.mjs`, the
 component driver's `differs` names each failing check's gap) and the shell's
-own runs. All are ui-pro's (`simai/ui-pro`, sf-editor) unless the row says
-otherwise; none has a workaround in the shell.
+own runs; open on `sf-editor` 1.0.2. All are ui-pro's (`simai/ui-pro`,
+sf-editor) unless the row says otherwise; none has a workaround in the shell.
 
 | Id | Gap | Scenarios | Closes when |
 |:---|:---|:---|:---|
 | G-20 | The catalogue has two tabs (Текст, Блоки) and the fixed groups; there is no one list with the sections Текст, Медиа, Элементы, Макет, Части страницы, Маркетинг, Данные, Формы, Сохранённые, no «back», and search does not name a result's section. The built-in types have no button, icon button, label, icon, container, grid or empty space, and no section «с областью текста», so the + between sections cannot open on sections | S02 (9 checks), S03 (3), S14 | the owner's one-list catalogue, with Part A's Элементы and Макет types |
 | G-21 | `layout.section` has no variants, so no value can come from a variant («вариант») and «сбросить» has nothing to return to | S06 (2) | the built-in section has variants (Part A) |
-| G-22 | A value set for one screen that equals the type's default clears the block's value on every screen: columns `{xs: 2}`, set to 1 on the phone, lose their `columns` prop, and the desktop shows 1 | S06 (3) | a screen value is stored for that screen whatever the default |
 | G-23 | The Data tab has a mapping preset («Как задано в источнике»), not the shape's fields mapped to the source's; a pagination seeded beside a list follows none («Блок в этой секции» is empty) and the Document has no binding to say it | S07 (3) | the field mapping, and the Document's form of a runtime binding a host can seed |
-| G-24 | An empty named place (the split hero's `media`) draws neither its `empty_key` prompt nor a + of its own | S11 | a named slot's empty place is drawn like an empty parent's |
 | G-25 | No editing of a block's own items in place (the features' points, a columns block's + at the right edge, «Добавить пункт», icons) | S19, S20 | the owner's second review is built |
 | G-26 | Content blocks (a paragraph) have no visibility per screen; only sections and areas have «Скрыт» | S22 | every block has it |
-| G-27 | After «Изменить шаблон» every render of sf-editor fails (`TypeError: Cannot read properties of null (reading 'insertBefore')` in the lit template) and a page the host sets later is not drawn until a reload | `scripts/e2e-shell.mjs` (a known check) | the template edit renders |
-| G-28 | The first press of «Результат» after a load draws the dialog but does not open it (`open()` runs before `sf-modal` is defined); the second press opens it | S05, S06, S15, S16, S21 (the driver presses again) | the dialog opens on the first press |
-| G-29 | Refused own classes are reported as «Не приняты: [object Object]», not by name | S15 | the refused classes are named |
-| G-30 | With the focus on the canvas and nothing chosen, ↓ chooses nothing | S18 | the arrows choose from the first block |
-| G-31 | axe: the library's group headings skip a level (`heading-order`); the editor's bar, canvas and help stand outside any landmark (`region`); the catalogue's options hold buttons (`nested-interactive`); a heading being typed has a role a heading may not have (`aria-allowed-role`); the site template dimmed to 55 %, a value's origin and the catalogue's quiet type names fail contrast (`color-contrast`) | S18 (5 states), `scripts/e2e-a11y.mjs` (allowed there by this id) | each passes axe |
-| G-35 | On a phone (390 px) and at 400 % zoom (320 px) the editor's bar keeps its width (478 px: screens, undo, «Изменить шаблон», «Результат»), so the page scrolls sideways by 88 and 158 px | `scripts/e2e-a11y.mjs` (a known check) | the bar wraps or folds its actions |
-| G-32 | Where the canvas leaves a block little room, the gutter (52 px) stands over the start of its line, and a press there goes to the gutter, not the text | S01 and every text click (the driver presses past the gutter) | the gutter never covers a block's text |
-| G-33 | «Разделить на колонки» takes more than one undo | S05 | one undo reverts the split |
-| G-34 | A block dragged from the library to another block's right edge goes into the column above it, not beside it, and inside a column adds no column | S05 (2) | the side drop puts blocks side by side |
+| G-36 | A value equal to the type's default prints no class, even where a wider screen differs: columns `{xs: 1, md: 2}` print `md:grid-col-2` without `grid-col-1`, so on a phone the grid has one implicit `auto` column, which a wide child can stretch, not `grid-col-1` (`minmax(0, 1fr)`) | S05, S06 | the smallest screen's value is printed when a wider one differs |
+| G-37 | The + opens its catalogue at the window's top-left corner: it is anchored to the `sf-button-icon` host, which is `display: contents` and has no box. In this shell the corner is under the left panel, so the options there cannot be pressed | S03 (stops at the + inside a text area) | the catalogue stands beside the + |
+| G-38 | «Сделать блоком сайта» on a section makes a block of the section's content only (the hero): the builder has no section, so the section's own parameters («Фон») cannot be offered to the author | S08 (stops at «Секция · Фон») | a block made of a container keeps the container, or the difference is agreed |
 
-Not classified yet, to check by hand before they are named gaps or driver
-fixes: S01's click on a section's frame when its area fills it, S03 after the
-+ (the «/» list), S04's grip drag of a list (the grip found is a point's), S08
-(the builder's «expose» switch is not found).
+## What sf-editor 1.0.2 closed
+
+Repinned 2026-11-04 to `pro-bff42cdcb4f4` (`sf-editor` 1.0.2) on the same
+pair. Its fixes and the workarounds that went with them:
+
+- **G-22**: a screen value equal to the type's default is kept for that screen
+  (S06: the phone has 1, the desktop keeps 2).
+- **G-24**: the split hero's empty `media` place draws the host's prompt
+  («Картинка или видео»); a press opens the catalogue narrowed to that place,
+  and the picked picture goes into it (S11).
+- **G-27**: after «Изменить шаблон» the editor still draws; the shell's check of
+  choosing a page is a plain check again.
+- **G-28**: «Результат» opens on the first press; the driver's second press went.
+- **G-29**: refused classes are named.
+- **G-30**: ↓ on the canvas with nothing chosen chooses the first block.
+- **G-31**: axe finds nothing in any state; `scripts/e2e-a11y.mjs` allows nothing.
+- **G-32**: the gutter no longer covers a block's text; the driver presses the
+  line's start.
+- **G-33**: «Разделить на колонки» is one undo step. Checked as written: one
+  Ctrl+Z on the canvas reverts the split. The dialog «Результат» gives the focus
+  back to its button on the bar, where the editor's keys rest by design, so
+  after reading the output the driver goes back to the page first, as a person
+  would.
+- **G-34**: a side drop from the library puts the block beside the other one,
+  and a side drop inside a column adds a column (S05).
+- **G-35**: on a phone and at 400 % zoom the page does not scroll sideways.
+
+The four checks left unclassified by C2 were checked by hand:
+
+- **S04** (the grip drag of a list) was the driver's: a list's own 20 px beside
+  its items was stepped over, so the hover found an item. The driver now tries
+  a block's start; S04 passes.
+- **S01** (a click on a section's frame) is a difference of design: a section
+  draws no padding unless a value or the theme gives one, so in the default
+  theme its area fills it and there is no frame of its own to press; Esc or the
+  path chooses it.
+- **S03** stops at G-37, **S08** at G-38.
 
 ## What sf-editor 1.0.0 closed (C2)
 

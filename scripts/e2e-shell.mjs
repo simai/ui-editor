@@ -157,8 +157,7 @@ try {
   await page.locator('#pages a').filter({hasText: seeded[1].label}).first().click();
   await settle();
   const about = {document: (await opened()).id, current: await page.evaluate(() => globalThis.uiEditor.state.current)};
-  // After «Изменить шаблон» sf-editor 1.0.0 fails every render, and a page set later is not drawn (G-27).
-  run.known('G-27', 'after a template edit, choosing a page opens it in the editor', about.document === 'about' && about.current === 'about', JSON.stringify(about));
+  check('after a template edit, choosing a page opens it in the editor', about.document === 'about' && about.current === 'about', JSON.stringify(about));
   await page.locator('#new-page').click();
   await settle();
   const added = await menu();

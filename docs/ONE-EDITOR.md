@@ -23,7 +23,7 @@ cannot start fails here too.
 
 | Target | Driver | What happens |
 |:---|:---|:---|
-| `--target component` (in `npm run e2e` and CI) | `scripts/one-editor/component.mjs` | runs on `sf-editor` 1.0.0 (`package.one_editor` in `framework.lock.json`) in the built shell; a check the component fails is reported with its gap, not failed |
+| `--target component` (in `npm run e2e` and CI) | `scripts/one-editor/component.mjs` | runs on `sf-editor` 1.0.2 (`package.one_editor` in `framework.lock.json`) in the built shell; a check the component fails is reported with its gap, not failed |
 | `--target prototype` (in `npm run e2e`) | `scripts/one-editor/prototype.mjs` | runs on [`prototypes/block-editor.html`](../prototypes/block-editor.html), the accepted behaviour (ui-control `0bb8dc4`), to prove the scenarios themselves |
 
 ```sh
@@ -73,7 +73,7 @@ C1's reports found five defects of the prototype; ui-control fixed them all:
 The prototype driver's `differs` map is empty; a check the prototype fails
 again fails the run.
 
-## C2: on sf-editor 1.0.0
+## C2: on sf-editor 1.0.0, rechecked on 1.0.2
 
 `pro-c47fe37db37d` on `ui-b8e23367889f`, 2026-11-03. The shell is the host
 (`src/ui/app.ts`):
@@ -86,9 +86,9 @@ again fails the run.
   and offers in the cards shape;
 - every `change` kept, a template change copied into every page.
 
-The run: 22 scenarios, 70 checks pass and 52 are known. Each known check names
-its gap in the driver's `differs` (G-20 to G-34, [GAPS.md](GAPS.md)), a
-difference of design below, or «not classified yet» (5 checks). None fails the
+The run on 1.0.0: 22 scenarios, 70 checks pass and 52 are known. Each known
+check names its gap in the driver's `differs` (G-20 to G-34, [GAPS.md](GAPS.md)),
+a difference of design below, or «not classified yet» (5 checks). None fails the
 run; a known check that starts to pass prints ok.
 
 What passes: selection by depth, typing into the Document, Esc and Enter
@@ -108,6 +108,27 @@ The driver reads the component the scenarios' way, in its header:
   screen;
 - the menu's «Сделать блоком сайта» for «Сделать блок из этого…».
 
+### Rechecked on sf-editor 1.0.2
+
+`pro-bff42cdcb4f4`, 2026-11-04, the same pair. The run: 22 scenarios, 88 checks
+pass and 37 are known: 28 by the gaps still open (G-20, G-21, G-23, G-25,
+G-26), 4 by the new G-36 to G-38, and 9 differences of design. None fails.
+
+What 1.0.2 adds to what passes: one undo reverts a split, a side drop puts
+blocks side by side and adds a column (S05); a phone value leaves the desktop's
+(S06); the split hero's empty place prompts and takes a picture again (S11);
+↓ chooses from the first block and axe finds nothing in any state (S18); the
+grip drag and the grip's menu (S04).
+
+The driver follows 1.0.2's names: a catalogue option is the `li[role=option]`
+itself, named by `.sf-editor-option-name[data-label]`; an empty named place
+opens the catalogue narrowed to it, so the driver picks the picture there. The
+HTML of one block is cut from the page's output by its id. After the
+«Результат» dialog the driver goes back to the page, as a person would: the
+dialog gives the focus to its button on the bar, where the editor's keys rest.
+To grip a list it points at the list's own start beside its items. In the
+builder it goes up to the named block (Esc) before exposing its field.
+
 ### Differences of design
 
 Not gaps: sf-editor does these on purpose, and the prototype's check does not
@@ -115,6 +136,7 @@ apply as written.
 
 | Check | What sf-editor does |
 |:---|:---|
+| S01: a click on a section's frame chooses the section | a section draws no padding unless a value or the theme gives one, so in the demo site's default theme its text area fills it and there is no frame of its own to press; Esc or the path chooses it |
 | S05: the split leaves the new column empty | it puts a paragraph in the new column, so it can be typed in at once |
 | S10: an author inserts only inside the first text area | a columns block's columns are text areas (`layout.area`), so an author writes there too; the prototype's columns were layout only |
 | S15: the HTML has `p-y-8` and `gap-5` | those are the prototype's theme defaults; the demo site's theme sets none |

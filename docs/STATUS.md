@@ -131,7 +131,11 @@ before C2. The rollback is to revert C2: a page kept before it keeps its
 | The host gives the demo site's types (variants, renderers, editor manifests, words), the theme and the rights, and answers the source port with three demo sources | `scripts/e2e-one-editor.mjs` (S07, S09, S10, S12) |
 | Every change sf-editor sends is kept in IndexedDB and outlives a reload; a template change goes into every page; a new page takes the template; a page kept as a layout and its content opens as one Document | `scripts/e2e-shell.mjs` |
 | The top bar, the page list's panel (resize, ⌘\, remembered, no tab stop when closed, sliding below 1024 px), RU/EN | `scripts/e2e-shell.mjs` |
-| The acceptance scenarios on the component: 22 run, 70 checks pass, 52 known (each named by its gap, a difference of design, or 5 not classified yet), none failed | `scripts/e2e-one-editor.mjs`, [ONE-EDITOR.md](ONE-EDITOR.md) |
-| axe-core at every size and scheme with nothing chosen, a block chosen, typing and the + open: nothing but sf-editor's own (G-31, allowed by id); the editor's bar scrolls the page sideways on a phone (G-35, known) | `scripts/e2e-a11y.mjs` |
+| The acceptance scenarios on the component, on `sf-editor` 1.0.2 (`pro-bff42cdcb4f4`, 2026-11-04): 22 run, 88 checks pass, 37 known (each named by its gap or a difference of design), none failed | `scripts/e2e-one-editor.mjs`, [ONE-EDITOR.md](ONE-EDITOR.md) |
+| axe-core at every size and scheme with nothing chosen, a block chosen, typing and the + open: no violation and nothing allowed; the page never scrolls sideways | `scripts/e2e-a11y.mjs` |
 
-What is missing is in [GAPS.md](GAPS.md).
+Repinned 2026-11-04 to `pro-bff42cdcb4f4` (`sf-editor` 1.0.2) on the same
+pair: it closed G-22, G-24 and G-27 to G-35, and their workarounds went (the
+second press of «Результат», the press past the gutter, the allowed axe
+findings, the known checks in the shell and a11y runs). What is missing is in
+[GAPS.md](GAPS.md).
