@@ -23,7 +23,7 @@ cannot start fails here too.
 
 | Target | Driver | What happens |
 |:---|:---|:---|
-| `--target component` (in `npm run e2e` and CI) | `scripts/one-editor/component.mjs` | runs on `sf-editor` 1.0.2 (`package.one_editor` in `framework.lock.json`) in the built shell; a check the component fails is reported with its gap, not failed |
+| `--target component` (in `npm run e2e` and CI) | `scripts/one-editor/component.mjs` | runs on `sf-editor` 1.0.3 (`package.one_editor` in `framework.lock.json`) in the built shell; a check the component fails is reported with its gap, not failed |
 | `--target prototype` (in `npm run e2e`) | `scripts/one-editor/prototype.mjs` | runs on [`prototypes/block-editor.html`](../prototypes/block-editor.html), the accepted behaviour (ui-control `0bb8dc4`), to prove the scenarios themselves |
 
 ```sh
@@ -124,7 +124,17 @@ With the seeded look of 2026-11-04 (sections with spacing and backgrounds,
 docs/STATUS.md): 91 checks pass and 38 are known (29 by G-20, G-21, G-23,
 G-25, G-26; 5 by G-36 to G-38 and the new G-40; 9 differences of design,
 two of them new: S06 and S12 find no section without its own spacing). S01's
-frame click passes now; S08 goes past «Секция · Фон» and stops at G-40.
+frame click passes now; S08 goes past «Секция · Фон» and stops at G-40 (which proved the driver's, below).
+
+### Rechecked on sf-editor 1.0.3
+
+`pro-968c4f47c3b8` over `ui-eea8c0a97cc7`, 2026-11-04: 97 checks pass and 34
+are known: 29 by G-20, G-21, G-23, G-25 and G-26, one by the new G-41 (S03's
+catalogue runs past the window's bottom) and 9 differences of design. None
+fails. 1.0.3 closed G-36 (S05, S06), G-37 (the catalogue stands at its +) and
+G-38 (S08 passes whole). The driver types in an instance at its first line and
+reads its texts from `data.texts`; a value set on the computer may carry the
+screen's prefix (`lg:p-y-5`) where the section's other screens differ.
 
 The driver follows 1.0.2's names: a catalogue option is the `li[role=option]`
 itself, named by `.sf-editor-option-name[data-label]`; an empty named place

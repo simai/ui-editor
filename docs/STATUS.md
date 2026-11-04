@@ -131,7 +131,7 @@ before C2. The rollback is to revert C2: a page kept before it keeps its
 | The host gives the demo site's types (variants, renderers, editor manifests, words), the theme and the rights, and answers the source port with three demo sources | `scripts/e2e-one-editor.mjs` (S07, S09, S10, S12) |
 | Every change sf-editor sends is kept in IndexedDB and outlives a reload; a template change goes into every page; a new page takes the template; a page kept as a layout and its content opens as one Document | `scripts/e2e-shell.mjs` |
 | The top bar, the page list's panel (resize, ⌘\, remembered, no tab stop when closed, sliding below 1024 px), RU/EN | `scripts/e2e-shell.mjs` |
-| The acceptance scenarios on the component, on `sf-editor` 1.0.2 (`pro-bff42cdcb4f4`, 2026-11-04): 22 run, 91 checks pass, 38 known (each named by its gap or a difference of design), none failed; with the seeded look of 2026-11-04 | `scripts/e2e-one-editor.mjs`, [ONE-EDITOR.md](ONE-EDITOR.md) |
+| The acceptance scenarios on the component, on `sf-editor` 1.0.3 (`pro-968c4f47c3b8` over `ui-eea8c0a97cc7`, 2026-11-04): 22 run, 97 checks pass, 34 known (each named by its gap or a difference of design), none failed | `scripts/e2e-one-editor.mjs`, [ONE-EDITOR.md](ONE-EDITOR.md) |
 | axe-core at every size and scheme with nothing chosen, a block chosen, typing and the + open: no violation and nothing allowed; the page never scrolls sideways | `scripts/e2e-a11y.mjs` |
 
 Repinned 2026-11-04 to `pro-bff42cdcb4f4` (`sf-editor` 1.0.2) on the same
@@ -154,8 +154,16 @@ the Framework's (sf-editor's chrome, the section's defaults, the built-in
 | 12 | The host's bar is a thin strip (32 px, 24 px controls) over the editor's own bar | `scripts/e2e-look.mjs`, `scripts/e2e-shell.mjs` |
 
 Found on the way: G-39 (the paragraph's `lead` prints nothing), and G-36
-reaches the demo blocks' `cols` and `gap` ([GAPS.md](GAPS.md)). What still
+reaches the demo blocks' `cols` and `gap` ([GAPS.md](GAPS.md)).
+
+The demo pages carry the seed's version (`SEED_VERSION`): a demo page nobody
+changed follows a newer seed and the interface's language, also one kept by
+an earlier build (never written after it was made); a page anyone edited
+keeps its words (`scripts/e2e-look.mjs`). What still
 differs from the prototype is the Framework's part: the editor's panels take
 the width, so the sheet is 556 px, not 792; the template lock stands on a line
 of its own; body text is 16 px in the canvas.
 
+Repinned 2026-11-04 to `pro-968c4f47c3b8` (`sf-editor` 1.0.3) over
+`ui-eea8c0a97cc7`: it closed G-36, G-37 and G-38; G-40 was the driver's; G-41
+is new (the + catalogue's bottom edge). See [GAPS.md](GAPS.md).

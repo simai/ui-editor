@@ -5,22 +5,22 @@ who owns it and what the editor does meanwhile. A Framework defect has a
 `simai/ui-source` issue; an editor part is ordered from `simai/ui-pro`. A gap
 closes when a pinned release brings the part and the workaround goes.
 
-Pinned: Framework `ui-b8e23367889f` (`@simai-studio/ui@5.20261103.1629`),
-Pro package `pro-bff42cdcb4f4` (`sf-editor` 1.0.2, [`framework.lock.json`](../framework.lock.json)).
+Pinned: Framework `ui-eea8c0a97cc7` (`@simai-studio/ui@5.20261103.2154`),
+Pro package `pro-968c4f47c3b8` (`sf-editor` 1.0.3, [`framework.lock.json`](../framework.lock.json)).
 
 | Id | Gap | Owner | Meanwhile | Closes when |
 |:---|:---|:---|:---|:---|
 | G-01 | `sf-resizer` inside `sf-drawer` stands off the panel's edge: the panel keeps a scrollbar's room at both sides | Framework, [simai/ui-source#59](https://github.com/simai/ui-source/issues/59) (open) | `src/ui/app.css` lets the panel overflow and scrolls its body instead, as ui-mail does | a release fixes #59; the two rules go |
-| G-04 | `layout.columns` names the asset `composition/layout`, but no stylesheet ships for `.sf-composition-columns` (still none in `ui-b8e23367889f`) | Framework, [simai/ui-source#61](https://github.com/simai/ui-source/issues/61) | the seeded columns are drawn by sf-editor with the grid utilities it prints | the stylesheet ships |
+| G-04 | `layout.columns` names the asset `composition/layout`, but no stylesheet ships for `.sf-composition-columns` (still none in `ui-eea8c0a97cc7`) | Framework, [simai/ui-source#61](https://github.com/simai/ui-source/issues/61) | the seeded columns are drawn by sf-editor with the grid utilities it prints | the stylesheet ships |
 | G-06 | No page-list part: rename, delete, order, a page's state. `sf-menu` lists the pages, but draws an item without `href` as plain text | ui-pro (an editor part), to order | each item gets `href="#page=<id>"` and the shell cancels `sf-menu-navigate` | ui-pro ships a page list over a storage port |
 | G-07 | No storage port for documents: the Framework keeps view preferences (`SF.Preferences`), not documents | ui-pro or the Framework, to agree | `src/ui/pages.ts` keeps pages in IndexedDB (`ui-editor` / `pages`), in memory when IndexedDB is refused; the shell copies a template change into every page | a port is released and the store moves behind it |
 | G-39 | `content.paragraph` declares the `lead` modifier, but its renderer prints none: `presentation: {modifiers: ['lead']}` draws a plain `<p>` | Framework (`ui-source`, composition renderers) | the seeded hero's lead keeps the modifier, and the demo hero sets its text column in the lead size (`text-2`) | the renderer prints the modifier; the hero's `text-2` goes |
 
-### sf-editor in this shell (C2, rechecked on 1.0.2)
+### sf-editor in this shell (C2, rechecked on 1.0.3)
 
 Found by the one-editor scenarios (`scripts/e2e-one-editor.mjs`, the
 component driver's `differs` names each failing check's gap) and the shell's
-own runs; open on `sf-editor` 1.0.2. All are ui-pro's (`simai/ui-pro`,
+own runs; open on `sf-editor` 1.0.3. All are ui-pro's (`simai/ui-pro`,
 sf-editor) unless the row says otherwise; none has a workaround in the shell.
 
 | Id | Gap | Scenarios | Closes when |
@@ -30,15 +30,30 @@ sf-editor) unless the row says otherwise; none has a workaround in the shell.
 | G-23 | The Data tab has a mapping preset («Как задано в источнике»), not the shape's fields mapped to the source's; a pagination seeded beside a list follows none («Блок в этой секции» is empty) and the Document has no binding to say it | S07 (3) | the field mapping, and the Document's form of a runtime binding a host can seed |
 | G-25 | No editing of a block's own items in place (the features' points, a columns block's + at the right edge, «Добавить пункт», icons) | S19, S20 | the owner's second review is built |
 | G-26 | Content blocks (a paragraph) have no visibility per screen; only sections and areas have «Скрыт» | S22 | every block has it |
-| G-36 | A value equal to the type's default prints no class, even where a wider screen differs: columns `{xs: 1, md: 2}` print `md:grid-col-2` without `grid-col-1`, so on a phone the grid has one implicit `auto` column, which a wide child can stretch, not `grid-col-1` (`minmax(0, 1fr)`) | S05, S06 | the smallest screen's value is printed when a wider one differs |
-| G-37 | The + opens its catalogue at the window's top-left corner: it is anchored to the `sf-button-icon` host, which is `display: contents` and has no box. In this shell the corner is under the left panel, so the options there cannot be pressed | S03 (stops at the + inside a text area) | the catalogue stands beside the + |
-| G-38 | «Сделать блоком сайта» on a section makes a block of the section's content only (the hero): the builder has no section, so the section's own parameters («Фон») cannot be offered to the author | S08 (stops at «Секция · Фон») | a block made of a container keeps the container, or the difference is agreed |
-| G-40 | Text typed in a site block's instance is not kept: after typing in «Наш первый экран» on the page the instance is still `{type, extensions: {composed: {version}}}`, with no `data` | S08 (reached since the seeded hero section has a background, so «Секция · Фон» can be offered) | the instance keeps what the author typed, as only what differs |
+| G-41 | The + catalogue opened low in the window runs past its bottom edge: from the + inside the seeded text area (1440×900) it stands at 483–995 px, its list scrolls inside it, and the last options («Цитата») stay below the window, where they cannot be pressed | S03 (stops at «Цитата») | the catalogue flips up or shrinks to the room below the + |
 
-G-36 also reaches the demo blocks' own `cols` and `gap`: a value equal to
-the default prints nothing, so three cards or features stood in one column.
-Their renderers (`src/ui/blocks.ts`, `grid`) say the default themselves when
-the canvas gives one value; this goes with G-36.
+The demo blocks' own `cols` and `gap` still print nothing for a value equal
+to the default when the canvas gives one value, so three cards or features
+would stand in one column. Their renderers (`src/ui/blocks.ts`, `grid`) say
+the default themselves; this goes when the Framework's side of the G-36 fix
+ships in a pair.
+
+## What sf-editor 1.0.3 closed
+
+Repinned 2026-11-04 to `pro-968c4f47c3b8` (`sf-editor` 1.0.3, simai/ui-pro
+968c4f4) over `ui-eea8c0a97cc7` (`@simai-studio/ui@5.20261103.2154`):
+
+- **G-36**: the phone's value is printed wherever a wider screen differs; S05
+  and S06 pass their columns and modifier checks.
+- **G-37**: the + catalogue is anchored to its button and stands beside it.
+  What is left is its bottom edge (G-41).
+- **G-38**: «Сделать блок из этого…» on a section keeps the section and offers
+  «Секция · Фон». S08 passes whole.
+
+G-40 was the driver's, not sf-editor's: sf-editor keeps what an author types
+in an instance as `data.texts`, by part and as inline content, where the
+prototype keeps `data.text`. The driver reads both, and types at the
+instance's first line.
 
 ## What sf-editor 1.0.2 closed
 
@@ -77,8 +92,7 @@ The four checks left unclassified by C2 were checked by hand:
   theme its area fills it and there is no frame of its own to press; Esc or the
   path chooses it. Since the seeded sections set their spacing (the look of
   the page, 2026-11-04), the frame is there and S01 passes.
-- **S03** stops at G-37, **S08** at G-38. Since the seeded hero section has a
-  background, S08 offers «Секция · Фон» and goes on to G-40.
+- **S03** stopped at G-37, **S08** at G-38 (both closed by 1.0.3).
 
 ## What sf-editor 1.0.0 closed (C2)
 

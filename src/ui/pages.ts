@@ -27,6 +27,12 @@ export interface Page {
   created?: string;
   /** ISO time of the last write. */
   updated: string;
+  /**
+   * The seed version a demo page was made from, while nobody has changed it
+   * (src/ui/seed.ts, SEED_VERSION). An edit drops it; a page that keeps it
+   * follows a newer seed and the interface's language.
+   */
+  seed?: number;
 }
 
 export interface PageStore {

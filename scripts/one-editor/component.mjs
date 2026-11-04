@@ -42,7 +42,7 @@ export const differs = {
   "S03: a block between sections stands in a section of its own, at that seam": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
   "S03: between sections the + opens on the list of sections": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
   "S03: inside a text area the + opens straight on Текст": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S03: the scenario finished": "G-37: the + opens its catalogue at the window's top-left corner, under the host's left panel",
+  "S03: the scenario finished": "G-41: the + catalogue opened low in the window runs past its bottom edge: the last options cannot be pressed",
   "S14: a page holds a second text area": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
   "S14: the scenario finished": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
   "S06: a value from the variant says so": "G-21: layout.section has no variants",
@@ -62,12 +62,8 @@ export const differs = {
   "S21: «#» turns the paragraph into content.heading 1": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S21: «1.» turns the paragraph into content.list": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S21: «>» turns the paragraph into content.quote": "a difference: differs by design, docs/ONE-EDITOR.md",
-  "S08: the scenario finished": "G-38: a site block made of a section holds only its content: the section's own parameters cannot be offered to the author",
-  "S05: new columns stand one under another on the phone": "G-36: a value equal to the type default prints no class: columns {xs 1, md 2} print md:grid-col-2 without grid-col-1",
   "S06: a value nobody set comes from the type": "a difference: the seeded sections set their spacing until the Framework section prints it by default, docs/ONE-EDITOR.md",
   "S12: a section with no value of its own takes the theme's": "a difference: the seeded sections set their spacing until the Framework section prints it by default, docs/ONE-EDITOR.md",
-  "S08: the author types in it, and the Document keeps only what differs": "G-40: text typed in a site block's instance is not kept: the instance stays {type, version}",
-  "S06: the HTML prints Framework modifiers, mobile first, a prefix only where the value changes": "G-36: a value equal to the type default prints no class: columns {xs 1, md 2} print md:grid-col-2 without grid-col-1",
 };
 export const lacks = {};
 
@@ -186,8 +182,11 @@ function driver(page, origin) {
     },
     /** A click on the block's text puts the caret at its end. */
     clickText: async (id) => {
-      await reveal(block(id));
-      const box = await block(id).boundingBox();
+      // A block that holds text blocks (a site block's instance) is typed in at its first line.
+      const lines = block(id).locator('h1, h2, h3, h4, p, li');
+      const target = (await block(id).evaluate((node) => /^(H[1-6]|P|LI)$/u.test(node.tagName))) || !(await lines.count()) ? block(id) : lines.first();
+      await reveal(target);
+      const box = await target.boundingBox();
       // The pointer comes onto the line first and shows the gutter beside it, then presses the line's start.
       const y = box.y + Math.min(10, box.height / 2);
       await page.mouse.move(box.x + 4, y, {steps: 3});

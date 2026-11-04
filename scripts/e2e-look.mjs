@@ -128,6 +128,42 @@ for (const scheme of ['light', 'dark']) {
   await context.close();
 }
 
+// ---------------------------------------------------------------- 11: an older build's pages
+// A browser that kept the demo pages of an earlier build: a page nobody wrote
+// after it was made follows the newer seed; a page someone edited stays.
+{
+  const context = await run.browser.newContext({viewport: {width: 1440, height: 900}, locale: 'ru-RU'});
+  const page = await context.newPage();
+  await page.addInitScript(() => localStorage.setItem('ui-editor.language', 'ru'));
+  await load(page, run.origin);
+  await page.evaluate(async () => {
+    const db = await new Promise((resolve, reject) => {
+      const r = indexedDB.open('ui-editor');
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+    const store = () => db.transaction('pages', 'readwrite').objectStore('pages');
+    const pages = await new Promise((resolve) => (store().getAll().onsuccess = (event) => resolve(event.target.result)));
+    // The older build's pages: no seed mark, English words, the old hero; «О компании» edited after it was made.
+    const stale = (kept, text, edited) => {
+      const document = JSON.parse(JSON.stringify(kept.document).replaceAll('Страница из блоков, в одном редакторе', 'A page of blocks').replaceAll('О компании', text));
+      return {id: kept.id, title: kept.title, document, created: kept.created, updated: edited ? new Date(Date.parse(kept.created) + 60000).toISOString() : kept.created};
+    };
+    for (const kept of pages) store().put(stale(kept, kept.id === 'about' ? 'Our company, edited' : 'About', kept.id === 'about'));
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  });
+  await page.reload();
+  await page.waitForSelector('body[data-ready="true"]');
+  await page.waitForTimeout(600);
+  const home = await page.evaluate(() => document.querySelector('.sf-editor-page h1')?.textContent.trim());
+  check("an older build's demo page nobody changed takes the new seed", home === 'Страница из блоков, в одном редакторе', home);
+  await page.evaluate(() => globalThis.uiEditor.openPage('about'));
+  await page.waitForTimeout(600);
+  const about = await page.evaluate(() => document.querySelector('.sf-editor-page h1')?.textContent.trim());
+  check('a demo page someone edited keeps its words', about === 'Our company, edited', about);
+  await context.close();
+}
+
 // ---------------------------------------------------------------- 12: one bar a person works with
 {
   const context = await run.browser.newContext({viewport: {width: 1440, height: 900}, locale: 'ru-RU'});

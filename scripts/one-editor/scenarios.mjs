@@ -301,14 +301,18 @@ export const scenarios = [
       await d.clickText(instance.id);
       await d.type(' — наш');
       await d.press('Escape');
-      check('the author types in it, and the Document keeps only what differs', Object.values((await find(d, (n) => n.id === instance.id)).data?.text ?? {}).some((t) => plain(t).endsWith('— наш')));
+      // The prototype keeps the instance's texts in `data.text` as HTML; sf-editor in `data.texts`, by part, as inline content.
+      const kept = (await find(d, (n) => n.id === instance.id)).data ?? {};
+      const words = (t) => (Array.isArray(t) ? t.map((run) => run.value ?? '').join('') : plain(t));
+      check('the author types in it, and the Document keeps only what differs', Object.values(kept.text ?? kept.texts ?? {}).some((t) => words(t).endsWith('— наш')), JSON.stringify(kept));
       await d.toolbarMenu();
       await d.menu('Изменить блок');
       const root = (await d.builder()).root;
       await d.choose(root);
       await d.setField('Отступы сверху и снизу', 'S');
       await d.builderSave();
-      check('a change to the block reaches its instance', (await d.classes(instance.id)).includes('p-y-5'), (await d.classes(instance.id)).join(' '));
+      // A value set on the computer: the prototype prints p-y-5, sf-editor the screen's prefix where the section's other screens differ.
+      check('a change to the block reaches its instance', (await d.classes(instance.id)).some((c) => /(^|:)p-y-5$/u.test(c)), (await d.classes(instance.id)).join(' '));
       check('the author\'s text stays', (await d.blockText(instance.id)).includes('— наш'));
     },
   },

@@ -11,7 +11,7 @@
 import {onUiLanguage, preferredLanguage, setUiLanguage, t, translate, uiLanguage, type Language} from './i18n.ts';
 import {EDITOR_MANIFESTS, RENDERERS, WORDS, blockTypes} from './blocks.ts';
 import {openPageStore, type Page, type PageStore} from './pages.ts';
-import {blankPage, seedDocuments, type CompositionDocument} from './seed.ts';
+import {SEED_VERSION, blankPage, seedDocuments, type CompositionDocument} from './seed.ts';
 import {startShell, type Shell} from './shell.ts';
 import {sourcePort} from './sources.ts';
 
@@ -102,14 +102,14 @@ async function keep(detail: ChangeDetail) {
   const current = page();
   if (!current) return;
   const updated = new Date().toISOString();
-  await save({...current, document: detail.document, updated});
+  await save({...current, document: detail.document, updated, seed: undefined});
   if (detail.scope !== 'template') return;
   const regions = (document: CompositionDocument) => document.root.slots?.regions ?? [];
   const template = regions(detail.document).filter((region) => region.props?.name !== 'main');
   for (const other of state.pages.filter((p) => p.id !== current.id)) {
     const root = other.document.root;
     const next = regions(other.document).map((region) => template.find((part) => part.props?.name === region.props?.name) ?? region);
-    await save({...other, document: {...other.document, root: {...root, slots: {...root.slots, regions: next}}}, updated});
+    await save({...other, document: {...other.document, root: {...root, slots: {...root.slots, regions: next}}}, updated, seed: undefined});
   }
 }
 
@@ -141,20 +141,21 @@ async function newPage() {
 }
 
 /**
- * The seeded pages speak the interface's language until someone changes them:
- * a page still equal to its seed in the language left is seeded again in the
- * new one. A page anyone edited keeps its words.
+ * A demo page nobody changed is the seed's, in the interface's language: when
+ * the seed is newer than the page (a newer build) or the language changes, it
+ * is seeded again. A page anyone edited keeps its words. A page kept before
+ * the seed was marked counts as nobody's while it was never written after it
+ * was made (`updated` is `created`).
  */
-async function followLanguage(from: Language, to: Language) {
-  if (from === to) return;
-  const was = new Map(seedDocuments(from).map((seed) => [seed.id, seed]));
-  const next = new Map(seedDocuments(to).map((seed) => [seed.id, seed]));
+async function followSeed(language: Language, force = false) {
+  const seeds = new Map(seedDocuments(language).map((seed) => [seed.id, seed]));
   let changed = false;
   for (const kept of state.pages) {
-    const old = was.get(kept.id);
-    const fresh = next.get(kept.id);
-    if (!old || !fresh || kept.title !== old.title || JSON.stringify(kept.document) !== JSON.stringify(old.document)) continue;
-    await save({...kept, title: fresh.title, document: fresh.document});
+    const fresh = seeds.get(kept.id);
+    const untouched = kept.seed !== undefined || (kept.created !== undefined && kept.updated === kept.created);
+    if (!fresh || !untouched || (!force && kept.seed === SEED_VERSION)) continue;
+    if (kept.seed === SEED_VERSION && kept.document.locale === language) continue;
+    await save({...kept, title: fresh.title, document: fresh.document, seed: SEED_VERSION});
     changed = true;
   }
   if (!changed) return;
@@ -174,12 +175,10 @@ async function start() {
   await Promise.all(USED.map((tag) => customElements.whenDefined(tag)));
   setUiLanguage(preferredLanguage());
   wordsOfComponents();
-  let spoken = uiLanguage();
   onUiLanguage((language) => {
     wordsOfComponents();
     giveSite(language);
-    void followLanguage(spoken, language);
-    spoken = language;
+    void followSeed(language, true);
   });
 
   const store = await openPageStore();
@@ -190,11 +189,12 @@ async function start() {
     const at = Date.now();
     for (const [index, seed] of seedDocuments(uiLanguage()).entries()) {
       const time = new Date(at + index).toISOString();
-      await store.put({...seed, created: time, updated: time});
+      await store.put({...seed, created: time, updated: time, seed: SEED_VERSION});
     }
     pages = await store.list();
   }
   state.pages = pages;
+  await followSeed(uiLanguage());
 
   shell = startShell();
   $('#toggle-left').addEventListener('click', () => shell!.togglePanel('left'));

@@ -31,6 +31,13 @@ export interface CompositionDocument {
   root: CompositionNode;
 }
 
+/**
+ * The demo pages' version. Raise it when the seeded pages change: a demo page
+ * nobody changed is seeded again (src/ui/app.ts, followSeed). 2: the look of
+ * the prototype (2026-11-04).
+ */
+export const SEED_VERSION = 2;
+
 export interface SeedPage {
   id: string;
   title: string;
