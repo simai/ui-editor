@@ -15,8 +15,14 @@ import {open} from './one-editor/component.mjs';
 
 const axeSource = readFileSync(join(ROOT, 'node_modules/axe-core/axe.min.js'), 'utf8');
 
-/** Framework and Pro defects, each reported or fixed upstream. Nothing of the editor's own goes here. */
-const ALLOWED = [];
+/** Framework and Pro defects, each reported or fixed upstream, and axe's own misreadings. Nothing of the editor's own goes here. */
+const ALLOWED = [
+  // sf-editor 1.1.0's gutter hint (on-surface-inverse on surface-inverse) is
+  // drawn black on white with forced colours (measured: rgb(0, 0, 0) on
+  // rgb(255, 255, 255), and its screenshot), but axe reads the unforced text
+  // colour against the forced background and finds 1.28:1.
+  {id: 'color-contrast', target: /\.sf-editor-gutter-hint$/, only: 'forced colours'},
+];
 
 const run = await startRun();
 const {check} = run;

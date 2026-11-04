@@ -78,6 +78,13 @@ function showPages() {
   $<HTMLElement & {items: unknown}>('#pages').items = state.pages.map((p) => ({id: p.id, label: p.title, href: `#page=${encodeURIComponent(p.id)}`, icon: 'description', current: p.id === state.current}));
 }
 
+/** The open page's name heads sf-editor's bar and its settings. */
+function showTitle() {
+  const title = page()?.title;
+  if (title) editor().setAttribute('heading', title);
+  else editor().removeAttribute('heading');
+}
+
 const themeOf = (name: string): Theme => ({name, label: t(`theme.${name}`), settings_url: '#settings/theme', defaults: THEMES[name] ?? {}});
 
 /** What the host gives the editor beside the page: its blocks, their words, the theme and the rights. */
@@ -118,6 +125,7 @@ async function openPage(id: string) {
   if (!next) return;
   state.current = id;
   showPages();
+  showTitle();
   editor().document = next.document;
 }
 
@@ -160,6 +168,7 @@ async function followSeed(language: Language, force = false) {
   }
   if (!changed) return;
   showPages();
+  showTitle();
   const current = page();
   if (current) editor().document = current.document;
 }

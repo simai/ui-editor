@@ -23,47 +23,35 @@ import {ROOT, load} from '../e2e-common.mjs';
 
 export const name = 'component';
 /**
- * Checks sf-editor 1.0.2 fails in this shell: each names its gap in
+ * Checks sf-editor 1.1.0 fails in this shell: each names its gap in
  * docs/GAPS.md or a difference of design (docs/ONE-EDITOR.md). Reported by
  * the run, not failed; a check here that passes is printed as ok, so its line
  * can go.
  */
 export const differs = {
-  "S02: Favourites stand above the sections": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S02: a block may stand in two sections: the button shows in Текст too": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S02: a section lists its types": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S02: its sections are Текст, Медиа, Элементы, Макет, Части страницы, Маркетинг, Данные, Формы, Сохранённые": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S02: search covers every section and names each result's section": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S02: search lists a block in two sections once": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S02: the library is one list, with no tabs": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S02: «back» returns to the sections": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S02: Макет holds the section, the columns, the text area, the container, the grid and the empty space": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S02: Элементы holds the button, the icon button, the label and the icon": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S03: a block between sections stands in a section of its own, at that seam": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S03: between sections the + opens on the list of sections": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S03: inside a text area the + opens straight on Текст": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S03: the scenario finished": "G-41: the + catalogue opened low in the window runs past its bottom edge: the last options cannot be pressed",
-  "S14: a page holds a second text area": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S14: the scenario finished": "G-20: the catalogue: two tabs and fixed groups, no sections Элементы and Макет",
-  "S06: a value from the variant says so": "G-21: layout.section has no variants",
-  "S06: «сбросить» returns the inherited value": "G-21: layout.section has no variants",
+  "S02: its sections are Текст, Медиа, Элементы, Макет, Части страницы, Маркетинг, Данные, Формы, Сохранённые": "G-20: a type stands in one section of the library; Формы has no types and a section with none is not listed",
+  "S02: a block may stand in two sections: the button shows in Текст too": "G-20: a type stands in one section of the library; Формы has no types and a section with none is not listed",
+  "S03: between sections the + opens on the list of sections": "G-20: the + and / catalogue keep two tabs (Текст, Блоки); the library has the sections",
+  "S03: a block between sections stands in a section of its own, at that seam": "G-20: the + and / catalogue keep two tabs (Текст, Блоки); the library has the sections",
+  "S03: inside a text area the + opens straight on Текст": "G-20: the + and / catalogue keep two tabs (Текст, Блоки); the library has the sections",
+  "S03: / in an empty line opens straight on Текст": "G-20: the + and / catalogue keep two tabs (Текст, Блоки); the library has the sections",
+  "S06: «сбросить» returns the inherited value": "G-21: «Сбросить» on a value the block's variant set returns the type's value, not the variant's",
   "S07: its Data tab names the list it reads": "G-23: the Data tab: a preset, no field mapping; a seeded pagination follows no list",
   "S07: its fields are mapped by the host's preset": "G-23: the Data tab: a preset, no field mapping; a seeded pagination follows no list",
   "S07: the pagination is bound to the list, not to a source": "G-23: the Data tab: a preset, no field mapping; a seeded pagination follows no list",
+  "S08: the author sees only the exposed parameter": "G-42: a site block's instance shows «Дополнительные классы» beside the parameters exposed to its author",
   "S19: the scenario finished": "G-25: no editing of a block's own items in place",
   "S20: the scenario finished": "G-25: no editing of a block's own items in place",
   "S22: every block offers «Показывать на этом экране»": "G-26: content blocks have no visibility per screen",
   "S22: the scenario finished": "G-26: content blocks have no visibility per screen",
-  "S15: the HTML has the section's modifiers and the own one, no inline style, no unknown class": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S05: the menu splits the block into two columns, the block in the left one": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S10: an author inserts only inside text areas": "a difference: differs by design, docs/ONE-EDITOR.md",
+  "S12: a value set in the block stays": "a difference: the Framework section's own spacing is L (p-y-8), the prototype's M, so setting L sets nothing, docs/ONE-EDITOR.md",
   "S21: «###» turns the paragraph into content.heading 3": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S21: «##» turns the paragraph into content.heading 2": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S21: «#» turns the paragraph into content.heading 1": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S21: «1.» turns the paragraph into content.list": "a difference: differs by design, docs/ONE-EDITOR.md",
   "S21: «>» turns the paragraph into content.quote": "a difference: differs by design, docs/ONE-EDITOR.md",
-  "S06: a value nobody set comes from the type": "a difference: the seeded sections set their spacing until the Framework section prints it by default, docs/ONE-EDITOR.md",
-  "S12: a section with no value of its own takes the theme's": "a difference: the seeded sections set their spacing until the Framework section prints it by default, docs/ONE-EDITOR.md",
 };
 export const lacks = {};
 
@@ -97,7 +85,7 @@ const INVERTED = new Set(['Показывать на этом экране']);
 /** The prototype's values → sf-editor's, per field: its padding steps S, M, L are the scale's 5, 6, 8; its tones are the scheme's. */
 const VALUES = {
   'Отступы сверху и снизу': {S: '5', M: '6', L: '8'},
-  'Фон': {'Мягкий': 'Дополнительный', 'Акцент': 'Основной'},
+  'Фон': {'Мягкий': 'Контейнер', 'Акцент': 'Основной'},
   'Вид': {'1, 2, 3': 'Да', '•': 'Нет'},
 };
 /** The prototype's menu items → sf-editor's. */
@@ -106,6 +94,8 @@ const MENU = {'Сделать блок из этого…': 'Сделать бл
 const SAYS = {'Настройки сайта': 'Настройки темы'};
 /** sf-editor's names of the chosen block → the prototype's. */
 const TITLES = {'Изображение': 'Картинка'};
+/** sf-editor's names in the library → the prototype's. */
+const ENTRIES = {'Текстовая область': 'Область текста'};
 const back = (label, value) => Object.entries(VALUES[label] ?? {}).find(([, own]) => own === value)?.[0] ?? value;
 
 export async function open(context, origin) {
@@ -260,18 +250,24 @@ function driver(page, origin) {
       } else await d.gutterPlus(children[Math.max(0, index - 1)]);
       await settle(200);
     },
-    /** The open catalogue (+ or /): its tabs, the names it lists and the place it names. */
+    /**
+     * The open catalogue (+ or /): its tabs, the names it lists and the
+     * section it opened on: with no tabs, the one section every option names
+     * beside it (a text area's + and the / menu open on Текст).
+     */
     picker: () => page.evaluate(() => {
       const box = document.querySelector('#page-editor .sf-editor-pop');
       if (!box) return null;
+      const tabs = [...box.querySelectorAll('sf-button-group button')].map((b) => ({name: b.textContent.trim(), pressed: b.getAttribute('aria-pressed') === 'true' || b.getAttribute('aria-checked') === 'true'}));
+      const heads = [...box.querySelectorAll('li[role="option"] .sf-editor-option-note')].map((s) => s.textContent.trim());
       return {
-        section: null,
-        tabs: [...box.querySelectorAll('sf-button-group button')].map((b) => ({name: b.textContent.trim(), pressed: b.getAttribute('aria-pressed') === 'true' || b.getAttribute('aria-checked') === 'true'})),
+        section: !tabs.length && heads.length && heads.every((head) => head === heads[0]) ? heads[0] : null,
+        tabs,
         items: [...box.querySelectorAll('li[role="option"] .sf-editor-option-name')].map((name) => name.dataset.label ?? name.textContent.trim()),
-        heads: [...box.querySelectorAll('li[role="option"] .sf-editor-option-note')].map((s) => s.textContent.trim()),
+        heads,
       };
     }),
-    /** A section of the catalogue: sf-editor has two tabs (Текст, Блоки); a section by another name is not there. */
+    /** A section of the + catalogue: it has two tabs (Текст, Блоки); a section by another name is not there. */
     pickerSection: async (section) => {
       const tab = pop.locator('sf-button-group button', {hasText: exact(section)});
       if (await tab.count()) await tab.first().click();
@@ -290,24 +286,39 @@ function driver(page, origin) {
       await pop.locator('input').fill(query);
       await settle();
     },
-    /** The library on the left. */
+    /**
+     * The library on the left: its sections (or the open section's entries)
+     * and its groups' headings. A variant's entry names its type beside it
+     * (search lists «Заголовок и текст», «Призыв к действию»); both count.
+     */
     library: () => page.evaluate(() => {
       const box = document.querySelector('#page-editor .sf-editor-left');
       const name = (item) => item.querySelector('.sf-editor-item-name')?.getAttribute('text') ?? '';
+      const items = [...box.querySelectorAll('.sf-editor-item:not(.sf-editor-variant)')];
+      const noted = items.flatMap((item) => {
+        const note = item.querySelector('.sf-editor-item-note')?.textContent.trim() ?? '';
+        return item.dataset.item?.includes('#') && note && !/\d/u.test(note) && note !== name(item) ? [name(item), note] : [name(item)];
+      });
       return {
         tabs: [...box.querySelectorAll('.sf-editor-kinds button')].map((b) => ({name: b.textContent.replace(/\d+/gu, '').trim(), pressed: b.getAttribute('aria-pressed') === 'true' || b.getAttribute('aria-checked') === 'true'})),
-        items: [...box.querySelectorAll('.sf-editor-item')].map(name),
-        heads: [...box.querySelectorAll('.sf-editor-group > h3')].map((h) => h.textContent.trim()),
-        favourites: [...new Set([...box.querySelectorAll('.sf-editor-item')].filter((item) => item.querySelector('.sf-editor-star [aria-pressed="true"], .sf-editor-star[aria-pressed="true"]')).map(name))],
+        // A variant's entry and its type's own name the same block once.
+        items: [...new Set([...[...box.querySelectorAll('.sf-editor-section-name')].map((section) => section.getAttribute('text')), ...noted])],
+        heads: [...box.querySelectorAll('.sf-editor-group > h3')].map((h) => (h.querySelector('span') ?? h).textContent.trim()),
+        favourites: [...new Set(items.filter((item) => item.querySelector('.sf-editor-star [aria-pressed="true"], .sf-editor-star[aria-pressed="true"]')).map(name))],
       };
-    }),
-    /** A section of the library: one of sf-editor's two tabs, by name. */
+    }).then((seen) => ({...seen, items: seen.items.map((own) => ENTRIES[own] ?? own)})),
+    /** A section of the library, opened from the list of sections (from another section, back first). */
     librarySection: async (section) => {
-      const tab = left.locator('.sf-editor-kinds button', {hasText: section});
-      if (await tab.count()) await tab.first().click();
+      await d.libraryBack();
+      const row = left.locator('.sf-editor-section-name', {hasText: exact(section)});
+      if (await row.count()) await row.first().locator('button').click();
       await settle();
     },
-    libraryBack: async () => {},
+    libraryBack: async () => {
+      const back = left.locator('.sf-editor-back button');
+      if (await back.count()) await back.first().click();
+      await settle();
+    },
     librarySearch: async (query) => {
       await left.locator('.sf-editor-search input').fill(query);
       await settle();
@@ -322,7 +333,7 @@ function driver(page, origin) {
       await d.librarySearch(entry);
       return async () => d.librarySearch('');
     },
-    libraryItem: (entry) => left.locator('.sf-editor-item').filter({has: page.locator(`sf-button.sf-editor-item-name[text="${entry}"]`)}).first(),
+    libraryItem: (entry) => left.locator('.sf-editor-item:not(.sf-editor-variant)').filter({has: page.locator(`sf-button.sf-editor-item-name[text="${entry}"]`)}).first(),
     favourite: async (entry) => {
       const done = await d.findEntry(entry);
       await d.libraryItem(entry).locator('.sf-editor-star button').click();
@@ -368,7 +379,7 @@ function driver(page, origin) {
         title: box.querySelector('.sf-editor-panel-title')?.textContent.trim() ?? '',
         note: box.querySelector('.sf-editor-locked-note')?.textContent.trim() ?? '',
         tabs: [...box.querySelectorAll('[role="tab"]')].map((b) => b.textContent.trim()),
-        fields: [...box.querySelectorAll('.sf-editor-field')].map((f) => f.querySelector('[label]')?.getAttribute('label') ?? ''),
+        fields: [...box.querySelectorAll('.sf-editor-field, .sf-editor-modifiers-row')].map((f) => f.querySelector('.sf-editor-field-label')?.textContent.trim() ?? ''),
       };
     }).then((seen) => ({...seen, title: TITLES[seen.title] ?? seen.title, fields: seen.fields.map((own) => Object.entries(LABELS).find(([, list]) => list.includes(own))?.[0] ?? own)})),
     panelTab: async (tab) => {
@@ -379,14 +390,19 @@ function driver(page, origin) {
       const own = await ownLabel(label);
       if (!own) return null;
       const found = await page.evaluate((wanted) => {
-        const control = [...document.querySelectorAll('#page-editor .sf-editor-right [label]')].find((c) => c.getAttribute('label') === wanted && /^SF-(SWITCH|DROPDOWN|INPUT|SELECT|TEXTAREA|BUTTON-GROUP)$/u.test(c.tagName));
+        // A parameter is a field headed by its label; the Data tab's controls carry their label themselves.
+        const headed = [...document.querySelectorAll('#page-editor .sf-editor-right :is(.sf-editor-field, .sf-editor-modifiers-row)')].find((f) => f.querySelector('.sf-editor-field-label')?.textContent.trim() === wanted);
+        const control = headed
+          ? [...headed.querySelectorAll('sf-switch, sf-dropdown, sf-input, sf-select, sf-textarea, sf-button-group')].find((c) => !c.classList.contains('sf-editor-expose'))
+          : [...document.querySelectorAll('#page-editor .sf-editor-right [label]')].find((c) => c.getAttribute('label') === wanted && /^SF-(SWITCH|DROPDOWN|INPUT|SELECT|TEXTAREA|BUTTON-GROUP)$/u.test(c.tagName));
         if (!control) return null;
-        const fld = control.closest('.sf-editor-field') ?? control.parentElement;
+        const fld = headed ?? control.closest('.sf-editor-field') ?? control.parentElement;
         let value;
         if (control.tagName === 'SF-SWITCH') value = control.checked ? 'Да' : 'Нет';
         else if (control.tagName === 'SF-DROPDOWN') value = (control.options ?? control.items ?? []).find((o) => String(o.value) === String(control.value))?.text ?? (control.options ?? control.items ?? []).find((o) => String(o.value) === String(control.value))?.label ?? String(control.value ?? '');
+        else if (control.tagName === 'SF-BUTTON-GROUP') value = [...control.querySelectorAll('button')].find((button) => button.getAttribute('aria-checked') === 'true' || button.getAttribute('aria-pressed') === 'true')?.textContent.trim() ?? String(control.value ?? '');
         else value = String(control.value ?? '');
-        const origin = fld.querySelector('.sf-editor-field-meta .sf-editor-origin');
+        const origin = fld.querySelector('.sf-editor-origin');
         return {value, origin: origin?.textContent.trim().toLowerCase() ?? null, own: origin?.dataset.origin === 'block', disabled: Boolean(fld.querySelector('[disabled]'))};
       }, own);
       if (!found) return null;
@@ -400,7 +416,7 @@ function driver(page, origin) {
       const own = await ownLabel(label);
       let wanted = VALUES[label]?.[value] ?? value;
       if (INVERTED.has(label)) wanted = wanted === 'Да' ? 'Нет' : 'Да';
-      const control = right.locator(`[label="${own}"]`).first();
+      const control = controlOf(own);
       const tag = await control.evaluate((element) => element.tagName);
       if (tag === 'SF-SWITCH') {
         const on = await control.evaluate((element) => Boolean(element.checked));
@@ -409,6 +425,8 @@ function driver(page, origin) {
         await control.locator('button, [role="combobox"]').first().click();
         await settle();
         await page.locator('[role="option"]:visible', {hasText: exact(String(wanted))}).first().click();
+      } else if (tag === 'SF-BUTTON-GROUP') {
+        await control.locator('button', {hasText: exact(String(wanted))}).first().click();
       } else {
         await control.locator('input, textarea').first().fill(String(wanted));
         await control.locator('input, textarea').first().press('Tab');
@@ -417,7 +435,7 @@ function driver(page, origin) {
     },
     resetField: async (label) => {
       const own = await ownLabel(label);
-      await right.locator('.sf-editor-field').filter({has: page.locator(`[label="${own}"]`)}).locator('.sf-editor-field-meta sf-button button').first().click();
+      await fieldOf(own).locator('.sf-editor-reset button').first().click();
       await settle(300);
     },
     preview: async (state) => {
@@ -433,7 +451,7 @@ function driver(page, origin) {
     markdown: async () => d.output('Markdown'),
     output: async (tab) => {
       const opened = () => page.evaluate(() => (document.querySelector('.sf-editor-output-body')?.getBoundingClientRect().width ?? 0) > 0);
-      await page.locator(`${ed} .sf-editor-bar-end sf-button`).last().locator('button').click();
+      await page.locator(`${ed} .sf-editor-output-open button`).click();
       await settle(400);
       if (!(await opened())) throw new Error('«Результат» did not open the dialog');
       // sf-modal shows its content outside the editor's element.
@@ -481,7 +499,7 @@ function driver(page, origin) {
       const [owner, field] = label.includes(' · ') ? label.split(' · ') : [null, label];
       await page.evaluate(() => document.querySelector('#page-editor .sf-editor-canvas')?.focus({preventScroll: true}));
       for (let i = 0; owner && i < 3 && !(await d.panel()).title.startsWith(owner); i += 1) await d.press('Escape');
-      await right.locator('.sf-editor-field').filter({has: page.locator(`[label="${field}"]`)}).locator('sf-switch.sf-editor-expose').locator('input, [role="switch"]').first().click();
+      await fieldOf(field).locator('sf-switch.sf-editor-expose').locator('input, [role="switch"]').first().click();
       await settle();
     },
     builderName: async (text) => {
@@ -513,7 +531,7 @@ function driver(page, origin) {
     dimmed: (id) => model((editor, wanted) => editor.model.lockOf(wanted) === 'template', id),
     /** The variants shown in the library or the catalogue: entries of a type's variant. */
     variants: () => page.evaluate(() => [
-      ...[...document.querySelectorAll('#page-editor .sf-editor-left .sf-editor-item')].filter((item) => item.dataset.item?.includes('#')).map((item) => item.querySelector('.sf-editor-item-name')?.getAttribute('text')),
+      ...[...document.querySelectorAll('#page-editor .sf-editor-left .sf-editor-variant')].map((item) => item.querySelector('.sf-editor-item-name')?.getAttribute('text')),
       ...[...document.querySelectorAll('#page-editor .sf-editor-pop li[role="option"]')].filter((option) => option.dataset.item?.includes('#')).map((option) => option.querySelector('.sf-editor-option-name')?.dataset.label),
     ]),
     /** The Data tab's field mapping: the shape's field → the source's field. */
@@ -592,7 +610,11 @@ function driver(page, origin) {
 
   let screen = 'компьютер';
   /** The first of sf-editor's names for a prototype's field that the right panel has. */
-  const ownLabel = (label) => page.evaluate((list) => list.find((own) => document.querySelector(`#page-editor .sf-editor-right [label="${own}"]`)) ?? null, LABELS[label] ?? [label]);
+  const ownLabel = (label) => page.evaluate((list) => list.find((own) => [...document.querySelectorAll('#page-editor .sf-editor-right .sf-editor-field-label')].some((name) => name.textContent.trim() === own) || document.querySelector(`#page-editor .sf-editor-right [label="${own}"]`)) ?? null, LABELS[label] ?? [label]);
+  /** A field of the right panel, by its label. */
+  const fieldOf = (own) => right.locator('.sf-editor-field, .sf-editor-modifiers-row').filter({has: page.locator('.sf-editor-field-label', {hasText: exact(own ?? '')})}).first();
+  /** A parameter's control: in the field its label heads, or a Data tab control that carries the label itself. */
+  const controlOf = (own) => fieldOf(own).locator('sf-switch:not(.sf-editor-expose), sf-dropdown, sf-input, sf-select, sf-textarea, sf-button-group').or(right.locator(`[label="${own}"]`)).first();
 
   /**
    * A point of the block itself, not of a block inside it nor of the gutter:

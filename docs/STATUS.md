@@ -45,7 +45,7 @@ and Pro `larena-5a2ae14a0ea0`, the newest released pair on that day.
 | One exact pair, never latest; the page loads that pair and that package; Node pinned alike in `.nvmrc`, `package.json` and CI | `scripts/check-lock.mjs` |
 | No local paths, no secret-shaped strings, the required files, every doc reachable from the README | `scripts/check-hygiene.mjs` |
 | The seeded page is a Composition Document (`ui-layout`) and the canvas holds exactly what `SF.Composition.render` draws | `scripts/e2e-shell.mjs` |
-| A top bar of 32 px controls; both panels resize with `sf-resizer` (drag, arrows, double click, remembered) and close by their `left_panel_*` / `right_panel_*` toggles and ⌘\ / ⌥⌘\, remembered, with no tab stop left in a closed panel | `scripts/e2e-shell.mjs` |
+| A top bar of 32 px controls (until sf-editor 1.1.0, whose bar holds the host's controls); both panels resize with `sf-resizer` (drag, arrows, double click, remembered) and close by their `left_panel_*` / `right_panel_*` toggles and ⌘\ / ⌥⌘\, remembered, with no tab stop left in a closed panel | `scripts/e2e-shell.mjs` |
 | Layout mode: `sf-composition-overlay` selects a block and its frame stands on it, also after the panels close; Content mode: a placeholder until `sf-content-editor` | `scripts/e2e-shell.mjs` |
 | The page list in IndexedDB: seeded, opened, a new page added, kept over a reload | `scripts/e2e-shell.mjs` |
 | RU/EN dictionaries, the components' words too, kept over a reload | `scripts/e2e-shell.mjs` |
@@ -114,7 +114,9 @@ its fixes and the width parts, copied to
 The side panels at about 800 px wide stand over the canvas edge, and that is
 intended: below 1024 px both panels start closed and slide over the canvas one
 at a time (`src/ui/shell.ts`), so the canvas keeps its whole width; at 1024 px
-and wider both are docked beside it.
+and wider both are docked beside it. Since sf-editor 1.1.0 the page list docks
+from 1600 px only: sf-editor's own panels take 560 px, and a 1440 window keeps
+a 796 px sheet with the list closed (508 with it open).
 
 ## The one block editor, C2: sf-editor replaces the two modes
 
@@ -130,9 +132,9 @@ before C2. The rollback is to revert C2: a page kept before it keeps its
 | A page is one Composition Document (`ui-layout`): the site template's header and footer regions around the page's main region; sf-editor draws every node | `scripts/e2e-shell.mjs` |
 | The host gives the demo site's types (variants, renderers, editor manifests, words), the theme and the rights, and answers the source port with three demo sources | `scripts/e2e-one-editor.mjs` (S07, S09, S10, S12) |
 | Every change sf-editor sends is kept in IndexedDB and outlives a reload; a template change goes into every page; a new page takes the template; a page kept as a layout and its content opens as one Document | `scripts/e2e-shell.mjs` |
-| The top bar, the page list's panel (resize, ⌘\, remembered, no tab stop when closed, sliding below 1024 px), RU/EN | `scripts/e2e-shell.mjs` |
-| The acceptance scenarios on the component, on `sf-editor` 1.0.3 (`pro-968c4f47c3b8` over `ui-eea8c0a97cc7`, 2026-11-04): 22 run, 97 checks pass, 34 known (each named by its gap or a difference of design), none failed | `scripts/e2e-one-editor.mjs`, [ONE-EDITOR.md](ONE-EDITOR.md) |
-| axe-core at every size and scheme with nothing chosen, a block chosen, typing and the + open: no violation and nothing allowed; the page never scrolls sideways | `scripts/e2e-a11y.mjs` |
+| One bar: the page list's toggle in sf-editor's `start` slot, RU/EN in its `actions` slot, the page's name as its heading; the page list's panel (resize, ⌘\, remembered, no tab stop when closed, sliding below 1600 px) | `scripts/e2e-shell.mjs` |
+| The acceptance scenarios on the component, on `sf-editor` 1.1.0 (`pro-978d513cf4bf` over `ui-c3015f76bcc2`, 2026-11-04): 19 run, 119 checks pass, 22 known (each named by its gap or a difference of design), none failed | `scripts/e2e-one-editor.mjs`, [ONE-EDITOR.md](ONE-EDITOR.md) |
+| axe-core at every size and scheme with nothing chosen, a block chosen, typing and the + open: no violation, and only axe's misreading of sf-editor 1.1.0's gutter hint with forced colours allowed (it draws black on white); the page never scrolls sideways | `scripts/e2e-a11y.mjs` |
 
 Repinned 2026-11-04 to `pro-bff42cdcb4f4` (`sf-editor` 1.0.2) on the same
 pair: it closed G-22, G-24 and G-27 to G-35, and their workarounds went (the
@@ -151,10 +153,11 @@ the Framework's (sf-editor's chrome, the section's defaults, the built-in
 |:---|:---|:---|
 | 10 | The demo blocks draw as the prototype's, with Framework utilities and Smart elements only: the header has a logo mark, a menu and an `sf-input` search (a search button on a narrow header); the hero a lead size, a primary `sf-button` (the block's `action`) and a 4:3 picture with rounded corners; cards and features in rounded, outlined grids; a footer with its links. A block that changes with the width asks its own width (`query-container`, `cq-`), since the canvas draws a phone inside a computer's window. The seeded sections take the prototype's spacing, a soft hero and a primary features section | `scripts/e2e-look.mjs` (1440 light and dark, the phone screen) |
 | 11 | Every seeded word is Russian when the interface is; a seeded page nobody changed follows a language switch | `scripts/e2e-look.mjs` |
-| 12 | The host's bar is a thin strip (32 px, 24 px controls) over the editor's own bar | `scripts/e2e-look.mjs`, `scripts/e2e-shell.mjs` |
+| 12 | One bar: the host's page list toggle and language stand in sf-editor's bar (its `start` and `actions` slots, sf-editor 1.1.0); the thin strip of before went | `scripts/e2e-look.mjs`, `scripts/e2e-shell.mjs` |
 
 Found on the way: G-39 (the paragraph's `lead` prints nothing), and G-36
-reaches the demo blocks' `cols` and `gap` ([GAPS.md](GAPS.md)).
+reaches the demo blocks' `cols` and `gap`; both closed by sf-editor 1.1.0
+([GAPS.md](GAPS.md)).
 
 The demo pages carry the seed's version (`SEED_VERSION`): a demo page nobody
 changed follows a newer seed and the interface's language, also one kept by
@@ -167,3 +170,15 @@ of its own; body text is 16 px in the canvas.
 Repinned 2026-11-04 to `pro-968c4f47c3b8` (`sf-editor` 1.0.3) over
 `ui-eea8c0a97cc7`: it closed G-36, G-37 and G-38; G-40 was the driver's; G-41
 is new (the + catalogue's bottom edge). See [GAPS.md](GAPS.md).
+
+Repinned 2026-11-04 to `pro-978d513cf4bf` (`sf-editor` 1.1.0, the visual
+parity pass) over `ui-c3015f76bcc2`: the workarounds for G-36 and G-39 went,
+the host's controls moved into sf-editor's bar, the seeded sections take the
+Framework section's spacing and its variants (`SEED_VERSION` 3), and the
+header and footer keep the section's sides (48 px). The sheet at 1440 is
+796 px, as the prototype's 792. What still differs from the prototype: the
+features stand one under another on the phone, and the accent section
+(`background: primary`) draws a light blue where the prototype's is strong
+(screenshots beside the prototype: ui-control
+`control/ui-editor/visual-parity-2026-11-04`). G-41 closed; G-20 and G-21
+narrowed; G-42 is new. See [GAPS.md](GAPS.md).

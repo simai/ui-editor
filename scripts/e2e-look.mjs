@@ -2,7 +2,7 @@
 // 2026-11-04; ui-control control/ui-editor/visual-parity-2026-11-04, host
 // items 10-12). Each check measures what the prototype shows: the demo
 // blocks' parts and sizes, the page's sides, the seeded words in the
-// interface's language and the thin host bar.
+// interface's language and the one bar.
 //
 //   node scripts/e2e-look.mjs [--chrome <path>] [--shots <dir>]
 //
@@ -169,8 +169,8 @@ for (const scheme of ['light', 'dark']) {
   const context = await run.browser.newContext({viewport: {width: 1440, height: 900}, locale: 'ru-RU'});
   const page = await context.newPage();
   await load(page, run.origin);
-  const bars = await page.evaluate(() => ({host: Math.round(document.querySelector('#top-bar').getBoundingClientRect().height), editor: Math.round(document.querySelector('.sf-editor-bar').getBoundingClientRect().height)}));
-  check("the host's bar is a thin strip over the editor's own bar", bars.host <= 32 && bars.host < bars.editor, JSON.stringify(bars));
+  const bars = await page.evaluate(() => ({host: Boolean(document.querySelector('#top-bar')), rows: document.querySelectorAll('.sf-editor-bar').length, slots: [...document.querySelectorAll('.sf-editor-bar [data-slot]')].map((slot) => slot.dataset.slot).join()}));
+  check("one bar: the host's controls are in sf-editor's, no strip of its own", !bars.host && bars.rows === 1 && bars.slots === 'start,actions', JSON.stringify(bars));
   await context.close();
 }
 

@@ -5,8 +5,8 @@ who owns it and what the editor does meanwhile. A Framework defect has a
 `simai/ui-source` issue; an editor part is ordered from `simai/ui-pro`. A gap
 closes when a pinned release brings the part and the workaround goes.
 
-Pinned: Framework `ui-eea8c0a97cc7` (`@simai-studio/ui@5.20261103.2154`),
-Pro package `pro-968c4f47c3b8` (`sf-editor` 1.0.3, [`framework.lock.json`](../framework.lock.json)).
+Pinned: Framework `ui-c3015f76bcc2` (`@simai-studio/ui@5.20261104.451`),
+Pro package `pro-978d513cf4bf` (`sf-editor` 1.1.0, [`framework.lock.json`](../framework.lock.json)).
 
 | Id | Gap | Owner | Meanwhile | Closes when |
 |:---|:---|:---|:---|:---|
@@ -14,29 +14,47 @@ Pro package `pro-968c4f47c3b8` (`sf-editor` 1.0.3, [`framework.lock.json`](../fr
 | G-04 | `layout.columns` names the asset `composition/layout`, but no stylesheet ships for `.sf-composition-columns` (still none in `ui-eea8c0a97cc7`) | Framework, [simai/ui-source#61](https://github.com/simai/ui-source/issues/61) | the seeded columns are drawn by sf-editor with the grid utilities it prints | the stylesheet ships |
 | G-06 | No page-list part: rename, delete, order, a page's state. `sf-menu` lists the pages, but draws an item without `href` as plain text | ui-pro (an editor part), to order | each item gets `href="#page=<id>"` and the shell cancels `sf-menu-navigate` | ui-pro ships a page list over a storage port |
 | G-07 | No storage port for documents: the Framework keeps view preferences (`SF.Preferences`), not documents | ui-pro or the Framework, to agree | `src/ui/pages.ts` keeps pages in IndexedDB (`ui-editor` / `pages`), in memory when IndexedDB is refused; the shell copies a template change into every page | a port is released and the store moves behind it |
-| G-39 | `content.paragraph` declares the `lead` modifier, but its renderer prints none: `presentation: {modifiers: ['lead']}` draws a plain `<p>` | Framework (`ui-source`, composition renderers) | the seeded hero's lead keeps the modifier, and the demo hero sets its text column in the lead size (`text-2`) | the renderer prints the modifier; the hero's `text-2` goes |
 
-### sf-editor in this shell (C2, rechecked on 1.0.3)
+### sf-editor in this shell (C2, rechecked on 1.1.0)
 
 Found by the one-editor scenarios (`scripts/e2e-one-editor.mjs`, the
 component driver's `differs` names each failing check's gap) and the shell's
-own runs; open on `sf-editor` 1.0.3. All are ui-pro's (`simai/ui-pro`,
+own runs; open on `sf-editor` 1.1.0. All are ui-pro's (`simai/ui-pro`,
 sf-editor) unless the row says otherwise; none has a workaround in the shell.
 
 | Id | Gap | Scenarios | Closes when |
 |:---|:---|:---|:---|
-| G-20 | The catalogue has two tabs (Текст, Блоки) and the fixed groups; there is no one list with the sections Текст, Медиа, Элементы, Макет, Части страницы, Маркетинг, Данные, Формы, Сохранённые, no «back», and search does not name a result's section. The built-in types have no button, icon button, label, icon, container, grid or empty space, and no section «с областью текста», so the + between sections cannot open on sections | S02 (9 checks), S03 (3), S14 | the owner's one-list catalogue, with Part A's Элементы and Макет types |
-| G-21 | `layout.section` has no variants, so no value can come from a variant («вариант») and «сбросить» has nothing to return to | S06 (2) | the built-in section has variants (Part A) |
+| G-20 | What is left of the one catalogue: the library has the owner's sections, «Назад», variants as pictures and search naming each result's section, but the + and / catalogue keep two tabs (Текст, Блоки) and a flat list, so the + between sections does not open on the sections and / does not open on Текст alone; a type stands in one section only (the button is not in Текст too); Формы has no types, and a section with none is not listed | S02 (2 checks), S03 (4) | the + and / catalogue are the library's sections; a type may stand in two |
+| G-21 | What is left of the section's variants: a value the variant set says «Вариант», but «Сбросить» after a change returns the type's value, not the variant's | S06 (1) | a reset returns to the variant's value |
 | G-23 | The Data tab has a mapping preset («Как задано в источнике»), not the shape's fields mapped to the source's; a pagination seeded beside a list follows none («Блок в этой секции» is empty) and the Document has no binding to say it | S07 (3) | the field mapping, and the Document's form of a runtime binding a host can seed |
 | G-25 | No editing of a block's own items in place (the features' points, a columns block's + at the right edge, «Добавить пункт», icons) | S19, S20 | the owner's second review is built |
 | G-26 | Content blocks (a paragraph) have no visibility per screen; only sections and areas have «Скрыт» | S22 | every block has it |
-| G-41 | The + catalogue opened low in the window runs past its bottom edge: from the + inside the seeded text area (1440×900) it stands at 483–995 px, its list scrolls inside it, and the last options («Цитата») stay below the window, where they cannot be pressed | S03 (stops at «Цитата») | the catalogue flips up or shrinks to the room below the + |
+| G-42 | A site block's instance shows «Дополнительные классы» beside the parameters its author was given (the builder's «Для автора»), so the author can change more than the exposed ones | S08 (1) | an instance shows only its exposed parameters |
 
-The demo blocks' own `cols` and `gap` still print nothing for a value equal
-to the default when the canvas gives one value, so three cards or features
-would stand in one column. Their renderers (`src/ui/blocks.ts`, `grid`) say
-the default themselves; this goes when the Framework's side of the G-36 fix
-ships in a pair.
+## What sf-editor 1.1.0 closed
+
+Repinned 2026-11-04 to `pro-978d513cf4bf` (`sf-editor` 1.1.0, simai/ui-pro
+978d513) over `ui-c3015f76bcc2` (`@simai-studio/ui@5.20261104.451`), the visual
+parity pass:
+
+- **G-20** in the library: one list of sections (Текст, Медиа, Элементы,
+  Макет, Части страницы, Маркетинг, Данные), «Назад», variants as pictures,
+  favourites above the sections, recent, and search over every section. The
+  built-in Элементы and Макет types are there (button, icon button, label,
+  icon, container, grid, empty space). The demo types sit in the groups
+  `page-parts`, `marketing` and `data`. What is left is in the table.
+- **G-21** mostly: the section has variants (soft, accent) and a value from
+  one says so. The seeded hero and features sections are made from them.
+- **G-36** for any type: a type's `parameter_defaults` print where a node sets
+  nothing. The demo grids declare theirs (`{cols: 3, gap: 5}`), and the
+  renderers' `grid()` workaround went.
+- **G-39**: the paragraph's `lead` prints `text-large`; the hero's `text-2`
+  went.
+- **G-41**: the + catalogue stays within the window (S03 passes its picks).
+- The section prints its own spacing and width; the seed's spacing on every
+  section went, and the S06 and S12 differences it caused with it.
+- The bar takes the host's controls in its `start` and `actions` slots and
+  shows the page's name (`heading`); the shell's own strip went.
 
 ## What sf-editor 1.0.3 closed
 

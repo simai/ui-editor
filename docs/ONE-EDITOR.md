@@ -23,7 +23,7 @@ cannot start fails here too.
 
 | Target | Driver | What happens |
 |:---|:---|:---|
-| `--target component` (in `npm run e2e` and CI) | `scripts/one-editor/component.mjs` | runs on `sf-editor` 1.0.3 (`package.one_editor` in `framework.lock.json`) in the built shell; a check the component fails is reported with its gap, not failed |
+| `--target component` (in `npm run e2e` and CI) | `scripts/one-editor/component.mjs` | runs on `sf-editor` 1.1.0 (`package.one_editor` in `framework.lock.json`) in the built shell; a check the component fails is reported with its gap, not failed |
 | `--target prototype` (in `npm run e2e`) | `scripts/one-editor/prototype.mjs` | runs on [`prototypes/block-editor.html`](../prototypes/block-editor.html), the accepted behaviour (ui-control `0bb8dc4`), to prove the scenarios themselves |
 
 ```sh
@@ -125,6 +125,27 @@ docs/STATUS.md): 91 checks pass and 38 are known (29 by G-20, G-21, G-23,
 G-25, G-26; 5 by G-36 to G-38 and the new G-40; 9 differences of design,
 two of them new: S06 and S12 find no section without its own spacing). S01's
 frame click passes now; S08 goes past «Секция · Фон» and stops at G-40 (which proved the driver's, below).
+
+### Rechecked on sf-editor 1.1.0
+
+`pro-978d513cf4bf` over `ui-c3015f76bcc2`, 2026-11-04: 119 checks pass and
+22 are known: 6 by what is left of G-20 (the + and / catalogue keep two
+tabs; a type stands in one section; Формы is empty), one by G-21's reset, 3 by
+G-23, 3 by G-25 and G-26, one by the new G-42 (an instance shows «Дополнительные
+классы» to its author) and 8 differences of design. None fails. 1.1.0 closed
+the library's part of G-20 (S02 passes its sections, «Назад», variants,
+search and favourites), most of G-21 (S06's value from the variant) and G-41
+(S03's picks). The seeded sections no longer set their spacing, so S06's
+«a value nobody set comes from the type» passes; S12's «a value set in the
+block stays» became a difference: the Framework section's own spacing is L
+(`p-y-8`) where the prototype's is M, so setting L sets nothing.
+
+The driver follows 1.1.0's parts: the library's sections are opened by name
+and left by «Назад»; a variant's entry counts with its type's name; a
+parameter is the `.sf-editor-field` its `.sf-editor-field-label` heads (the
+Data tab's controls still carry their `label`); «Результат» is the bar's
+`data_object` icon button; «Текстовая область» is the prototype's «Область
+текста».
 
 ### Rechecked on sf-editor 1.0.3
 

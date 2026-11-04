@@ -34,9 +34,10 @@ export interface CompositionDocument {
 /**
  * The demo pages' version. Raise it when the seeded pages change: a demo page
  * nobody changed is seeded again (src/ui/app.ts, followSeed). 2: the look of
- * the prototype (2026-11-04).
+ * the prototype (2026-11-04). 3: sections keep the Framework section's own
+ * spacing, and the soft and accent ones come from its variants (sf-editor 1.1.0).
  */
-export const SEED_VERSION = 2;
+export const SEED_VERSION = 3;
 
 export interface SeedPage {
   id: string;
@@ -56,9 +57,18 @@ function withIds(part: Part, id: string): CompositionNode {
   return node;
 }
 
-/** A section with the prototype's spacing: 48 px above and below on a computer, and the sides the header and the footer keep (24 px). */
-const SPACE = {padding_y: {xs: 6, md: 8}, padding_x: 4};
-const section = (children: Part[], props?: Record<string, unknown>): Part => ({type: 'layout.section', props: {...SPACE, ...props}, slots: {default: children}});
+/**
+ * A section takes the Framework section's own spacing and width (its
+ * parameter defaults); one made from a variant says so, and keeps the
+ * variant's values (the soft and the accent background).
+ */
+const VARIANTS: Record<string, Record<string, unknown>> = {soft: {background: 'container'}, accent: {background: 'primary'}};
+const section = (children: Part[], variant?: keyof typeof VARIANTS, props?: Record<string, unknown>): Part => ({
+  type: 'layout.section',
+  ...(variant || props ? {props: {...(variant ? VARIANTS[variant] : {}), ...props}} : {}),
+  ...(variant ? {extensions: {'simai.composition:variant': {id: variant}}} : {}),
+  slots: {default: children},
+});
 const area = (children: Part[]): Part => ({type: 'layout.area', slots: {default: children}});
 const list = (items: string[]): Part => ({type: 'content.list', slots: {items: items.map((value) => ({type: 'content.list-item', data: {content: [{type: 'text', value}]}}))}});
 
@@ -85,15 +95,15 @@ export function seedDocuments(language: Language): SeedPage[] {
       id: 'home',
       title: s('home.pageTitle'),
       document: pageDocument('home', language, [
-        section([{type: 'demo.hero', props: {align: 'split'}, data: {action: s('home.heroAction')}, slots: {default: [heading(1, s('home.heroTitle')), lead(s('home.heroLead'))], media: [picture(s('picture'), '4/3')]}}], {background: 'container'}),
-        section([area([heading(2, s('home.areaTitle')), paragraph(s('home.areaText')), list([s('home.li1'), s('home.li2'), s('home.li3')]), {type: 'content.alert', props: {status: 'info', appearance: 'flat'}, slots: {default: [paragraph(s('home.alert'))]}}])], {width: 'narrow'}),
+        section([{type: 'demo.hero', props: {align: 'split'}, data: {action: s('home.heroAction')}, slots: {default: [heading(1, s('home.heroTitle')), lead(s('home.heroLead'))], media: [picture(s('picture'), '4/3')]}}], 'soft'),
+        section([area([heading(2, s('home.areaTitle')), paragraph(s('home.areaText')), list([s('home.li1'), s('home.li2'), s('home.li3')]), {type: 'content.alert', props: {status: 'info', appearance: 'flat'}, slots: {default: [paragraph(s('home.alert'))]}}])], undefined, {width: 'narrow'}),
         section([
           heading(2, s('home.newsTitle')),
           {type: 'demo.cards', props: {cols: {xs: 1, md: 2, lg: 3}}, bindings: [{owner: 'host', ref: 'news', target: 'items'}], extensions: {'simai.composition:data': {items: {shape: 'cards', preset: 'default', limit: 3}}}},
           {type: 'demo.pagination', props: {mode: 'pages'}},
         ]),
         section([{type: 'layout.columns', props: {columns: {xs: 2}}, slots: {columns: [area([picture(s('picture'))]), area([heading(3, s('home.columnsTitle')), paragraph(s('home.columnsText'))])]}}]),
-        section([{type: 'demo.features', props: {cols: {xs: 1, md: 3}}}], {background: 'primary'}),
+        section([{type: 'demo.features', props: {cols: {xs: 1, md: 3}}}], 'accent'),
       ]),
     },
     {

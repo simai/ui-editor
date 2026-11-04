@@ -1,19 +1,22 @@
 // The editor shell's page list, on sf-drawer:
 //
-//   ≥ 1024 px  docked at the start; it resizes by its edge (sf-resizer) and
-//              closes by its toggle in the top bar or by ⌘\; the editor takes
-//              the room, and the choice is remembered for this viewer
+//   ≥ 1600 px  docked at the start; it resizes by its edge (sf-resizer) and
+//              closes by its toggle in sf-editor's bar or by ⌘\; the editor
+//              takes the room, and the choice is remembered for this viewer
 //              (SF.Preferences);
-//   <  1024 px  it slides over the editor and starts closed.
+//   <  1600 px  it slides over the editor and starts closed.
 //
-// The block library and the parameters are sf-editor's own panels.
+// The block library and the parameters are sf-editor's own panels (560 px
+// together): docked beside them on a narrower window, the page list would
+// leave the page less than a computer's width (a 1440 window keeps a
+// 796 px sheet with it closed, 508 with it open).
 //
 // The widths are sf-resizer's own and are remembered by it (storage-key).
 
 export type Layout = 'wide' | 'narrow';
 export type Side = 'left';
 
-export const layoutOf = (width: number): Layout => (width >= 1024 ? 'wide' : 'narrow');
+export const layoutOf = (width: number): Layout => (width >= 1600 ? 'wide' : 'narrow');
 
 const PANELS_KEY = 'ui-editor/panels';
 type Preferences = {read(key: string): unknown; write(key: string, value: unknown): boolean};

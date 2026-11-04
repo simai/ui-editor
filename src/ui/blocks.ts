@@ -128,13 +128,19 @@ const HERO = manifest('demo.hero', {
   catalogue: {group: 'marketing', label_key: 'demo.hero.name', keywords: {ru: ['первый экран', 'баннер', 'обложка'], en: ['hero', 'banner', 'cover']}},
 });
 
+/** Three in a row, apart: the demo grids' defaults. */
+const GRID = {cols: 3, gap: 5};
+
 const FEATURE = closedObject({icon: {type: 'string', minLength: 1, maxLength: 64}, title: {type: 'string', minLength: 1, maxLength: 200}, text: {type: 'string', maxLength: 1000}}, ['icon', 'title']);
 const FEATURES = manifest('demo.features', {
   data_schema: closedObject({items: {type: 'array', minItems: 1, maxItems: 12, items: FEATURE}}),
   props_schema: closedObject({
-    cols: utility('grid-col-{value}', {type: 'integer', minimum: 1, maximum: 4, default: 3}),
-    gap: utility('gap-{value}', {type: 'integer', minimum: 0, maximum: 8, default: 5}),
+    cols: utility('grid-col-{value}', {type: 'integer', minimum: 1, maximum: 4}),
+    gap: utility('gap-{value}', {type: 'integer', minimum: 0, maximum: 8}),
   }),
+  // Printed when a node leaves them unset (parameter_defaults): the grid has
+  // no look of its own without its classes.
+  parameter_defaults: GRID,
   catalogue: {group: 'marketing', label_key: 'demo.features.name', keywords: {ru: ['преимущества', 'фичи', 'особенности'], en: ['features', 'benefits']}},
 });
 
@@ -146,9 +152,12 @@ const CTA = manifest('demo.cta', {
 
 const CARDS = manifest('demo.cards', {
   props_schema: closedObject({
-    cols: utility('grid-col-{value}', {type: 'integer', minimum: 1, maximum: 4, default: 3}),
-    gap: utility('gap-{value}', {type: 'integer', minimum: 0, maximum: 8, default: 5}),
+    cols: utility('grid-col-{value}', {type: 'integer', minimum: 1, maximum: 4}),
+    gap: utility('gap-{value}', {type: 'integer', minimum: 0, maximum: 8}),
   }),
+  // Printed when a node leaves them unset (parameter_defaults): the grid has
+  // no look of its own without its classes.
+  parameter_defaults: GRID,
   catalogue: {group: 'data', label_key: 'demo.cards.name', keywords: {ru: ['карточки', 'новости', 'товары', 'каталог'], en: ['cards', 'news', 'products']}},
   variants: [
     {id: 'top', label_key: 'demo.cards.top', props: {cols: {xs: 1, md: 2, lg: 3}}},
@@ -195,21 +204,10 @@ const FEATURE_DEFAULTS = (locale?: string) => [
 // Every look below is a SIMAI Framework utility or a Smart element (sf-input,
 // sf-button, sf-icon). A block that changes with the width asks its own
 // width (query-container and the cq- utilities), not the window's: the
-// canvas draws a phone inside a computer's window. The sides (p-x-4) are the
-// seeded sections' too, so a header, a section and a footer line up.
-const SIDES = 'p-x-4';
-
-/**
- * The grid of a block with `cols` and `gap`: the canvas gives the screen's one
- * value, and the utility printer leaves out a value equal to the default
- * (docs/GAPS.md G-36), so the renderer says the default itself. A value per
- * screen (the page's output) is left to the printer.
- */
-const grid = (node: Node) =>
-  ([['cols', 'grid-col', 3], ['gap', 'gap', 5]] as const)
-    .filter(([key]) => typeof node.props?.[key] !== 'object')
-    .map(([key, klass, fallback]) => ` ${klass}-${Number(node.props?.[key] ?? fallback)}`)
-    .join('');
+// canvas draws a phone inside a computer's window. The sides (p-x-6) are the
+// Framework section's own on every screen, so a header, a section and a
+// footer line up.
+const SIDES = 'p-x-6';
 
 export const RENDERERS: Record<string, (input: RenderInput) => string> = {
   'demo.header': ({node, locale}) => {
@@ -237,10 +235,8 @@ export const RENDERERS: Record<string, (input: RenderInput) => string> = {
     // 224 px, picture 192 px, and they share what is left) and one under the
     // other on a narrower page: the hero's own width decides, not the window's.
     const media = split ? `<div class="demo-hero-media grow w-f2 min-w-0 radius-2 overflow-hidden" data-sf-composition-slot="media">${slots.media ?? ''}</div>` : '';
-    // The hero's text stands in the lead size (text-2). The lead paragraph says so
-    // itself too (the `lead` modifier), but the Framework renderer prints no
-    // modifier yet (docs/GAPS.md G-39).
-    const text = `<div class="demo-hero-text flex flex-col gap-3 text-2${split ? ' grow w-f4 min-w-0' : ''}${centre ? ' items-cross-center' : ''}">${slots.default ?? ''}${action}</div>`;
+    // The hero's text is its lead paragraph: the `lead` modifier prints text-large.
+    const text = `<div class="demo-hero-text flex flex-col gap-3${split ? ' grow w-f4 min-w-0' : ''}${centre ? ' items-cross-center' : ''}">${slots.default ?? ''}${action}</div>`;
     return `<div class="demo-hero${split ? ' flex flex-wrap items-cross-center gap-6' : ' flex flex-col'}${centre ? ' text-center items-cross-center' : ''}" ${id(node)}>${text}${media}</div>`;
   },
   'demo.features': ({node, locale}) => {
@@ -248,7 +244,7 @@ export const RENDERERS: Record<string, (input: RenderInput) => string> = {
     const cells = items
       .map((item) => `<div class="demo-feature flex flex-col gap-1"><span class="flex items-center justify-center w-d0 h-d0 radius-2 bg-primary color-on-primary" aria-hidden="true"><sf-icon icon="${escape(item.icon)}"></sf-icon></span><strong class="text-2 weight-6">${escape(item.title)}</strong>${item.text ? `<p class="m-0 color-on-surface-variant">${escape(item.text)}</p>` : ''}</div>`)
       .join('');
-    return `<div class="demo-features grid${grid(node)}" ${id(node)}>${cells}</div>`;
+    return `<div class="demo-features grid" ${id(node)}>${cells}</div>`;
   },
   'demo.cta': ({node, slots}) => `<div class="demo-cta flex flex-col gap-1 p-4" ${id(node)}>${slots.default ?? ''}</div>`,
   'demo.cards': ({node, resolvedBindings = {}, bindingStates = {}, locale}) => {
@@ -267,7 +263,7 @@ export const RENDERERS: Record<string, (input: RenderInput) => string> = {
     } else if (state === 'empty') body = `<p class="demo-state p-4 radius-2 bg-surface-container text-center color-on-surface-variant">${escape(settings?.empty_text ?? word(locale, 'demo.cards.empty'))}</p>`;
     else if (state === 'error') body = `<p class="demo-state p-4 radius-2 bg-error-container text-center color-on-error-container" role="status">${escape(word(locale, 'demo.cards.failed'))}</p>`;
     else body = '<div class="demo-card demo-card--loading radius-2 bg-surface-container h-g0" aria-busy="true"></div>';
-    return `<div class="demo-cards grid${grid(node)}" data-state="${escape(state)}" ${id(node)}>${body}</div>`;
+    return `<div class="demo-cards grid" data-state="${escape(state)}" ${id(node)}>${body}</div>`;
   },
   'demo.pagination': ({node, resolvedBindings = {}, locale}) => {
     const at = resolvedBindings.pagination;

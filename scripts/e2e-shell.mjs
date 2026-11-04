@@ -12,7 +12,7 @@ import {open as openEditor} from './one-editor/component.mjs';
 
 const run = await startRun();
 const {check} = run;
-const context = await run.browser.newContext({viewport: {width: 1440, height: 900}, locale: 'ru-RU'});
+const context = await run.browser.newContext({viewport: {width: 1680, height: 900}, locale: 'ru-RU'});
 const d = await openEditor(context, run.origin);
 const {page} = d;
 const errors = [];
@@ -69,13 +69,18 @@ try {
   check('the seeded page is one Composition Document (ui-layout), the site template around its main region', drawn.kind === 'simai.composition.document ui-layout layout.regions' && drawn.regions === 'header:banner,main:main,footer:contentinfo', JSON.stringify(drawn));
   check('sf-editor draws every node of it', drawn.missing.length === 0, `${drawn.ids - drawn.missing.length}/${drawn.ids}, missing ${drawn.missing.join()}`);
 
-  // ---------------------------------------------------------------- the top bar
+  // ---------------------------------------------------------------- one bar
   const bar = await page.evaluate(() => {
-    // A component's control is its first box: the button, or the segmented track.
-    const controls = [...document.querySelectorAll('#top-bar > sf-button-icon, #top-bar > sf-button, #top-bar > sf-button-group')].map((host) => host.firstElementChild).filter((node) => node?.getClientRects().length);
-    return {strip: Math.round(document.querySelector('#top-bar').getBoundingClientRect().height), count: controls.length, heights: [...new Set(controls.map((node) => Math.round(node.getBoundingClientRect().height)))]};
+    const row = document.querySelector('.sf-editor-bar');
+    const start = row?.querySelector('[data-slot="start"] #toggle-left');
+    const actions = row?.querySelector('[data-slot="actions"] #language');
+    const undo = row?.querySelector('sf-button-icon[icon="undo"]');
+    const help = row?.querySelector('.sf-editor-help-open');
+    const before = (a, b) => Boolean(a && b && a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const top = (node) => Math.round(node.getBoundingClientRect().top + node.getBoundingClientRect().height / 2);
+    return {strip: Boolean(document.querySelector('#top-bar')), start: Boolean(start), actions: Boolean(actions), order: before(start, undo ?? help) && before(actions, help), row: start && actions && help ? new Set([top(start.firstElementChild), top(actions.firstElementChild), top(help.firstElementChild ?? help)]).size : 0};
   });
-  check('the host bar is a thin strip: 32 px, every control of it 24 px high', bar.strip === 32 && bar.count === 2 && bar.heights.length === 1 && bar.heights[0] === 24, `${bar.strip} px, ${bar.count} controls, ${bar.heights.join()}`);
+  check("the host's controls stand in sf-editor's bar: the page list before undo, the language before help, one row", !bar.strip && bar.start && bar.actions && bar.order && bar.row === 1, JSON.stringify(bar));
 
   // ---------------------------------------------------------------- the width
   const start = await panel();
@@ -104,7 +109,7 @@ try {
   await page.keyboard.press('Meta+Backslash');
   await settle(500);
   const closed = await panel();
-  check('⌘\\ closes the panel: the editor has the whole width, the icon turns', closed.left === 0 && closed.editor === 1440 && closed.icon === 'left_panel_open' && closed.pressed === 'false', JSON.stringify(closed));
+  check('⌘\\ closes the panel: the editor has the whole width, the icon turns', closed.left === 0 && closed.editor === 1680 && closed.icon === 'left_panel_open' && closed.pressed === 'false', JSON.stringify(closed));
   check('the focus does not go away with the panel: it stands on the toggle', await page.evaluate(() => Boolean(document.activeElement?.closest('#toggle-left'))));
   const stops = await page.evaluate(() => [...document.querySelectorAll('#pages-pane *')].filter((node) => node.tabIndex >= 0 && node.getClientRects().length && getComputedStyle(node).visibility !== 'hidden' && !node.closest('[inert]')).length);
   check('a closed panel holds no tab stop', stops === 0, String(stops));
@@ -209,7 +214,7 @@ try {
   await page.setViewportSize({width: 900, height: 800});
   await settle(600);
   const narrow = await panel();
-  check('below 1024 px the panel starts closed and the editor has the room', narrow.left === 0 && narrow.editor === 900, JSON.stringify(narrow));
+  check('below 1600 px the panel starts closed and the editor has the room', narrow.left === 0 && narrow.editor === 900, JSON.stringify(narrow));
   await page.locator('#toggle-left button').first().click();
   await settle(500);
   const over = await panel();
