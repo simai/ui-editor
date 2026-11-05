@@ -30,6 +30,8 @@ jobs:
         run: node scripts/build-ui.mjs
       - name: The shell end to end in headless Chrome (the page as one Document, top bar, panel, page list, template, old pages, RU/EN)
         run: node scripts/e2e-shell.mjs --chrome "$(command -v google-chrome)"
+      - name: The single-page mode for hosts (docs/HOST-EMBED.md)
+        run: node scripts/e2e-embed.mjs --chrome "$(command -v google-chrome)"
       - name: The one editor's acceptance scenarios on sf-editor (known gaps reported, docs/GAPS.md)
         run: node scripts/e2e-one-editor.mjs --chrome "$(command -v google-chrome)"
       - name: Accessibility (axe-core) at 1440 light and dark, 390, 400 % zoom, forced colours, reduced motion; nothing chosen, a block chosen, typing, the + open

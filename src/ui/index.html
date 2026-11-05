@@ -32,10 +32,12 @@
     </sf-drawer>
 
     <!-- The host's own controls stand in sf-editor's bar, one row a person
-         works with: the page list toggle before undo, the language before help. -->
+         works with: the page list toggle before undo, the language before help.
+         «Сохранить» is the single-page mode's (?mode=page); the list mode drops it. -->
     <div class="canvas-area">
       <sf-editor id="page-editor" preferences-key="ui-editor" data-t-attr="label:canvas.label" label="Страница">
         <sf-button-icon slot="start" id="toggle-left" icon="left_panel_close" appearance="ghost" scheme="on-surface-variant" size="1/2" aria-controls="left-panel" data-t-attr="aria-label:panel.toggleLeft;title:panel.toggleLeftKey" aria-label="Панель страниц"></sf-button-icon>
+        <sf-button slot="actions" id="save" appearance="default" size="1/2" icon-start="save" text="Сохранить" data-t-attr="text:page.save;title:page.saveKey" title="Сохранить (⌘S)" disabled hidden></sf-button>
         <sf-button-group slot="actions" id="language" appearance="segmented" plate="raised" size="1/2" data-t-attr="aria-label:language.label" aria-label="Язык интерфейса" items='[{"value":"ru","label":"RU"},{"value":"en","label":"EN"}]'></sf-button-group>
       </sf-editor>
     </div>

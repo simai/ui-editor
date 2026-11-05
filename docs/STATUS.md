@@ -182,3 +182,19 @@ features stand one under another on the phone, and the accent section
 (screenshots beside the prototype: ui-control
 `control/ui-editor/visual-parity-2026-11-04`). G-41 closed; G-20 and G-21
 narrowed; G-42 is new. See [GAPS.md](GAPS.md).
+
+## Two launch modes (owner, 2026-11-05)
+
+A host opens the editor for one concrete page; the page list is the
+standalone app's. `?mode=page` starts the same build without the page list
+and without the browser store: the host loads a composition-document v1 by
+`postMessage` or `uiEditor.load`, and «Сохранить» hands it back with the
+page's settings and the revision it was made on. The contract is
+[HOST-EMBED.md](HOST-EMBED.md).
+
+| What | Proved by |
+|:---|:---|
+| `?mode=page`: no pages panel, toggle, «Новая страница» or storage note; the canvas takes the width; the page's name on the bar | `scripts/e2e-embed.mjs` |
+| The host demo (`examples/host-embed.html`) loads the seeded page into an iframe; an edit makes it dirty; save hands back exactly the edited Document, valid, with the settings and revision; the host's `sf-editor:saved` makes it clean; ⌘S saves | `scripts/e2e-embed.mjs` |
+| Nothing written to IndexedDB in this mode; an invalid Document refused with its diagnostics; the same-page API and its `sf-editor:save` event; leaving with unsaved changes asks first | `scripts/e2e-embed.mjs` |
+| Without `?mode=page` the list mode is unchanged | `scripts/e2e-embed.mjs`, `scripts/e2e-shell.mjs` |

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Host demo: the editor on one page</title>
+  <!-- A host of the single-page mode (docs/HOST-EMBED.md), as small as it can
+       be: it embeds the editor in an iframe, loads one page into it and keeps
+       what the editor hands back on save. A real host (Bitrix, Larena, mail)
+       loads the page from its own storage and writes it back there. -->
+  <style>
+    html, body { margin: 0; block-size: 100%; font: 14px system-ui, sans-serif; }
+    body { display: flex; flex-direction: column; }
+    header { display: flex; gap: 12px; align-items: center; padding: 8px 12px; border-block-end: 1px solid #ccc; }
+    iframe { flex: 1; border: 0; inline-size: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>Host demo</strong>
+    <span id="state" role="status">waiting for the editor</span>
+  </header>
+  <iframe id="editor" title="Page editor"></iframe>
+  <script type="module">
+    const frame = document.getElementById('editor');
+    const state = document.getElementById('state');
+    const language = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ru';
+    // The editor answers only this page's origin.
+    frame.src = `../index.html?mode=page&host=${encodeURIComponent(location.origin)}`;
+    let revision = 0;
+    /** What the host received: the end-to-end run reads it. */
+    window.hostDemo = {saves: [], dirty: false, errors: []};
+
+    addEventListener('message', async (event) => {
+      if (event.source !== frame.contentWindow || event.origin !== location.origin) return;
+      const message = event.data;
+      if (message.type === 'sf-editor:ready') {
+        const page = await (await fetch(`page.${language}.json`)).json();
+        revision = page.revision;
+        frame.contentWindow.postMessage({type: 'sf-editor:load', ...page, language}, location.origin);
+      } else if (message.type === 'sf-editor:loaded') {
+        state.textContent = `page loaded, revision ${message.revision}`;
+      } else if (message.type === 'sf-editor:dirty') {
+        window.hostDemo.dirty = message.dirty;
+        state.textContent = message.dirty ? 'unsaved changes' : `saved, revision ${revision}`;
+      } else if (message.type === 'sf-editor:save') {
+        // A real host writes the page to its storage here and gets a new revision.
+        window.hostDemo.saves.push(message);
+        revision += 1;
+        frame.contentWindow.postMessage({type: 'sf-editor:saved', revision}, location.origin);
+      } else if (message.type === 'sf-editor:error') {
+        window.hostDemo.errors.push(message);
+        state.textContent = `the editor refused the page: ${message.code}`;
+      }
+    });
+  </script>
+</body>
+</html>

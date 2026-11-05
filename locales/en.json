@@ -14,7 +14,9 @@
     "storage.unavailable": "The browser storage is unavailable: pages will not outlive this tab.",
     "theme.default": "Site theme",
     "theme.compact": "Compact",
-    "rights.layout": "The site’s designer changes it; you write in the text areas."
+    "rights.layout": "The site’s designer changes it; you write in the text areas.",
+    "page.save": "Save",
+    "page.saveKey": "Save (⌘S)"
   },
   "seed": {
     "site": "SIMAI Studio",

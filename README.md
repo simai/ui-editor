@@ -15,6 +15,11 @@ component ([`docs/ONE-EDITOR.md`](docs/ONE-EDITOR.md)); what it does not do yet
 is listed as gaps, scenario by scenario ([`docs/GAPS.md`](docs/GAPS.md)). The
 repository is private until it passes acceptance.
 
+Two launch modes, one editor (the owner's decision of 2026-11-05): the
+standalone list mode with the demo pages is the default; `?mode=page` opens
+one page that a host gives and takes back on save
+([`docs/HOST-EMBED.md`](docs/HOST-EMBED.md)).
+
 ## One editor, one Document
 
 A page is a SIMAI Framework Composition Document (profile `ui-layout`): the
@@ -43,6 +48,8 @@ writes in the text areas.
 |:---|:---|
 | [`docs/STATUS.md`](docs/STATUS.md) | Decisions, plan and what each step must prove |
 | [`docs/GAPS.md`](docs/GAPS.md) | What the pinned releases do not give yet, and who owns it |
+| [`docs/HOST-EMBED.md`](docs/HOST-EMBED.md) | The single-page mode for hosts: the launch modes and the load/save contract |
+| [`examples/`](examples) | The smallest host of the single-page mode |
 | [`docs/ONE-EDITOR.md`](docs/ONE-EDITOR.md) | The one block editor's acceptance scenarios, run on the prototype and on `sf-editor` |
 | [`src/ui/`](src/ui) | The shell: the page, its wiring to `sf-editor`, the demo site's blocks and data sources, the page store and the seeded pages |
 | [`locales/`](locales) | The RU/EN dictionaries |

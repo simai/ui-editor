@@ -7,9 +7,14 @@
 // the person's rights, answers the source port with the demo sources
 // (src/ui/sources.ts), and keeps every Document the editor sends in `change`.
 // Everything on screen is a Framework or Pro component; this file only wires them.
+//
+// Two launch modes, one editor (owner, 2026-11-05): the standalone list mode,
+// the default, keeps the demo pages in this browser; `?mode=page` opens one
+// page a host gives and takes back (src/ui/host.ts, docs/HOST-EMBED.md).
 
 import {onUiLanguage, preferredLanguage, setUiLanguage, t, translate, uiLanguage, type Language} from './i18n.ts';
 import {EDITOR_MANIFESTS, RENDERERS, WORDS, blockTypes} from './blocks.ts';
+import {listenToHost, pageMode, type Diagnostic, type HostLink, type LoadPayload, type PageSettings} from './host.ts';
 import {openPageStore, type Page, type PageStore} from './pages.ts';
 import {SEED_VERSION, blankPage, seedDocuments, type CompositionDocument} from './seed.ts';
 import {startShell, type Shell} from './shell.ts';
@@ -37,6 +42,7 @@ interface SiteBlock {
   version: string;
 }
 interface Editor extends HTMLElement {
+  model?: {toJSON(): CompositionDocument};
   document: CompositionDocument | null;
   types: unknown[];
   renderers: Record<string, unknown>;
@@ -177,11 +183,124 @@ function wordsOfComponents() {
   $('#language').setAttribute('value', uiLanguage());
 }
 
+/** What the editor holds in the single-page mode: the host's page, its settings and whether it changed. */
+const one: {document: CompositionDocument | null; settings: PageSettings; revision: string | number | null; dirty: boolean; host: HostLink | null} = {
+  document: null,
+  settings: {},
+  revision: null,
+  dirty: false,
+  host: null,
+};
+
+/** Checks a Document the host gives against composition-document v1, with the site's types. */
+function validateDocument(document: unknown): Diagnostic[] {
+  const composition = (globalThis as {SF?: {Composition?: {validate(d: unknown, r: unknown): {valid: boolean; diagnostics?: Diagnostic[]}; extendRegistry(m: unknown[], r: unknown): unknown}}}).SF?.Composition;
+  if (!composition) return [{code: 'framework_missing', path: '$', message: 'SF.Composition is not loaded'}];
+  const result = composition.validate(document, composition.extendRegistry(blockTypes(uiLanguage()), RENDERERS));
+  return result.valid ? [] : (result.diagnostics ?? [{code: 'document_invalid', path: '$'}]);
+}
+
+function setDirty(dirty: boolean) {
+  if (one.dirty === dirty) return;
+  one.dirty = dirty;
+  $('#save').toggleAttribute('disabled', !dirty);
+  document.body.dataset.dirty = String(dirty);
+  one.host?.post({type: 'sf-editor:dirty', dirty});
+}
+
+const pageName = () => (typeof one.settings.name === 'string' && one.settings.name) || '';
+
+/** The host's page: checked, then given to the editor. A Document that fails is refused whole, and the host is told why. */
+function loadPage(payload: LoadPayload): {ok: boolean; diagnostics: Diagnostic[]} {
+  if (payload?.language === 'ru' || payload?.language === 'en') setUiLanguage(payload.language);
+  const diagnostics = validateDocument(payload?.document);
+  if (diagnostics.length) {
+    one.host?.post({type: 'sf-editor:error', code: 'document_invalid', diagnostics});
+    return {ok: false, diagnostics};
+  }
+  one.document = payload.document;
+  one.settings = {...(payload.settings ?? {})};
+  one.revision = payload.revision ?? null;
+  editor().document = payload.document;
+  showSettings();
+  one.dirty = true;
+  setDirty(false);
+  document.body.dataset.loaded = 'true';
+  one.host?.post({type: 'sf-editor:loaded', revision: one.revision});
+  return {ok: true, diagnostics: []};
+}
+
+/**
+ * The page's settings (name, address, template, publication, history) are
+ * the host's: until the Framework's page-settings panel ships, the editor
+ * shows the name on its bar and carries the rest through. This is the hook
+ * that panel will fill.
+ */
+function showSettings() {
+  const name = pageName();
+  if (name) editor().setAttribute('heading', name);
+  else editor().removeAttribute('heading');
+}
+
+/** Hands the page back: the host decides where it goes and answers `sf-editor:saved` with its new revision. */
+function savePage() {
+  if (!one.document) return null;
+  const payload = {type: 'sf-editor:save' as const, document: editor().model?.toJSON() ?? one.document, settings: {...one.settings}, revision: one.revision};
+  one.host?.post(payload);
+  return payload;
+}
+
+async function startPage() {
+  // No page list, no local store: the host's page is the only one.
+  for (const selector of ['#left-panel', '#storage-state', '#toggle-left']) document.querySelector(selector)?.remove();
+  $('#save').hidden = false;
+  document.body.dataset.mode = 'page';
+  setUiLanguage(preferredLanguage());
+  wordsOfComponents();
+  onUiLanguage((language) => {
+    wordsOfComponents();
+    giveSite(language);
+  });
+  const element = editor();
+  giveSite(uiLanguage());
+  element.connectPort({...sourcePort(uiLanguage), saveBlock: async (manifest: SiteBlock) => void (state.siteBlocks = [...state.siteBlocks.filter((b) => b.type !== manifest.type || b.version !== manifest.version), manifest])});
+  element.addEventListener('change', (event) => {
+    one.document = (event as CustomEvent<ChangeDetail>).detail.document;
+    setDirty(true);
+  });
+  $('#language').addEventListener('change', (event) => setUiLanguage((event as CustomEvent<{value: Language}>).detail.value));
+  $('#save').addEventListener('click', () => void savePage());
+  addEventListener('keydown', (event) => {
+    if (event.code !== 'KeyS' || !(event.metaKey || event.ctrlKey) || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    savePage();
+  });
+  // Unsaved changes are not lost by leaving: the browser asks first.
+  addEventListener('beforeunload', (event) => {
+    if (!one.dirty) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
+  one.host = listenToHost({
+    load: (payload) => void loadPage(payload),
+    save: () => void savePage(),
+    saved: (revision) => {
+      one.revision = revision;
+      setDirty(false);
+    },
+  });
+  translate();
+  document.body.dataset.ready = 'true';
+  one.host.post({type: 'sf-editor:ready'});
+}
+
 async function start() {
   // The Loader defines each element when it meets its tag. A property set
   // before that stays on the bare element and the component never reads it,
   // so the shell waits for every element it writes to.
   await Promise.all(USED.map((tag) => customElements.whenDefined(tag)));
+  if (pageMode()) return startPage();
+  $('#save').remove();
   setUiLanguage(preferredLanguage());
   wordsOfComponents();
   onUiLanguage((language) => {
@@ -244,5 +363,26 @@ const host = {
   },
 };
 
+/** The single-page mode's API for a host on the same page (docs/HOST-EMBED.md). */
+const embed = {
+  load: (payload: LoadPayload) => loadPage(payload),
+  save: () => savePage(),
+  /** The host's answer to a save: its new revision, and the page is clean again. */
+  saved(revision: string | number | null) {
+    one.revision = revision;
+    setDirty(false);
+  },
+  /** A change of the page's settings, for the page-settings panel when it ships. */
+  setSettings(patch: PageSettings) {
+    one.settings = {...one.settings, ...patch};
+    showSettings();
+    setDirty(true);
+  },
+  get dirty() {
+    return one.dirty;
+  },
+};
+
 // For the end-to-end runs and the console: the state, read only, and the host's settings.
-(globalThis as {uiEditor?: unknown}).uiEditor = {state, openPage, host};
+// Descriptors, not a spread: `dirty` is read when asked, not when the object is made.
+(globalThis as {uiEditor?: unknown}).uiEditor = Object.defineProperties({state, openPage, host}, Object.getOwnPropertyDescriptors(embed));
