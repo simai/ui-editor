@@ -9,7 +9,10 @@ standalone app only. One editor, two launch modes, no second app:
 | List (default, the standalone demo) | `index.html` | the demo pages, in this browser's IndexedDB |
 | Page (for hosts) | `index.html?mode=page` | nothing: the host gives the page and takes it back |
 
-The mode is read at start from the address; nothing is rebuilt. Proved by
+The mode is read from the address in the page's head, before the first
+paint: the page mode never paints the page list, not for a frame, and no
+part of the shell shows before its components are defined and styled.
+Nothing is rebuilt. Proved by
 `scripts/e2e-embed.mjs`; the smallest host is
 [`examples/host-embed.html`](../examples/host-embed.html) (built to
 `dist/examples/`, with the seeded home page as `page.ru.json` and

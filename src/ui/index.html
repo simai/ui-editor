@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="sf-release" content="ui-c3015f76bcc2">
   <title>SIMAI — редактор страниц</title>
+  <link rel="icon" href="data:,">
+  <script>
+    // The launch mode is decided before the first paint (docs/HOST-EMBED.md):
+    // the single-page mode never paints the page list, not even for a frame.
+    document.documentElement.dataset.mode = new URLSearchParams(location.search).get('mode') === 'page' ? 'page' : 'list';
+  </script>
   <link rel="stylesheet" href="fw/core/css/core.css">
   <link rel="stylesheet" href="app.css">
   <script>

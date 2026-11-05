@@ -197,4 +197,5 @@ page's settings and the revision it was made on. The contract is
 | `?mode=page`: no pages panel, toggle, «Новая страница» or storage note; the canvas takes the width; the page's name on the bar | `scripts/e2e-embed.mjs` |
 | The host demo (`examples/host-embed.html`) loads the seeded page into an iframe; an edit makes it dirty; save hands back exactly the edited Document, valid, with the settings and revision; the host's `sf-editor:saved` makes it clean; ⌘S saves | `scripts/e2e-embed.mjs` |
 | Nothing written to IndexedDB in this mode; an invalid Document refused with its diagnostics; the same-page API and its `sf-editor:save` event; leaving with unsaved changes asks first | `scripts/e2e-embed.mjs` |
+| Timing-hostile loads (the bundle late by up to 2.5 s, the CPU four times slower, cold and warm cache): each reaches «page loaded» with no console error, and no frame paints the pages panel or a control before its component is ready; 30 such loads pass, 6 run in every gate (`--loads`) | `scripts/e2e-embed.mjs` |
 | Without `?mode=page` the list mode is unchanged | `scripts/e2e-embed.mjs`, `scripts/e2e-shell.mjs` |

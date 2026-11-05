@@ -78,6 +78,31 @@ let shell: Shell | null = null;
 
 const page = () => state.pages.find((p) => p.id === state.current) ?? null;
 
+/**
+ * The host's controls in sf-editor's bar. sf-editor takes its slotted children
+ * out of the page while it draws its slots, so a query at that moment finds
+ * nothing: each is held from when it is first in the page (now, if the editor
+ * has not drawn yet) and kept, attached or not.
+ */
+const bar = {} as {save: HTMLElement; language: HTMLElement; toggle: HTMLElement};
+const BAR = {save: 'save', language: 'language', toggle: 'toggle-left'} as const;
+for (const [key, id] of Object.entries(BAR)) {
+  const found = document.getElementById(id);
+  if (found) bar[key as keyof typeof BAR] = found;
+}
+function holdBar(): Promise<void> {
+  const missing = () => (Object.entries(BAR) as [keyof typeof BAR, string][]).filter(([key, id]) => !bar[key] && !(bar[key] = document.getElementById(id)!));
+  if (!missing().length) return Promise.resolve();
+  return new Promise((resolve) => {
+    const watcher = new MutationObserver(() => {
+      if (missing().length) return;
+      watcher.disconnect();
+      resolve();
+    });
+    watcher.observe(document.body, {childList: true, subtree: true});
+  });
+}
+
 function showPages() {
   // sf-menu draws an item without href as plain text; the href makes it a
   // link a person can reach, and the editor takes the navigation itself.
@@ -180,7 +205,7 @@ async function followSeed(language: Language, force = false) {
 }
 
 function wordsOfComponents() {
-  $('#language').setAttribute('value', uiLanguage());
+  bar.language.setAttribute('value', uiLanguage());
 }
 
 /** What the editor holds in the single-page mode: the host's page, its settings and whether it changed. */
@@ -203,7 +228,7 @@ function validateDocument(document: unknown): Diagnostic[] {
 function setDirty(dirty: boolean) {
   if (one.dirty === dirty) return;
   one.dirty = dirty;
-  $('#save').toggleAttribute('disabled', !dirty);
+  bar.save.toggleAttribute('disabled', !dirty);
   document.body.dataset.dirty = String(dirty);
   one.host?.post({type: 'sf-editor:dirty', dirty});
 }
@@ -252,8 +277,9 @@ function savePage() {
 
 async function startPage() {
   // No page list, no local store: the host's page is the only one.
-  for (const selector of ['#left-panel', '#storage-state', '#toggle-left']) document.querySelector(selector)?.remove();
-  $('#save').hidden = false;
+  for (const selector of ['#left-panel', '#storage-state']) document.querySelector(selector)?.remove();
+  bar.toggle.remove();
+  bar.save.hidden = false;
   document.body.dataset.mode = 'page';
   setUiLanguage(preferredLanguage());
   wordsOfComponents();
@@ -268,8 +294,8 @@ async function startPage() {
     one.document = (event as CustomEvent<ChangeDetail>).detail.document;
     setDirty(true);
   });
-  $('#language').addEventListener('change', (event) => setUiLanguage((event as CustomEvent<{value: Language}>).detail.value));
-  $('#save').addEventListener('click', () => void savePage());
+  bar.language.addEventListener('change', (event) => setUiLanguage((event as CustomEvent<{value: Language}>).detail.value));
+  bar.save.addEventListener('click', () => void savePage());
   addEventListener('keydown', (event) => {
     if (event.code !== 'KeyS' || !(event.metaKey || event.ctrlKey) || event.shiftKey || event.altKey) return;
     event.preventDefault();
@@ -299,8 +325,9 @@ async function start() {
   // before that stays on the bare element and the component never reads it,
   // so the shell waits for every element it writes to.
   await Promise.all(USED.map((tag) => customElements.whenDefined(tag)));
+  await holdBar();
   if (pageMode()) return startPage();
-  $('#save').remove();
+  bar.save.remove();
   setUiLanguage(preferredLanguage());
   wordsOfComponents();
   onUiLanguage((language) => {
@@ -324,9 +351,9 @@ async function start() {
   state.pages = pages;
   await followSeed(uiLanguage());
 
-  shell = startShell();
-  $('#toggle-left').addEventListener('click', () => shell!.togglePanel('left'));
-  $('#language').addEventListener('change', (event) => setUiLanguage((event as CustomEvent<{value: Language}>).detail.value));
+  shell = startShell(bar.toggle);
+  bar.toggle.addEventListener('click', () => shell!.togglePanel('left'));
+  bar.language.addEventListener('change', (event) => setUiLanguage((event as CustomEvent<{value: Language}>).detail.value));
   $('#new-page').addEventListener('click', () => void newPage());
   $('#pages').addEventListener('sf-menu-navigate', (event) => {
     event.preventDefault();

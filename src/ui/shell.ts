@@ -30,7 +30,7 @@ export interface Shell {
   isOpen(side: Side): boolean;
 }
 
-export function startShell(onPanels: () => void = () => {}): Shell {
+export function startShell(toggle: HTMLElement, onPanels: () => void = () => {}): Shell {
   const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
   const drawers: Record<Side, Drawer> = {left: $<Drawer>('#left-panel')};
   const kept = preferences()?.read(PANELS_KEY) as Partial<Record<Side, boolean>> | null | undefined;
@@ -57,7 +57,6 @@ export function startShell(onPanels: () => void = () => {}): Shell {
     applying = true;
     for (const side of ['left'] as const) {
       set(side, layout === 'wide' ? !closed[side] : wanted[side]);
-      const toggle = $(`#toggle-${side}`);
       const open = isOpen(side);
       toggle.setAttribute('aria-pressed', String(open));
       toggle.setAttribute('icon', `${side}_panel_${open ? 'close' : 'open'}`);
@@ -100,7 +99,7 @@ export function startShell(onPanels: () => void = () => {}): Shell {
       const open = isOpen(side);
       // The focus does not go away with the panel: it stands on the way back.
       const panel = $('#pages-pane').closest('.sf-drawer-panel');
-      if (open && panel?.contains(document.activeElement)) $(`#toggle-${side}`).querySelector('button')?.focus();
+      if (open && panel?.contains(document.activeElement)) toggle.querySelector('button')?.focus();
       if (layout === 'wide') {
         closed[side] = open;
         preferences()?.write(PANELS_KEY, {...closed});

@@ -9,6 +9,12 @@ html, body { margin: 0; block-size: 100%; }
    everything fixed in it, and tooltips would stand lower than their buttons
    (simai/ui-source#63). */
 :root { --sf-drawer-block-start: 0px; --sf-drawer-dock-block-start: 0px; }
+/* Nothing of the shell is painted before it is ready: a component's styles
+   come with its definition, and a control drawn before them is a raw native
+   one. The single-page mode never paints the page list: index.html sets the
+   mode before the first paint, and the shell removes the list's parts. */
+body:not([data-ready="true"]) > * { visibility: hidden; }
+[data-mode="page"] :is(#left-panel, #storage-state, #toggle-left) { display: none; }
 body { background: var(--sf-surface-0); color: var(--sf-on-surface); display: flex; flex-direction: column; block-size: 100vh; overflow: hidden; }
 .muted { color: var(--sf-on-surface-variant); }
 

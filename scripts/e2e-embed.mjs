@@ -3,12 +3,95 @@
 // on save. Also the same-page API, a Document the editor refuses, the guard
 // on unsaved changes, and that the list mode stays the default.
 //
-//   node scripts/e2e-embed.mjs [--chrome <path>]
+//   node scripts/e2e-embed.mjs [--chrome <path>] [--loads <n>]
 
-import {load, startRun} from './e2e-common.mjs';
+import {argument, load, startRun} from './e2e-common.mjs';
 
 const run = await startRun();
 const {check} = run;
+
+/**
+ * Watches every frame of the editor's document from its first: whether the
+ * pages panel is painted, whether an element is painted before its component
+ * is defined (a raw, unstyled control), and every uncaught error. It runs in
+ * each frame before the page's own scripts.
+ */
+function watchFrames() {
+  const editor = /\/(index\.html)?$/u.test(location.pathname);
+  const seen = {frames: 0, panel: [], raw: [], errors: []};
+  globalThis.__watch = seen;
+  addEventListener('error', (event) => seen.errors.push(String(event.message)));
+  addEventListener('unhandledrejection', (event) => seen.errors.push(String(event.reason?.message ?? event.reason)));
+  if (!editor) return;
+  const painted = (node) => {
+    const box = node.getBoundingClientRect();
+    return box.width > 0 && box.height > 0 && node.checkVisibility({visibilityProperty: true, opacityProperty: true});
+  };
+  const started = performance.now();
+  const frame = () => {
+    seen.frames += 1;
+    const at = Math.round(performance.now() - started);
+    if (/mode=page/u.test(location.search)) {
+      for (const selector of ['#left-panel', '#pages-pane', '#new-page', '#storage-state', '#toggle-left']) {
+        const node = document.querySelector(selector);
+        if (node && [node, ...node.querySelectorAll('*')].some(painted)) seen.panel.push(`${at}ms ${selector}`);
+      }
+    }
+    // Before the shell is ready its components' styles may not be there yet: nothing may show.
+    if (document.body && document.body.dataset.ready !== 'true') {
+      const early = [...document.body.querySelectorAll('*')].find(painted);
+      if (early) seen.raw.push(`${at}ms before ready: ${early.localName}${early.id ? `#${early.id}` : ''}`);
+    }
+    for (const raw of document.querySelectorAll(':not(:defined)')) {
+      if ([raw, ...raw.querySelectorAll('*')].some(painted)) seen.raw.push(`${at}ms ${raw.localName}${raw.id ? `#${raw.id}` : ''}`);
+    }
+    if (performance.now() - started < 12000) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
+/**
+ * Loads of the host demo made hostile to timing: the editor's bundle comes
+ * late by a different delay each time, the CPU runs four times slower, and
+ * every other load reuses the cache. Each must reach «page loaded» with no
+ * error, and no frame may paint the pages panel or a raw control.
+ */
+const LOADS = Number(argument('--loads', '6'));
+{
+  const delays = [0, 150, 400, 900, 1600, 2500];
+  const failures = [];
+  let context = null;
+  for (let n = 0; n < LOADS; n += 1) {
+    const warm = n % 2 === 1;
+    if (!warm || !context) {
+      await context?.close();
+      context = await run.browser.newContext({viewport: {width: 1440, height: 900}, locale: 'ru-RU'});
+      await context.addInitScript(watchFrames);
+    }
+    const page = await context.newPage();
+    const delay = delays[n % delays.length];
+    await page.route('**/app.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      await route.continue();
+    });
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', {rate: 4});
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(String(error)));
+    page.on('console', (message) => message.type() === 'error' && errors.push(message.text()));
+    await page.goto(`${run.origin}/examples/host-embed.html`);
+    const reached = await page.waitForFunction(() => document.getElementById('state').textContent.startsWith('page loaded'), null, {timeout: 30000}).then(() => true, () => false);
+    await page.waitForTimeout(400);
+    const frame = page.frame({url: /mode=page/u});
+    const watched = frame ? await frame.evaluate(() => globalThis.__watch) : {frames: 0, panel: ['no frame'], raw: [], errors: []};
+    const all = [...errors, ...watched.errors];
+    const what = `load ${n + 1} (${warm ? 'warm' : 'cold'}, app.js +${delay} ms, CPU ×4)`;
+    if (!reached || all.length || watched.panel.length || watched.raw.length) failures.push(`${what}: ${JSON.stringify({reached, errors: all.slice(0, 2), panel: watched.panel.slice(0, 2), raw: watched.raw.slice(0, 2)})}`);
+    await page.close();
+  }
+  await context?.close();
+  check(`${LOADS} cold and warm loads, the bundle late and the CPU slowed: each reaches «page loaded» with no console error, and no frame paints the pages panel or a raw control`, failures.length === 0, failures.slice(0, 3).join(' | '));
+}
 
 // ---------------------------------------------------------------- the host demo, in an iframe
 {
@@ -16,6 +99,7 @@ const {check} = run;
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (error) => errors.push(String(error)));
+  page.on('console', (message) => message.type() === 'error' && errors.push(message.text()));
   await page.goto(`${run.origin}/examples/host-embed.html`);
   await page.waitForFunction(() => document.getElementById('state').textContent.startsWith('page loaded'));
   const frame = page.frame({url: /mode=page/});
@@ -68,7 +152,7 @@ const {check} = run;
 
   const stored = await frame.evaluate(async () => (await indexedDB.databases()).map((d) => d.name));
   check('nothing is written to IndexedDB in this mode', !stored.includes('ui-editor'), stored.join() || 'none');
-  check('no page errors', errors.length === 0, errors.join(' | '));
+  check('no page or console errors', errors.length === 0, errors.join(' | '));
   await context.close();
 }
 
@@ -115,8 +199,15 @@ const {check} = run;
 // ---------------------------------------------------------------- the list mode stays the default
 {
   const context = await run.browser.newContext({viewport: {width: 1680, height: 900}, locale: 'ru-RU'});
+  await context.addInitScript(watchFrames);
   const page = await context.newPage();
+  await page.route('**/app.js', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await route.continue();
+  });
   await load(page, run.origin);
+  const watched = await page.evaluate(() => globalThis.__watch);
+  check('the list mode paints no raw control either, its bundle late', watched.raw.length === 0 && watched.errors.length === 0, JSON.stringify({raw: watched.raw.slice(0, 3), errors: watched.errors.slice(0, 2)}));
   const list = await page.evaluate(() => ({mode: document.body.dataset.mode ?? 'list', pages: Boolean(document.querySelector('#pages')), save: Boolean(document.querySelector('#save'))}));
   check('without ?mode=page the editor is the standalone list mode, with no «Сохранить»', list.mode === 'list' && list.pages && !list.save, JSON.stringify(list));
   await context.close();
