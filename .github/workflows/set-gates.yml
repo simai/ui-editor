@@ -40,15 +40,24 @@ jobs:
         with:
           repository: simai/ui-builder
           path: ui-builder
+      # ui-builder installs the way its own CI does: yarn 1.22.22 (its
+      # packageManager, through corepack) on its Node 20.19.5, from yarn.lock,
+      # without install scripts.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "20.19.5"
+      - name: The builder's dependencies (yarn, frozen lockfile)
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile --ignore-scripts --non-interactive
+        working-directory: ui-builder
+      # The gates themselves run on this repository's Node, as on a workstation.
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "24.21.0"
       - name: The repository's development dependencies (Playwright among them)
         run: npm ci
         working-directory: ui-editor
-      - name: The builder's dependencies
-        run: npm ci
-        working-directory: ui-builder
       - name: The browser Playwright needs, with its system libraries
         run: npx playwright install --with-deps chromium-headless-shell
         working-directory: ui-editor
