@@ -9,22 +9,41 @@
        be: it embeds the editor in an iframe, loads one page into it and keeps
        what the editor hands back on save. A real host (Bitrix, Larena, mail)
        loads the page from its own storage and writes it back there. -->
-  <style>
-    html, body { margin: 0; block-size: 100%; font: 14px system-ui, sans-serif; }
-    body { display: flex; flex-direction: column; }
-    header { display: flex; gap: 12px; align-items: center; padding: 8px 12px; border-block-end: 1px solid #ccc; }
-    iframe { flex: 1; border: 0; inline-size: 100%; }
-  </style>
+  <!-- The page is the SIMAI Framework's like the editor inside it: core.css,
+       the Loader (utilities and Smart elements on demand) and no sheet of
+       its own. -->
+  <link rel="stylesheet" href="../fw/core/css/core.css">
+  <script>
+    window.sfPath = new URL('../fw/', document.baseURI).href;
+    window.SF_BOOT_CONFIG = {icons: {enabled: false}};
+  </script>
+  <script src="../fw/core/js/core.js"></script>
 </head>
-<body>
-  <header>
-    <strong>Host demo</strong>
-    <span id="state" role="status">waiting for the editor</span>
+<body class="h-screen m-0 flex flex-col bg-surface-0 color-on-surface">
+  <header class="flex items-cross-center gap-2 p-x-2 p-y-1 border-bottom-1 border-outline-variant text-1">
+    <strong class="weight-6">Host demo</strong>
+    <!-- The state in words for the run and a screen reader, and as a badge to the eye. -->
+    <span id="state" role="status" class="sr-only">waiting for the editor</span>
+    <sf-badge id="state-badge" appearance="tonal" activity="waiting" text="waiting for the editor" aria-hidden="true"></sf-badge>
   </header>
-  <iframe id="editor" title="Page editor"></iframe>
+  <iframe id="editor" class="grow min-h-0 w-full border-0" title="Page editor"></iframe>
   <script type="module">
     const frame = document.getElementById('editor');
-    const state = document.getElementById('state');
+    const status = document.getElementById('state');
+    const badge = document.getElementById('state-badge');
+    /** The state in words, and the badge's colour by it: done, unsaved, failed. */
+    const state = {
+      set textContent(text) {
+        status.textContent = text;
+        badge.setAttribute('text', text);
+        badge.removeAttribute('activity');
+        const tone = /refused|failed/u.test(text) ? 'error' : text.startsWith('unsaved') ? 'warning' : 'success';
+        badge.setAttribute('status', tone);
+      },
+      get textContent() {
+        return status.textContent;
+      },
+    };
     const language = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ru';
     // The editor answers only this page's origin.
     frame.src = `../index.html?mode=page&host=${encodeURIComponent(location.origin)}`;
