@@ -29,6 +29,26 @@ sf-editor) unless the row says otherwise; none has a workaround in the shell.
 | G-25 | No editing of a block's own items in place (the features' points, a columns block's + at the right edge, «Добавить пункт», icons) | S19, S20 | the owner's second review is built |
 | G-26 | Content blocks (a paragraph) have no visibility per screen; only sections and areas have «Скрыт» | S22 | every block has it |
 
+### A block made with the block author kit (sample.quote)
+
+The SIMAI Framework block author kit's sample block (`simai/ui-source`
+`feat/block-author-kit` at `b77e0ef6`, copied into
+[`examples/kit/sample-quote`](../examples/kit/sample-quote)) given to
+`sf-editor` 1.2.0 by a host made of nothing else
+([`examples/block-kit.html`](../examples/block-kit.html),
+`scripts/e2e-kit.mjs`, 2026-11-06). The quote opens drawn by its own
+renderer, its five fields carry the kit's words, centre and large write
+`props`, «Сбросить» removes them, it moves and goes whole and undo brings it
+back byte for byte, and the saved Document validates with the kit's registry
+and draws the case's HTML. What it does not do:
+
+| Id | Gap | Owner | Closes when |
+|:---|:---|:---|:---|
+| G-30 | Choosing a choice field's default writes it (`align: "start"`, `size: "default"`) instead of removing the key; only «Сбросить» removes it | ui-pro, sf-editor | a choice equal to the manifest's `default` removes the key |
+| G-31 | Clearing a required data field (`author`, required by the type's `data_schema`) removes the key: nothing refuses or flags it, the Document turns invalid and the canvas draws nothing at all | ui-pro, sf-editor | a required field is marked, and clearing it is refused or flagged with the page still drawn |
+| G-32 | A Document holding a type the host did not register opens and is kept unchanged, but the canvas draws nothing: the Framework's render refuses the whole Document on `type_unknown` | ui-pro, sf-editor (or the Framework's render, to agree) | the unknown block is drawn as a placeholder with its type and the rest of the page is drawn |
+| G-33 | The kit's type manifest has no `catalogue` (label, group): the catalogue shows «Group sample» and the block «Quote» from the type name, with a missing-word warning for each | Framework, the block author kit | the kit's template and sample carry `catalogue` and its words |
+
 ## What sf-editor 1.2.0 closed
 
 Repinned 2026-11-05 to `pro-4032e9f6f316` (`sf-editor` 1.2.0, simai/ui-pro

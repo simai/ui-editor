@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Block author kit: sample.quote in sf-editor</title>
+  <link rel="icon" href="data:,">
+  <!-- A host made only of the SIMAI Framework block author kit's sample block
+       (kit/sample-quote/, copied from simai/ui-source feat/block-author-kit at
+       b77e0ef6, kits/block/examples/sample-quote): its type, editor manifest,
+       words and renderer are given to sf-editor and nothing else. ?bare opens
+       the same page without them: a host that does not know sample.quote.
+       scripts/e2e-kit.mjs drives it. -->
+  <link rel="stylesheet" href="../fw/core/css/core.css">
+  <link rel="stylesheet" href="kit/sample-quote/style.css">
+  <style>
+    html, body { margin: 0; block-size: 100%; }
+    sf-editor { display: block; block-size: 100vh; }
+  </style>
+  <script>
+    window.sfPath = new URL('../fw/', document.baseURI).href;
+    window.SF_BOOT_CONFIG = {icons: {enabled: false}, packages: {pro: {base: '../pkg/pro/smart'}}};
+  </script>
+  <script src="../fw/core/js/core.js"></script>
+</head>
+<body>
+  <sf-editor id="editor" label="Page"></sf-editor>
+  <script type="module">
+    import type from './kit/sample-quote/type.json' with {type: 'json'};
+    import manifest from './kit/sample-quote/editor.json' with {type: 'json'};
+    import words from './kit/sample-quote/words.json' with {type: 'json'};
+    import drawQuote from './kit/sample-quote/renderer.mjs';
+    import sample from './kit/sample-quote/cases/quote-center-large.json' with {type: 'json'};
+
+    const bare = new URLSearchParams(location.search).has('bare');
+    const element = document.getElementById('editor');
+    const registry = bare ? SF.Composition.extendRegistry([], {}) : SF.Composition.extendRegistry([type], {[type.renderer.name]: drawQuote});
+    /** What the run reads: every change event's Document, and the case. */
+    window.kit = {bare, changes: [], sample, registry, ready: false};
+    element.addEventListener('change', (event) => window.kit.changes.push(structuredClone(event.detail.document)));
+    await customElements.whenDefined('sf-editor');
+    if (!bare) {
+      element.types = [type];
+      element.renderers = {[type.renderer.name]: drawQuote};
+      element.editorManifests = [manifest];
+      element.words = words.words;
+    }
+    // The case's page, the quote at the defaults (the run sets centre and
+    // large itself), and one paragraph after it to move the quote past.
+    const page = structuredClone(sample.input.document);
+    const quote = page.root.slots.default[0];
+    delete quote.props;
+    page.root.slots.default.push({id: 'after', type: 'content.paragraph', data: {content: [{type: 'text', value: 'After the quote.'}]}});
+    window.kit.opened = structuredClone(page);
+    element.document = page;
+    window.kit.ready = true;
+  </script>
+</body>
+</html>
