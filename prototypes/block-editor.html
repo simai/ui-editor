@@ -566,11 +566,11 @@ const T = {
       { key: 'iconpos', label: 'Значок', tab: 'look', kind: 'seg', choices: [['start', 'Слева'], ['end', 'Справа']], default: 'end', bind: 'sf-button · icon-position', when: n => val(n, 'icon') },
       { key: 'href', label: 'Ссылка', tab: 'content', kind: 'text', default: '/contacts', bind: 'sf-button · href' }],
     variants: [{ id: 'plain', name: 'Кнопка', props: {} }, { id: 'icon', name: 'Со значком', props: { icon: 'arrow_forward' } }, { id: 'outline', name: 'Контурная', props: { appearance: 'outline' } }] },
-  'element.iconbutton': { name: 'Кнопка-значок', icon: 'add_circle', cat: 'elements', syn: 'иконка кнопка icon button', smart: 'sf-icon-button', display: 'inline-flex',
-    fields: [{ key: 'icon', label: 'Значок', tab: 'content', kind: 'icon', default: 'favorite', bind: 'sf-icon-button · icon' },
-      { key: 'appearance', label: 'Вид', tab: 'look', kind: 'select', choices: [['default', 'Заливка'], ['tonal', 'Тональная'], ['outline', 'Контур'], ['ghost', 'Без фона']], default: 'tonal', bind: 'sf-icon-button · appearance' },
-      { key: 'size', label: 'Размер', tab: 'look', kind: 'seg', choices: [['1/2', 'S'], ['1', 'M'], ['2', 'L']], default: '1', bind: 'sf-icon-button · size' },
-      { key: 'label', label: 'Подпись для экранного диктора', tab: 'content', kind: 'text', default: 'Нравится', bind: 'sf-icon-button · aria-label' }] },
+  'element.iconbutton': { name: 'Кнопка-значок', icon: 'add_circle', cat: 'elements', syn: 'иконка кнопка icon button', smart: 'sf-button-icon', display: 'inline-flex',
+    fields: [{ key: 'icon', label: 'Значок', tab: 'content', kind: 'icon', default: 'favorite', bind: 'sf-button-icon · icon' },
+      { key: 'appearance', label: 'Вид', tab: 'look', kind: 'select', choices: [['default', 'Заливка'], ['tonal', 'Тональная'], ['outline', 'Контур'], ['ghost', 'Без фона']], default: 'tonal', bind: 'sf-button-icon · appearance' },
+      { key: 'size', label: 'Размер', tab: 'look', kind: 'seg', choices: [['1/2', 'S'], ['1', 'M'], ['2', 'L']], default: '1', bind: 'sf-button-icon · size' },
+      { key: 'label', label: 'Подпись для экранного диктора', tab: 'content', kind: 'text', default: 'Нравится', bind: 'sf-button-icon · aria-label' }] },
   'element.badge': { name: 'Метка', icon: 'label', cat: 'elements', syn: 'бейдж badge тег статус новинка', text: true, smart: 'sf-badge', display: 'inline-flex',
     fields: [{ key: 'appearance', label: 'Вид', tab: 'look', kind: 'seg', choices: [['main', 'Заливка'], ['tonal', 'Тональная'], ['outline', 'Контур']], default: 'tonal', bind: 'sf-badge · appearance' },
       { key: 'scheme', label: 'Цвет', tab: 'look', kind: 'select', choices: [['primary', 'Основной'], ['secondary', 'Второй'], ['neutral', 'Нейтральный']], default: 'primary', bind: 'sf-badge · scheme' }] },
@@ -891,7 +891,7 @@ function draw(n) {
       if (OUT) return `<sf-button${oc}${smartAttrs(n)}>${esc(n.data.text || 'Кнопка')}</sf-button>`;
       return `<div ${at} data-look="${val(n, 'appearance')}" data-size="${val(n, 'size')}"><a href="#" onclick="return false">${st ? ico : ''}${txt(n, 'text', 'span', 'Кнопка')}${st ? '' : ico}</a></div>`;
     }
-    case 'element.iconbutton': return OUT ? `<sf-icon-button${oc}${smartAttrs(n)}></sf-icon-button>` : `<div ${at}><span class="ibtn" data-look="${val(n, 'appearance')}" data-size="${val(n, 'size')}" title="${esc(val(n, 'label'))}"><span class="ic">${val(n, 'icon')}</span></span></div>`;
+    case 'element.iconbutton': return OUT ? `<sf-button-icon${oc}${smartAttrs(n)}></sf-button-icon>` : `<div ${at}><span class="ibtn" data-look="${val(n, 'appearance')}" data-size="${val(n, 'size')}" title="${esc(val(n, 'label'))}"><span class="ic">${val(n, 'icon')}</span></span></div>`;
     case 'element.badge': return OUT ? `<sf-badge${oc}${smartAttrs(n)}>${esc(n.data.text || 'Метка')}</sf-badge>` : `<div ${at}><span class="bdg" data-look="${val(n, 'appearance')}" data-scheme="${val(n, 'scheme')}">${txt(n, 'text', 'span', 'Метка')}</span></div>`;
     case 'element.icon': return OUT ? `<sf-icon${oc}${smartAttrs(n)}></sf-icon>` : `<div ${at}><span class="ic eic" data-size="${val(n, 'size')}">${val(n, 'icon')}</span></div>`;
     case 'element.divider': return OUT ? `<hr class="sf-divider${mc ? ' ' + mc : ''}">` : `<div ${at}><hr class="sf-divider"></div>`;
