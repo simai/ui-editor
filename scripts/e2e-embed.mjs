@@ -93,6 +93,23 @@ const LOADS = Number(argument('--loads', '6'));
   check(`${LOADS} cold and warm loads, the bundle late and the CPU slowed: each reaches «page loaded» with no console error, and no frame paints the pages panel or a raw control`, failures.length === 0, failures.slice(0, 3).join(' | '));
 }
 
+/** The page panel's publishing, as a person reads it: the status under the title, the note, and whether «Опубликовать» is on. */
+const publishing = (target) => target.evaluate(() => {
+  const right = document.querySelector('#page-editor .sf-editor-right');
+  const button = right?.querySelector('[data-key="publish"] sf-button[scheme="primary"]');
+  return {
+    status: right?.querySelector('.sf-editor-panel-sub')?.textContent.trim(),
+    note: right?.querySelector('[data-key="publish"] .sf-editor-hint')?.textContent.trim(),
+    on: Boolean(button) && !button.hasAttribute('disabled') && !button.querySelector('button')?.disabled,
+  };
+});
+const STATES = {
+  new: {status: 'черновик · ещё не опубликована', note: 'Страница ещё не опубликована: посетители её не видят.', on: true},
+  changes: {status: 'черновик · изменения не опубликованы', note: 'Пока изменения не опубликованы, посетители видят прошлую версию.', on: true},
+  live: {status: 'опубликована', note: 'Опубликована. Изменений нет.', on: false},
+};
+const isState = (seen, name) => seen.status === STATES[name].status && seen.note === STATES[name].note && seen.on === STATES[name].on;
+
 // ---------------------------------------------------------------- the host demo, in an iframe
 {
   const context = await run.browser.newContext({viewport: {width: 1440, height: 900}, locale: 'ru-RU'});
@@ -159,6 +176,8 @@ const LOADS = Number(argument('--loads', '6'));
     const right = document.querySelector('#page-editor .sf-editor-right');
     return {keys: [...right.querySelectorAll('[data-key]')].map((e) => e.dataset.key), name: right.querySelector('[data-key="name"] input')?.value, history: right.querySelector('[data-key="publish"]')?.innerText.includes('История · 1')};
   });
+  const never = await publishing(frame);
+  check('publishing, never published: «ещё не опубликована», visitors do not see it, «Опубликовать» on', isState(never, 'new'), JSON.stringify(never));
   check("nothing chosen: the page panel shows the host's settings, name to history", ['name', 'address', 'template', 'theme', 'publish'].every((key) => panel.keys.includes(key)) && panel.name === 'Главная' && panel.history, JSON.stringify(panel));
   const address = frame.locator('#page-editor .sf-editor-right [data-key="address"] input');
   await address.fill('/home');
@@ -177,6 +196,19 @@ const LOADS = Number(argument('--loads', '6'));
   const answered = await frame.evaluate(() => ({history: document.querySelector('#page-editor .sf-editor-right [data-key="publish"]')?.innerText.includes('История · 2'), status: document.querySelector('#page-editor .sf-editor-right .sf-editor-panel-sub')?.textContent.trim()}));
   check('«Опубликовать» goes to the host as `sf-editor:page-action`, with the settings and the revision', action.action === 'publish' && action.protocol === 1 && action.settings.address === '/home' && action.revision === 4, JSON.stringify({action: action.action, protocol: action.protocol, revision: action.revision}));
   check("the host's `sf-editor:settings` answer shows in the panel and leaves the page clean", answered.history && answered.status === 'опубликована' && !(await page.evaluate(() => window.hostDemo.dirty)), JSON.stringify(answered));
+  const live = await publishing(frame);
+  check('publishing, published with nothing new: «Опубликована. Изменений нет.», «Опубликовать» off', isState(live, 'live'), JSON.stringify(live));
+  await address.fill('/home-2');
+  await address.press('Enter');
+  await address.evaluate((input) => input.blur());
+  await page.waitForTimeout(300);
+  const changed = await publishing(frame);
+  check('publishing, published with changes: «изменения не опубликованы», visitors see the last version, «Опубликовать» on', isState(changed, 'changes'), JSON.stringify(changed));
+  await frame.locator('#save button').click();
+  await page.waitForFunction(() => window.hostDemo.saves.length === 4, null, {timeout: 10000});
+  await page.waitForTimeout(300);
+  const saved4 = await publishing(frame);
+  check('…and a save keeps them unpublished until the host publishes', isState(saved4, 'changes') && (await page.evaluate(() => window.hostDemo.saves[3].settings.changes)) === true, JSON.stringify(saved4));
 
   const stored = await frame.evaluate(async () => (await indexedDB.databases()).map((d) => d.name));
   check('nothing is written to IndexedDB in this mode', !stored.includes('ui-editor'), stored.join() || 'none');
@@ -249,8 +281,12 @@ const LOADS = Number(argument('--loads', '6'));
   await page.waitForTimeout(400);
   const renamed = await page.evaluate(async () => ({list: document.querySelector('#pages').items[0].label, heading: document.querySelector('#page-editor').getAttribute('heading'), kept: globalThis.uiEditor.state.pages[0]}));
   check('list mode: a name edited in the page panel renames the page in the list and on the bar', renamed.list === 'Главная, новая' && renamed.heading === 'Главная, новая' && renamed.kept.title === 'Главная, новая', JSON.stringify({list: renamed.list, heading: renamed.heading}));
+  const renamedState = await publishing(page);
+  check('list mode: an edit of a published page shows its changes as unpublished', isState(renamedState, 'changes'), JSON.stringify(renamedState));
   await page.locator('#page-editor .sf-editor-right [data-key="publish"] sf-button[scheme="primary"] button').click();
   await page.waitForTimeout(300);
+  const listLive = await publishing(page);
+  check('list mode: «Опубликовать» makes it «Опубликована. Изменений нет.», the button off', isState(listLive, 'live'), JSON.stringify(listLive));
   await page.reload();
   await page.waitForSelector('body[data-ready="true"]');
   const reloaded = await page.evaluate(() => ({title: globalThis.uiEditor.state.pages[0].title, settings: globalThis.uiEditor.state.pages[0].settings}));

@@ -90,7 +90,17 @@ edits in it. Keys it does not know are carried through untouched.
 | `address` | string | «Адрес», editable |
 | `template` | string | «Шаблон сайта», a list; the value the host keeps |
 | `templates` | `[{value, text}]` | the list's choices; without it, the demo site's `default` and `none` |
-| `published` | boolean | the status under the panel's title («опубликована» or «черновик»); «Опубликовать» is off while it is true |
+| `published` | boolean | a version of the page is live |
+| `changes` | boolean | the page differs from its live version; the editor sets it on the first edit, and it goes back with every save until the host publishes and answers `changes: false` |
+
+Publishing reads as one of three states, the same in the status under the
+panel's title, the note and the button:
+
+| State | When | Status | Note | «Опубликовать» |
+|:---|:---|:---|:---|:---|
+| never published | `published` is not true | черновик · ещё не опубликована | Страница ещё не опубликована: посетители её не видят. | on |
+| changes | `published`, and `changes` or an unsaved edit | черновик · изменения не опубликованы | Пока изменения не опубликованы, посетители видят прошлую версию. | on |
+| live | `published`, no changes | опубликована | Опубликована. Изменений нет. | off |
 | `history` | number or `{count}` | «История · N»; without it, no history button |
 
 An edit of name, address or template is a change of the page: it marks the
@@ -102,9 +112,10 @@ once and counts versions). These messages are additive: the contract stays
 version 1.
 
 In the list mode the same panel shows the local page's settings, kept with
-it in IndexedDB: an edit renames the page in the list, and «Опубликовать»
-only marks it published, since the demo keeps no versions (no history
-button there).
+it in IndexedDB: an edit renames the page in the list and marks its changes,
+and «Опубликовать» only marks it published with no changes, since the demo
+keeps no versions (no history button there). A seeded page nobody changed
+counts as published.
 
 ## Unsaved changes
 

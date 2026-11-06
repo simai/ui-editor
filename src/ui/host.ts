@@ -21,7 +21,10 @@ export type PageSettings = Record<string, unknown> & {
   template?: string;
   /** The host's templates for the page panel's list, else the demo site's two. */
   templates?: {value: string; text?: string}[];
+  /** A version of the page is live. */
   published?: boolean;
+  /** The page differs from its live version: something to publish. */
+  changes?: boolean;
   /** The number of kept versions, or {count}: the page panel's «История · N». */
   history?: number | {count?: number};
 };

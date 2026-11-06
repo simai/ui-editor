@@ -21,7 +21,10 @@
     "page.status.live": "published",
     "page.template.default": "Main: header and footer",
     "page.template.none": "No header and footer",
-    "page.publishNote": "Until the page is published, visitors see the previous version."
+    "page.publishNote": "Until the changes are published, visitors see the previous version.",
+    "page.status.new": "draft · not published yet",
+    "page.publishNote.new": "The page is not published yet: visitors do not see it.",
+    "page.publishNote.live": "Published. No changes."
   },
   "seed": {
     "site": "SIMAI Studio",

@@ -58,7 +58,7 @@
         window.hostDemo.actions.push(message);
         if (message.action === 'publish') {
           published += 1;
-          frame.contentWindow.postMessage({type: 'sf-editor:settings', settings: {published: true, history: published}}, location.origin);
+          frame.contentWindow.postMessage({type: 'sf-editor:settings', settings: {published: true, changes: false, history: published}}, location.origin);
           state.textContent = `published, revision ${revision}`;
         }
       } else if (message.type === 'sf-editor:error') {

@@ -133,7 +133,8 @@ function localSettings(p: Page): PageSettings {
 /** What a local page keeps beside its title, with the defaults filled in. */
 function ownSettings(p: Page): NonNullable<Page['settings']> {
   const first = state.pages[0]?.id === p.id;
-  return {address: first ? '/' : `/${p.id}`, template: 'default', published: p.seed !== undefined, ...p.settings};
+  // A demo page nobody changed counts as published as seeded; any other was never published.
+  return {address: first ? '/' : `/${p.id}`, template: 'default', published: p.seed !== undefined, changes: false, ...p.settings};
 }
 
 /** A change in the page panel, kept with the local page. An edit of the name renames it in the list. */
@@ -141,7 +142,7 @@ async function changeLocal({key, value}: PageChange) {
   const current = page();
   if (!current) return;
   const updated = new Date().toISOString();
-  const settings = {...ownSettings(current), published: false};
+  const settings = {...ownSettings(current), changes: true};
   await save(key === 'name'
     ? {...current, title: value.trim() || current.title, updated, seed: undefined, settings}
     : {...current, updated, seed: undefined, settings: {...settings, [key]: value}});
@@ -153,7 +154,7 @@ async function changeLocal({key, value}: PageChange) {
 async function actLocal({action}: PageAction) {
   const current = page();
   if (!current || action !== 'publish') return;
-  await save({...current, settings: {...ownSettings(current), published: true}});
+  await save({...current, settings: {...ownSettings(current), published: true, changes: false}});
   showTitle();
 }
 
@@ -181,7 +182,7 @@ async function keep(detail: ChangeDetail) {
   const current = page();
   if (!current) return;
   const updated = new Date().toISOString();
-  await save({...current, document: detail.document, updated, seed: undefined, settings: {...ownSettings(current), published: false}});
+  await save({...current, document: detail.document, updated, seed: undefined, settings: {...ownSettings(current), changes: true}});
   showTitle();
   if (detail.scope !== 'template') return;
   const regions = (document: CompositionDocument) => document.root.slots?.regions ?? [];
@@ -270,6 +271,9 @@ function validateDocument(document: unknown): Diagnostic[] {
 function setDirty(dirty: boolean) {
   if (one.dirty === dirty) return;
   one.dirty = dirty;
+  // An edit is a change to publish; it stays one after a save, until the host publishes.
+  if (dirty) one.settings = {...one.settings, changes: true};
+  showSettings();
   bar.save.toggleAttribute('disabled', !dirty);
   document.body.dataset.dirty = String(dirty);
   one.host?.post({type: 'sf-editor:dirty', dirty});
@@ -309,7 +313,7 @@ function showSettings() {
   const name = pageName();
   if (name) editor().setAttribute('heading', name);
   else editor().removeAttribute('heading');
-  editor().pageSettings = one.document ? panelView(one.settings) : null;
+  editor().pageSettings = one.document ? panelView(one.settings, one.dirty) : null;
 }
 
 /** Hands the page back: the host decides where it goes and answers `sf-editor:saved` with its new revision. */

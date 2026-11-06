@@ -31,24 +31,43 @@ export interface PageAction {
   action: 'publish' | 'history';
 }
 
+/**
+ * Where the page stands with publishing, from the host's two keys:
+ * `published` (a version is live) and `changes` (what the editor holds
+ * differs from it). An unsaved edit counts as a change.
+ *
+ *   new      never published: visitors do not see it; «Опубликовать» on
+ *   changes  published, with changes: visitors see the last version; on
+ *   live     published, nothing new: «Опубликована. Изменений нет.»; off
+ */
+export type PublishState = 'new' | 'changes' | 'live';
+
+export function publishState(settings: PageSettings, dirty = false): PublishState {
+  if (settings.published !== true) return 'new';
+  return dirty || settings.changes === true ? 'changes' : 'live';
+}
+
+const STATUS: Record<PublishState, string> = {new: 'page.status.new', changes: 'page.status.draft', live: 'page.status.live'};
+const NOTE: Record<PublishState, string> = {new: 'page.publishNote.new', changes: 'page.publishNote', live: 'page.publishNote.live'};
+
 /** The demo site's templates; a host may name its own in `settings.templates`. */
 const TEMPLATES = ['default', 'none'];
 
 /** The panel's view of the host's settings: the words are the interface's, the values the host's. */
-export function panelView(settings: PageSettings): PanelView {
+export function panelView(settings: PageSettings, dirty = false): PanelView {
   const own = Array.isArray(settings.templates) ? (settings.templates as {value: unknown; text?: unknown}[]) : null;
   const options = own
     ? own.map((option) => ({value: String(option.value), text: String(option.text ?? option.value)}))
     : TEMPLATES.map((value) => ({value, text: t(`page.template.${value}`)}));
   const history = settings.history;
   const count = typeof history === 'number' ? history : (history as {count?: unknown} | undefined)?.count;
-  const published = settings.published === true;
+  const state = publishState(settings, dirty);
   return {
     name: String(settings.name ?? ''),
     address: String(settings.address ?? ''),
     template: {value: String(settings.template ?? options[0]?.value ?? ''), options},
-    publish: {disabled: published, note: t('page.publishNote')},
+    publish: {disabled: state === 'live', note: t(NOTE[state])},
     ...(history === undefined ? {} : {history: Number.isFinite(count) ? {count: Number(count)} : {}}),
-    status: t(published ? 'page.status.live' : 'page.status.draft'),
+    status: t(STATUS[state]),
   };
 }
