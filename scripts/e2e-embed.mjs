@@ -5,7 +5,7 @@
 //
 //   node scripts/e2e-embed.mjs [--chrome <path>] [--loads <n>]
 
-import {argument, load, startRun} from './e2e-common.mjs';
+import {argument, load, ready, reload, startRun} from './e2e-common.mjs';
 
 const run = await startRun();
 const {check} = run;
@@ -221,7 +221,7 @@ const isState = (seen, name) => seen.status === STATES[name].status && seen.note
   const context = await run.browser.newContext({viewport: {width: 1280, height: 800}, locale: 'ru-RU'});
   const page = await context.newPage();
   await page.goto(`${run.origin}/index.html?mode=page`);
-  await page.waitForSelector('body[data-ready="true"]');
+  await ready(page);
   const page0 = await (await fetch(`${run.origin}/examples/page.ru.json`)).json();
   const refused = await page.evaluate(() => globalThis.uiEditor.load({document: {schema: 'simai.composition.document', schema_version: 9, root: {}}}));
   check('a Document that is not composition-document v1 is refused with its diagnostics', !refused.ok && refused.diagnostics.length > 0 && !(await page.evaluate(() => document.body.dataset.loaded)), refused.diagnostics.map((d) => d.code).join());
@@ -287,8 +287,7 @@ const isState = (seen, name) => seen.status === STATES[name].status && seen.note
   await page.waitForTimeout(300);
   const listLive = await publishing(page);
   check('list mode: «Опубликовать» makes it «Опубликована. Изменений нет.», the button off', isState(listLive, 'live'), JSON.stringify(listLive));
-  await page.reload();
-  await page.waitForSelector('body[data-ready="true"]');
+  await reload(page);
   const reloaded = await page.evaluate(() => ({title: globalThis.uiEditor.state.pages[0].title, settings: globalThis.uiEditor.state.pages[0].settings}));
   check('…and its settings live with the local page: after a reload it keeps the name and «опубликована»', reloaded.title === 'Главная, новая' && reloaded.settings?.published === true && reloaded.settings.address === '/', JSON.stringify(reloaded));
   await context.close();

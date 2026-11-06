@@ -4,9 +4,10 @@
 // and keeps the same verbs. Acts go through the pointer and the keyboard; only
 // reading the Document and what a host grants (rights, theme) reach into the
 // prototype, because the prototype has no host.
+import {existsSync, readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {ROOT} from '../e2e-common.mjs';
+import {READY_MS, ROOT, explain, watch} from '../e2e-common.mjs';
 
 const URL = pathToFileURL(join(ROOT, 'prototypes/block-editor.html')).href;
 
@@ -20,6 +21,21 @@ export const lacks = {
   axe: 'the prototype is not held to the accessibility gate',
 };
 
+/** The pinned Framework's fonts, standing in for Google Fonts (see open). */
+const lock = JSON.parse(readFileSync(join(ROOT, 'framework.lock.json'), 'utf8'));
+const DISTR = join(ROOT, '.cache', 'framework', lock.ui.npm.version, 'x', 'package', 'distr');
+const INTER = ['latin', 'latin-ext', 'cyrillic', 'cyrillic-ext', 'greek', 'greek-ext', 'vietnamese'];
+const LOCAL_FONTS = Object.fromEntries([
+  ...INTER.map((subset) => [`https://fonts.gstatic.com/local/inter-${subset}.woff2`, join(DISTR, 'core', 'fonts', 'inter', `inter-${subset}-wght-normal.woff2`)]),
+  ['https://fonts.gstatic.com/local/material-symbols-outlined.woff2', join(DISTR, 'component', 'icons', 'fonts', 'MaterialSymbols-Outlined.woff2')],
+]);
+for (const file of Object.values(LOCAL_FONTS)) if (!existsSync(file)) throw new Error(`${file} is missing: run npm run framework:fetch first`);
+const FONTS_CSS = [
+  ...INTER.map((subset) => `@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:block;src:url(https://fonts.gstatic.com/local/inter-${subset}.woff2) format('woff2')}`),
+  `@font-face{font-family:'Material Symbols Outlined';font-style:normal;font-weight:100 700;font-display:block;src:url(https://fonts.gstatic.com/local/material-symbols-outlined.woff2) format('woff2')}`,
+  `.material-symbols-outlined{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased}`,
+].join('\n');
+
 export async function open(context) {
   const page = await context.newPage();
   // The first-visit hints would cover the canvas. `words` reads a label
@@ -31,8 +47,26 @@ export async function open(context) {
       localStorage.setItem('be-hint-grip', '1');
     } catch {}
   });
-  await page.goto(URL);
-  await page.waitForSelector('#frame .n');
+  // The prototype asks Google Fonts for Inter and its icon font. The run
+  // stays off the network: the stylesheet is answered here with the same two
+  // families from the pinned Framework (its Inter and Material Symbols
+  // Outlined, fetched and checked by framework:fetch), and anything else
+  // from the network is refused at once. The icons keep their width, so the
+  // layout the scenarios click is the same; a gate never waits on a CDN.
+  await page.route(/^https?:\/\//u, (route) => {
+    const url = route.request().url();
+    if (url.startsWith('https://fonts.googleapis.com/css')) return route.fulfill({contentType: 'text/css', body: FONTS_CSS});
+    const file = LOCAL_FONTS[url];
+    if (file) return route.fulfill({contentType: 'font/woff2', body: readFileSync(file)});
+    return route.abort('blockedbyclient');
+  });
+  watch(page);
+  await page.goto(URL, {waitUntil: 'domcontentloaded', timeout: READY_MS});
+  try {
+    await page.waitForSelector('#frame .n', {timeout: READY_MS});
+  } catch (error) {
+    throw new Error(`the prototype drew no block in ${READY_MS} ms: ${await explain(page)}`, {cause: error});
+  }
   return driver(page);
 }
 

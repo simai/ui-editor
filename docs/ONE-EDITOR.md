@@ -30,6 +30,17 @@ cannot start fails here too.
 node scripts/e2e-one-editor.mjs --target prototype [--only S05]
 ```
 
+The prototype runs off the network: its Google Fonts stylesheet is answered
+with the pinned Framework's Inter and Material Symbols Outlined (fetched and
+checked by `npm run framework:fetch`), and any other request to the network
+is refused, so a slow CDN cannot hold a gate.
+
+Every run waits up to 15 s for a load to reach `body[data-ready]`
+(`READY_MS` in `scripts/e2e-common.mjs`) and reports the load times apart, a
+soft metric (typical under 2 s). A timeout prints what the page said: its
+`readyState`, the body's dataset, undefined elements, console and page
+errors and failed requests.
+
 On the prototype:
 - 19 scenarios run, with 146 checks;
 - 3 need what only a host or the component has, and are skipped there.

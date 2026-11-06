@@ -9,7 +9,7 @@
 // --shots writes the 1440 light and dark and the phone screenshots of the
 // page there, for a side-by-side look.
 
-import {argument, load, startRun} from './e2e-common.mjs';
+import {argument, load, ready, reload, startRun} from './e2e-common.mjs';
 
 const run = await startRun();
 const {check} = run;
@@ -121,8 +121,7 @@ for (const scheme of ['light', 'dark']) {
   await page.locator('#language button', {hasText: 'RU'}).click();
   await page.waitForTimeout(900);
   check('and back into Russian', (await heading()) === ru, await heading());
-  await page.reload();
-  await page.waitForSelector('body[data-ready="true"]');
+  await reload(page);
   await page.waitForTimeout(600);
   check('the page it follows is kept: a reload shows it', (await heading()) === ru, await heading());
   await context.close();
@@ -152,8 +151,7 @@ for (const scheme of ['light', 'dark']) {
     for (const kept of pages) store().put(stale(kept, kept.id === 'about' ? 'Our company, edited' : 'About', kept.id === 'about'));
     await new Promise((resolve) => setTimeout(resolve, 200));
   });
-  await page.reload();
-  await page.waitForSelector('body[data-ready="true"]');
+  await reload(page);
   await page.waitForTimeout(600);
   const home = await page.evaluate(() => document.querySelector('.sf-editor-page h1')?.textContent.trim());
   check("an older build's demo page nobody changed takes the new seed", home === 'Страница из блоков, в одном редакторе', home);

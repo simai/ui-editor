@@ -19,7 +19,7 @@
 // items), the verb does what a person could and the check says what is missing.
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
-import {ROOT, load} from '../e2e-common.mjs';
+import {ROOT, load, reload} from '../e2e-common.mjs';
 
 export const name = 'component';
 /**
@@ -581,8 +581,7 @@ function driver(page, origin) {
       await settle(300);
     },
     reload: async () => {
-      await page.reload();
-      await page.waitForSelector('body[data-ready="true"]');
+      await reload(page);
       await page.waitForSelector(`${ed} .sf-editor-page [data-sf-composition-id]`);
       await settle(400);
     },
