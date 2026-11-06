@@ -21,13 +21,17 @@ and its browser probes (`tests/browser/editor-*.browser.mjs`). Its history
 before the move is there. The `pro` bundle keeps shipping it until it is
 rebuilt from the sets; from this move on it is written here only.
 
-**Version 1.0.0, prepared, not yet published.** The first release of the
-set ([CHANGELOG.md](CHANGELOG.md)) goes through the dispatcher's release route as `view`'s
-did: the build committed under `dist/` with its receipt, the release lock
-`editor-<12>`, the tag and `npm publish` of `@simai-studio/editor` from the
-staged folder (`node scripts/stage-npm.mjs`). Paid sets publish on the public
-npm registry (owner, 2026-11-05), so `package.json` is public; nothing here is
-published by this repository's own hand.
+**Version 1.0.0, released 2026-11-06** ([CHANGELOG.md](CHANGELOG.md)) through
+the dispatcher's release route as `view`'s releases were: the build committed
+under `dist/` with its receipt, the release lock `contracts/releases/editor-<12>.lock.json`,
+the tag `editor-<12>` with a GitHub release, and `npm publish` of
+`@simai-studio/editor` from the staged folder (`node scripts/stage-npm.mjs`).
+Paid sets publish on the public npm registry (owner, 2026-11-05); nothing here
+is published by this repository's own hand. One line connects it:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@simai-studio/ui@5.20261106.1146/distr/core/js/core.min.js" data-sf-sets="editor@1.0.0"></script>
+```
 
 ## Built against a pinned ui-source
 

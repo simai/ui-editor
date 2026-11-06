@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# The set's release build is committed: the release route lays it here
+!/package/dist/
 .cache/
 .DS_Store
 *.log
