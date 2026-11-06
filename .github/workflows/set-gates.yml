@@ -1,0 +1,62 @@
+name: Set gates
+
+# The gates of the component set `editor` (package/scripts/gates.sh): two
+# byte-identical builds, the receipt, the unit suite, the registry, the
+# manifest and browser probes and the first paint. They read the public
+# sibling checkouts simai/ui-source and simai/ui (full history: the pinned
+# revision and the released pair are taken from their git objects) and
+# simai/ui-builder beside this repository, as on a workstation.
+
+on:
+  pull_request:
+    paths: ["package/**", "package.json", "package-lock.json", ".github/workflows/set-gates.yml"]
+  push:
+    branches: [main]
+    paths: ["package/**", "package.json", "package-lock.json", ".github/workflows/set-gates.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          path: ui-editor
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: simai/ui-source
+          path: ui-source
+          fetch-depth: 0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: simai/ui
+          path: ui
+          fetch-depth: 0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: simai/ui-builder
+          path: ui-builder
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24.21.0"
+      - name: The repository's development dependencies (Playwright among them)
+        run: npm ci
+        working-directory: ui-editor
+      - name: The builder's dependencies
+        run: npm ci
+        working-directory: ui-builder
+      - name: The browser Playwright needs, with its system libraries
+        run: npx playwright install --with-deps chromium-headless-shell
+        working-directory: ui-editor
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/ui-editor/.playwright-browsers
+      - name: Every gate of the set
+        run: sh package/scripts/gates.sh "$RUNNER_TEMP/gates"
+        working-directory: ui-editor
+      - name: The gates' summary
+        if: always()
+        run: cat "$RUNNER_TEMP/gates/gates.json" 2>/dev/null || echo "no summary, a gate stopped the run"

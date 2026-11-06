@@ -53,7 +53,11 @@ holding `smart/` (`wave-1/output/package/editor`). `scripts/gates.sh
 <new workspace>` runs the whole chain over the commit at HEAD: two
 byte-identical builds, the receipt, the suite, the registry, the manifest
 and browser probes and the first paint. It reads the sibling checkouts
-`../ui-source`, `../ui` and `../ui-builder` beside this repository.
+`../ui-source`, `../ui` and `../ui-builder` beside this repository, takes
+Playwright from this repository's `node_modules` (`npm ci` at the root) and
+fetches the browser that version names into `.playwright-browsers`
+(ignored). CI runs the same chain (`.github/workflows/set-gates.yml`) when
+`package/` changes.
 
 The scripts and the passport and package-wide tests are copied from the
 reference set `simai/ui-view` (`docs/SET-TEMPLATE.md` there says which parts
