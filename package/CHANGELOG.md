@@ -3,7 +3,7 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
-## 1.0.0 — not released
+## 1.0.0 — 2026-11-06
 
 - First version of the set: `sf-editor` (1.2.0), the one block editor,
   moved from the SIMAI Pro package (ui-pro `4032e9f6f316`, the release

@@ -1,0 +1,47 @@
+{
+  "schema": "simai.framework.component-set",
+  "schema_version": 1,
+  "standard": {
+    "id": "simai.component-set",
+    "version": "1.0.0"
+  },
+  "id": "editor",
+  "title": "SIMAI Editor",
+  "summary": "The page editor for SIMAI Framework pages: the one block editor sf-editor, layout and text in one Composition Document edited by depth, with its library, catalogue, parameters, data bindings, block builder and page panel; the host gives the page, its blocks, theme, rights and data sources.",
+  "repository": "simai/ui-editor",
+  "licence": {
+    "class": "simai-pro",
+    "spdx": "PolyForm-Small-Business-1.0.0 OR PolyForm-Noncommercial-1.0.0 OR LicenseRef-SIMAI-Commercial"
+  },
+  "framework": {
+    "core_runtime": ">=1.25.0",
+    "source_revision": "54c89e61ef9b89ed683fe530d43bdbf215fbafdd"
+  },
+  "requires_sets": [],
+  "families": [
+    "editor"
+  ],
+  "docs": "https://editor.simai.io/",
+  "components": [
+    {
+      "element": "sf-editor",
+      "rule": "cl-editor",
+      "folder": "editor",
+      "status": "released",
+      "requires": [
+        "cl-button",
+        "cl-button-group",
+        "cl-button-icon",
+        "cl-dropdown",
+        "cl-editor-inline",
+        "cl-icon",
+        "cl-input",
+        "cl-menu-context",
+        "cl-modal",
+        "cl-skeleton",
+        "cl-switch",
+        "cl-tabs"
+      ]
+    }
+  ]
+}
