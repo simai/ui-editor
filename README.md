@@ -32,10 +32,12 @@ writes in the text areas.
 
 ## Rules
 
-- **No components here.** Screens are assemblies of SIMAI Framework and SIMAI Pro
-  components (owner decision D31, 2026-10-26). A missing component is ordered from
-  the Framework if it is universal, from ui-pro if it belongs to the editor. A
-  Framework gap goes to `simai/ui-source` as an issue.
+- **The set's components live in `package/` only.** Since the component sets
+  decision (owner, 2026-11-03) this repository holds the set `editor`
+  (`sf-editor`, [`package/README.md`](package/README.md)); it is written there
+  and nowhere else. The editor screen outside `package/` stays an assembly of
+  SIMAI Framework parts and the set. A missing universal part is ordered from
+  the Framework; a Framework gap goes to `simai/ui-source` as an issue.
 - **JSON is the store.** HTML and Markdown are conversions. Markdown in Docara's
   syntax is written for documentation through Docara's own adapter, which keeps
   the source bytes.
@@ -46,6 +48,7 @@ writes in the text areas.
 
 | Path | What it is |
 |:---|:---|
+| [`package/`](package) | The component set `editor` (`sf-editor`): passport, source, tests and gates; a skeleton, not released yet |
 | [`docs/STATUS.md`](docs/STATUS.md) | Decisions, plan and what each step must prove |
 | [`docs/GAPS.md`](docs/GAPS.md) | What the pinned releases do not give yet, and who owns it |
 | [`docs/HOST-EMBED.md`](docs/HOST-EMBED.md) | The single-page mode for hosts: the launch modes and the load/save contract |
