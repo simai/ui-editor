@@ -21,10 +21,13 @@ and its browser probes (`tests/browser/editor-*.browser.mjs`). Its history
 before the move is there. The `pro` bundle keeps shipping it until it is
 rebuilt from the sets; from this move on it is written here only.
 
-**Skeleton, not a release.** Nothing here is tagged, staged or published:
-there is no `dist/`, `package.json` is `private`, and the release route
-(`editor-<12>`, npm `@simai-studio/editor`) waits for the dispatcher and the
-owner, as for `view`.
+**Version 1.0.0, prepared, not yet published.** The first release of the
+set ([CHANGELOG.md](CHANGELOG.md)) goes through the dispatcher's release route as `view`'s
+did: the build committed under `dist/` with its receipt, the release lock
+`editor-<12>`, the tag and `npm publish` of `@simai-studio/editor` from the
+staged folder (`node scripts/stage-npm.mjs`). Paid sets publish on the public
+npm registry (owner, 2026-11-05), so `package.json` is public; nothing here is
+published by this repository's own hand.
 
 ## Built against a pinned ui-source
 
@@ -34,8 +37,11 @@ ui-source at the revision `framework.lock.json` pins (from git, never a
 working tree), with this folder's `src/` and `tests/` laid over it. A file
 here may not replace a ui-source file.
 
-The pin is `ec2f29dfa5df`, the source of the released pair
-`ui-62b1d9b6dc8d` (core.runtime 1.28.0). The passport names the same commit.
+The pin is `54c89e61ef9b`, the source of the released pair
+`ui-1e5ec795a1ce` (core.runtime 1.30.0), the first whose name registry
+names this set as the owner of `sf-editor`. The passport names the same
+commit.
+
 The editor screen beside this folder is pinned separately
 (`framework.lock.json` at the repository root) to released pairs and to the
 `pro` package until the set has a release of its own.

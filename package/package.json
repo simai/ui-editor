@@ -1,7 +1,6 @@
 {
   "name": "@simai-studio/editor",
-  "version": "1.2.0",
-  "private": true,
+  "version": "1.0.0",
   "description": "SIMAI Editor, the component set editor of SIMAI Framework: the one block editor sf-editor.",
   "license": "PolyForm-Small-Business-1.0.0 OR PolyForm-Noncommercial-1.0.0 OR LicenseRef-SIMAI-Commercial",
   "author": "Rim Zabarov",
@@ -32,5 +31,8 @@
     "test:manifest": "node scripts/run-manifest-probes.mjs",
     "test:first-paint": "node scripts/run-first-paint.mjs",
     "stage": "node scripts/stage-npm.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
