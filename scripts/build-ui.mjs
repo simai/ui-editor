@@ -46,7 +46,7 @@ await build({entryPoints: [join(ROOT, 'src/ui/seed.ts')], bundle: true, format: 
 const {seedDocuments} = await import(`${pathToFileURL(seedModule).href}?${Date.now()}`);
 for (const language of ['ru', 'en']) {
   const [home] = seedDocuments(language);
-  writeFileSync(join(out, 'examples', `page.${language}.json`), `${JSON.stringify({document: home.document, settings: {name: home.title, address: '/', template: 'default', published: false}, revision: 1}, null, 2)}\n`);
+  writeFileSync(join(out, 'examples', `page.${language}.json`), `${JSON.stringify({document: home.document, settings: {name: home.title, address: '/', template: 'default', published: false, history: 1}, revision: 1}, null, 2)}\n`);
 }
 cpSync(framework, join(out, 'fw'), {recursive: true});
 cpSync(pro, join(out, lock.package.base), {recursive: true});

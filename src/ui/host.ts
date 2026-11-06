@@ -15,7 +15,16 @@ import type {CompositionDocument} from './seed.ts';
 export const PROTOCOL = 1;
 
 /** The page's own settings, the host's: the editor carries them and returns them with the page. */
-export type PageSettings = Record<string, unknown> & {name?: string; address?: string; template?: string; published?: boolean; history?: unknown};
+export type PageSettings = Record<string, unknown> & {
+  name?: string;
+  address?: string;
+  template?: string;
+  /** The host's templates for the page panel's list, else the demo site's two. */
+  templates?: {value: string; text?: string}[];
+  published?: boolean;
+  /** The number of kept versions, or {count}: the page panel's «История · N». */
+  history?: number | {count?: number};
+};
 
 export interface LoadPayload {
   document: CompositionDocument;
@@ -63,7 +72,7 @@ export interface HostLink {
  * load fixes the origin every later message must come from and every answer
  * goes to.
  */
-export function listenToHost(handlers: {load(payload: LoadPayload): void; save(): void; saved(revision: string | number | null): void}): HostLink {
+export function listenToHost(handlers: {load(payload: LoadPayload): void; save(): void; saved(revision: string | number | null): void; settings(patch: PageSettings): void}): HostLink {
   const named = namedHost();
   let origin: string | null = named;
   const parent = window.parent !== window ? window.parent : null;
@@ -77,6 +86,10 @@ export function listenToHost(handlers: {load(payload: LoadPayload): void; save()
       handlers.load(data as LoadPayload);
     } else if (data.type === 'sf-editor:save-request') handlers.save();
     else if (data.type === 'sf-editor:saved') handlers.saved(data.revision ?? null);
+    else if (data.type === 'sf-editor:settings') {
+      const settings = (data as {settings?: unknown}).settings;
+      if (settings && typeof settings === 'object' && !Array.isArray(settings)) handlers.settings(settings as PageSettings);
+    }
   });
   const link: HostLink = {
     post(message) {

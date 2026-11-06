@@ -5,9 +5,9 @@ The reference page editor for SIMAI Framework and SIMAI Pro, in the line of
 pages before products take them: the email editor (`simai/ui-mail`), Larena's
 layout editor and documentation editing in Docara.
 
-**Status: one block editor, C2, 2026-11-04** on Framework `ui-c3015f76bcc2`
-and Pro `pro-978d513cf4bf`: a page is one Composition Document, layout and
-text in one tree, edited by SIMAI Pro's `sf-editor` 1.1.0 (the owner's decision
+**Status: one block editor, C2, 2026-11-05** on Framework `ui-c759b3cb3e31`
+and Pro `pro-4032e9f6f316`: a page is one Composition Document, layout and
+text in one tree, edited by SIMAI Pro's `sf-editor` 1.2.0 (the owner's decision
 of 2026-11-03). The shell gives it the page, the demo site's own blocks, the
 site's theme, the person's rights and the demo data sources, and keeps every
 change it sends. The two modes are gone. The acceptance scenarios run on the

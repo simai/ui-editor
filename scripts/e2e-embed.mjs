@@ -150,6 +150,34 @@ const LOADS = Number(argument('--loads', '6'));
   await page.waitForTimeout(300);
   check('⌘S saves too', (await page.evaluate(() => window.hostDemo.saves.length)) === 2);
 
+  // The page panel (sf-editor 1.2.0): nothing chosen, the host's settings on the right.
+  // Esc goes a level up from the canvas, to nothing chosen.
+  await frame.evaluate(() => document.querySelector('#page-editor .sf-editor-canvas')?.focus({preventScroll: true}));
+  for (let i = 0; i < 4; i += 1) await page.keyboard.press('Escape');
+  await frame.waitForSelector('#page-editor .sf-editor-right [data-key="address"] input', {timeout: 10000});
+  const panel = await frame.evaluate(() => {
+    const right = document.querySelector('#page-editor .sf-editor-right');
+    return {keys: [...right.querySelectorAll('[data-key]')].map((e) => e.dataset.key), name: right.querySelector('[data-key="name"] input')?.value, history: right.querySelector('[data-key="publish"]')?.innerText.includes('История · 1')};
+  });
+  check("nothing chosen: the page panel shows the host's settings, name to history", ['name', 'address', 'template', 'theme', 'publish'].every((key) => panel.keys.includes(key)) && panel.name === 'Главная' && panel.history, JSON.stringify(panel));
+  const address = frame.locator('#page-editor .sf-editor-right [data-key="address"] input');
+  await address.fill('/home');
+  await address.press('Enter');
+  await address.evaluate((input) => input.blur());
+  await page.waitForTimeout(300);
+  check('an edit in the page panel makes the page dirty', await page.evaluate(() => window.hostDemo.dirty));
+  await frame.locator('#save button').click();
+  await page.waitForFunction(() => window.hostDemo.saves.length === 3, null, {timeout: 10000});
+  const withAddress = await page.evaluate(() => window.hostDemo.saves[2].settings);
+  check('…and goes back to the host in the next save', withAddress.address === '/home' && withAddress.name === 'Главная', JSON.stringify(withAddress));
+  await frame.locator('#page-editor .sf-editor-right [data-key="publish"] sf-button[scheme="primary"] button').click();
+  await page.waitForFunction(() => window.hostDemo.actions.length === 1, null, {timeout: 10000});
+  await page.waitForTimeout(300);
+  const action = await page.evaluate(() => window.hostDemo.actions[0]);
+  const answered = await frame.evaluate(() => ({history: document.querySelector('#page-editor .sf-editor-right [data-key="publish"]')?.innerText.includes('История · 2'), status: document.querySelector('#page-editor .sf-editor-right .sf-editor-panel-sub')?.textContent.trim()}));
+  check('«Опубликовать» goes to the host as `sf-editor:page-action`, with the settings and the revision', action.action === 'publish' && action.protocol === 1 && action.settings.address === '/home' && action.revision === 4, JSON.stringify({action: action.action, protocol: action.protocol, revision: action.revision}));
+  check("the host's `sf-editor:settings` answer shows in the panel and leaves the page clean", answered.history && answered.status === 'опубликована' && !(await page.evaluate(() => window.hostDemo.dirty)), JSON.stringify(answered));
+
   const stored = await frame.evaluate(async () => (await indexedDB.databases()).map((d) => d.name));
   check('nothing is written to IndexedDB in this mode', !stored.includes('ui-editor'), stored.join() || 'none');
   check('no page or console errors', errors.length === 0, errors.join(' | '));
@@ -210,6 +238,23 @@ const LOADS = Number(argument('--loads', '6'));
   check('the list mode paints no raw control either, its bundle late', watched.raw.length === 0 && watched.errors.length === 0, JSON.stringify({raw: watched.raw.slice(0, 3), errors: watched.errors.slice(0, 2)}));
   const list = await page.evaluate(() => ({mode: document.body.dataset.mode ?? 'list', pages: Boolean(document.querySelector('#pages')), save: Boolean(document.querySelector('#save'))}));
   check('without ?mode=page the editor is the standalone list mode, with no «Сохранить»', list.mode === 'list' && list.pages && !list.save, JSON.stringify(list));
+  // The page panel in the list mode: the local page's settings, kept in IndexedDB.
+  await page.evaluate(() => document.querySelector('#page-editor .sf-editor-canvas')?.focus({preventScroll: true}));
+  for (let i = 0; i < 4; i += 1) await page.keyboard.press('Escape');
+  await page.waitForSelector('#page-editor .sf-editor-right [data-key="name"] input', {timeout: 10000});
+  const name = page.locator('#page-editor .sf-editor-right [data-key="name"] input');
+  await name.fill('Главная, новая');
+  await name.press('Enter');
+  await name.evaluate((input) => input.blur());
+  await page.waitForTimeout(400);
+  const renamed = await page.evaluate(async () => ({list: document.querySelector('#pages').items[0].label, heading: document.querySelector('#page-editor').getAttribute('heading'), kept: globalThis.uiEditor.state.pages[0]}));
+  check('list mode: a name edited in the page panel renames the page in the list and on the bar', renamed.list === 'Главная, новая' && renamed.heading === 'Главная, новая' && renamed.kept.title === 'Главная, новая', JSON.stringify({list: renamed.list, heading: renamed.heading}));
+  await page.locator('#page-editor .sf-editor-right [data-key="publish"] sf-button[scheme="primary"] button').click();
+  await page.waitForTimeout(300);
+  await page.reload();
+  await page.waitForSelector('body[data-ready="true"]');
+  const reloaded = await page.evaluate(() => ({title: globalThis.uiEditor.state.pages[0].title, settings: globalThis.uiEditor.state.pages[0].settings}));
+  check('…and its settings live with the local page: after a reload it keeps the name and «опубликована»', reloaded.title === 'Главная, новая' && reloaded.settings?.published === true && reloaded.settings.address === '/', JSON.stringify(reloaded));
   await context.close();
 }
 

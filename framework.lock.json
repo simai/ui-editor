@@ -2,48 +2,56 @@
   "schema": "simai.ui-editor.framework-lock",
   "version": 1,
   "note": "The SIMAI Framework release and the SIMAI Pro package the editor is built and checked against, never latest. scripts/framework-fetch.mjs downloads the npm tarball and the package tar, checks them against the hashes here, checks every Framework file against the package's own package-manifest.json, and checks that the Pro package's receipt names this pair and the pinned source. A repin changes this file, then the end-to-end runs pass again.",
-  "pair": "ui-c3015f76bcc2",
-  "pinned_on": "2026-11-04",
+  "pair": "ui-c759b3cb3e31",
+  "pinned_on": "2026-11-05",
   "ui": {
     "repository": "simai/ui",
-    "commit": "c3015f76bcc20cd502d5fe7931495e35711d6a4d",
+    "commit": "c759b3cb3e31936cf8bc34d9e950460f76a90fa2",
     "npm": {
       "package": "@simai-studio/ui",
-      "version": "5.20261104.451",
-      "tarball": "https://registry.npmjs.org/@simai-studio/ui/-/ui-5.20261104.451.tgz",
-      "integrity": "sha512-cygEyPBAIE1K2/0BhTFXJzGBEV3+SHYsIkX4yWRN09kUAP2AusKZkZvdMKy9kV3IwNZ+0jiEl8eduQ+nvsFMRw==",
-      "shasum": "5f9713dfe7a1962671e384b33a227c4ff833a3c0",
-      "tarball_sha256": "5932d6cb4c1ee928f58b4e08d47122d3d492dc180e2080b18d6794e3269f4fa8",
+      "version": "5.20261105.1314",
+      "tarball": "https://registry.npmjs.org/@simai-studio/ui/-/ui-5.20261105.1314.tgz",
+      "integrity": "sha512-dWYljtxWVC/8w1KwuVXhh5+mdIMohCLWUkFYZytlBfFADsOsnS7wwSKm9G533Ox8C8TvhMlKabXKmP9DF9jlsw==",
+      "shasum": "dc877eef8c35da82fa6e43a73e2959c471bdaf43",
+      "tarball_sha256": "afb0e7dee585385585d4dfbdbb3d3119b137bfd8fb991a3d3e5744bf087da0c0",
       "file_count": 4861,
       "license": "Apache-2.0"
     },
     "package_manifest": {
       "path": "package-manifest.json",
-      "sha256": "f383f8c5de2df39146f3595c4b60f80273cc90073333ae5dc4015e94ecd092db",
+      "sha256": "29a59c27083ae29511264ca44239c759521bfeb20f9cd0d112645afe72130a5e",
       "files": 4855
     }
   },
   "ui_source": {
     "repository": "simai/ui-source",
-    "commit": "4863a40e221cba7684cd0c7d860b286613d3e8c4"
+    "commit": "bda0af0e54ccf218480fd07403e31250924a5eb6"
   },
   "package": {
     "name": "pro",
-    "release": "pro-978d513cf4bf",
+    "release": "pro-4032e9f6f316",
     "repository": "simai/ui-pro",
     "source": {
       "repository": "simai/ui-pro",
-      "commit": "978d513cf4bf331e0f89aa201aefe608b90e9d1c"
+      "commit": "4032e9f6f3169de0e8619bc84dd13eea90f6b391"
     },
-    "tar": "https://github.com/simai/ui-pro/releases/download/pro-978d513cf4bf/package-pro.tar",
-    "tar_sha256": "c32337ffaf509155d55a9db57d94d2fab0322e7056b52b9bfca2d129504643a3",
-    "receipt": "https://github.com/simai/ui-pro/releases/download/pro-978d513cf4bf/package-receipt.json",
-    "receipt_sha256": "72b731f871f6644ec8efe0a18212c2debcf835ee1f33a38b58ab4e079173c20c",
+    "tar": "https://github.com/simai/ui-pro/releases/download/pro-4032e9f6f316/package-pro.tar",
+    "tar_sha256": "fbece5d1f62da9eb0fd64a4400d14e25a8cab5dc2f91b368d511bdf864edadc2",
+    "receipt": "https://github.com/simai/ui-pro/releases/download/pro-4032e9f6f316/package-receipt.json",
+    "receipt_sha256": "d8119562d7a76b212f4983a1bb98a79d5942c542f6c9f26ce106eaed2d0676b7",
     "base": "pkg/pro/smart",
     "one_editor": "sf-editor",
     "licence": "PolyForm-Small-Business-1.0.0 OR PolyForm-Noncommercial-1.0.0 OR LicenseRef-SIMAI-Commercial"
   },
   "history": [
+    {
+      "pair": "ui-c3015f76bcc2",
+      "npm": "5.20261104.451",
+      "package": "pro-978d513cf4bf",
+      "pinned_on": "2026-11-04",
+      "replaced_on": "2026-11-05",
+      "why": "sf-editor 1.1.0, the visual parity pass"
+    },
     {
       "pair": "ui-eea8c0a97cc7",
       "npm": "5.20261103.2154",

@@ -12,11 +12,16 @@
     "pages.list": "Pages",
     "canvas.label": "Page canvas",
     "storage.unavailable": "The browser storage is unavailable: pages will not outlive this tab.",
-    "theme.default": "Site theme",
+    "theme.default": "Default",
     "theme.compact": "Compact",
     "rights.layout": "The site’s designer changes it; you write in the text areas.",
     "page.save": "Save",
-    "page.saveKey": "Save (⌘S)"
+    "page.saveKey": "Save (⌘S)",
+    "page.status.draft": "draft · changes not published",
+    "page.status.live": "published",
+    "page.template.default": "Main: header and footer",
+    "page.template.none": "No header and footer",
+    "page.publishNote": "Until the page is published, visitors see the previous version."
   },
   "seed": {
     "site": "SIMAI Studio",

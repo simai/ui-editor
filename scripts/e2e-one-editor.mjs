@@ -53,7 +53,7 @@ for (const s of chosen) {
       const known = driver.differs?.[`${s.id}: ${name}`];
       if (known && !pass) {
         counts.known.push(`${s.id}: ${name}`);
-        console.log(`known ${s.id}: ${name} (${known})`);
+        console.log(`known ${s.id}: ${name} (${known})${detail ? ` [${String(detail).slice(0, 300)}]` : ""}`);
       } else run.check(`${s.id}: ${name}`, pass, detail);
     });
     run.check(`${s.id}: no page errors`, errors.length === 0, errors.join(' | '));

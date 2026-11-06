@@ -15,6 +15,7 @@
 import {onUiLanguage, preferredLanguage, setUiLanguage, t, translate, uiLanguage, type Language} from './i18n.ts';
 import {EDITOR_MANIFESTS, RENDERERS, WORDS, blockTypes} from './blocks.ts';
 import {listenToHost, pageMode, type Diagnostic, type HostLink, type LoadPayload, type PageSettings} from './host.ts';
+import {panelView, type PageAction, type PageChange} from './page-panel.ts';
 import {openPageStore, type Page, type PageStore} from './pages.ts';
 import {SEED_VERSION, blankPage, seedDocuments, type CompositionDocument} from './seed.ts';
 import {startShell, type Shell} from './shell.ts';
@@ -51,10 +52,17 @@ interface Editor extends HTMLElement {
   words: Record<string, Record<string, string>>;
   rights: Rights;
   theme: Theme;
+  pageSettings: unknown;
   connectPort(port: unknown): unknown;
 }
 
 const USED = ['sf-editor', 'sf-menu', 'sf-button-group', 'sf-drawer', 'sf-resizer', 'sf-button-icon', 'sf-button'];
+/**
+ * The page mode never shows the page list. On ui-c759b3cb3e31 the list's
+ * sf-menu and sf-resizer stay undefined while it is not displayed (seen in
+ * the page mode), so the page mode waits for its own components only.
+ */
+const USED_ON_PAGE = ['sf-editor', 'sf-button-group', 'sf-button'];
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const editor = () => $<Editor>('#page-editor');
 
@@ -109,11 +117,44 @@ function showPages() {
   $<HTMLElement & {items: unknown}>('#pages').items = state.pages.map((p) => ({id: p.id, label: p.title, href: `#page=${encodeURIComponent(p.id)}`, icon: 'description', current: p.id === state.current}));
 }
 
-/** The open page's name heads sf-editor's bar and its settings. */
+/** The open page's name heads sf-editor's bar; its settings fill the page panel. */
 function showTitle() {
-  const title = page()?.title;
-  if (title) editor().setAttribute('heading', title);
+  const current = page();
+  if (current?.title) editor().setAttribute('heading', current.title);
   else editor().removeAttribute('heading');
+  editor().pageSettings = current ? panelView(localSettings(current)) : null;
+}
+
+/** A local page's settings as the panel reads them; a page kept before them takes the defaults. */
+function localSettings(p: Page): PageSettings {
+  return {name: p.title, ...ownSettings(p)};
+}
+
+/** What a local page keeps beside its title, with the defaults filled in. */
+function ownSettings(p: Page): NonNullable<Page['settings']> {
+  const first = state.pages[0]?.id === p.id;
+  return {address: first ? '/' : `/${p.id}`, template: 'default', published: p.seed !== undefined, ...p.settings};
+}
+
+/** A change in the page panel, kept with the local page. An edit of the name renames it in the list. */
+async function changeLocal({key, value}: PageChange) {
+  const current = page();
+  if (!current) return;
+  const updated = new Date().toISOString();
+  const settings = {...ownSettings(current), published: false};
+  await save(key === 'name'
+    ? {...current, title: value.trim() || current.title, updated, seed: undefined, settings}
+    : {...current, updated, seed: undefined, settings: {...settings, [key]: value}});
+  showPages();
+  showTitle();
+}
+
+/** The list mode's own publishing: the demo keeps no versions, so publishing only marks the page. */
+async function actLocal({action}: PageAction) {
+  const current = page();
+  if (!current || action !== 'publish') return;
+  await save({...current, settings: {...ownSettings(current), published: true}});
+  showTitle();
 }
 
 const themeOf = (name: string): Theme => ({name, label: t(`theme.${name}`), settings_url: '#settings/theme', defaults: THEMES[name] ?? {}});
@@ -140,7 +181,8 @@ async function keep(detail: ChangeDetail) {
   const current = page();
   if (!current) return;
   const updated = new Date().toISOString();
-  await save({...current, document: detail.document, updated, seed: undefined});
+  await save({...current, document: detail.document, updated, seed: undefined, settings: {...ownSettings(current), published: false}});
+  showTitle();
   if (detail.scope !== 'template') return;
   const regions = (document: CompositionDocument) => document.root.slots?.regions ?? [];
   const template = regions(detail.document).filter((region) => region.props?.name !== 'main');
@@ -233,6 +275,9 @@ function setDirty(dirty: boolean) {
   one.host?.post({type: 'sf-editor:dirty', dirty});
 }
 
+/** A page panel edit as a settings patch: an edit unpublishes nothing on its own, the host decides. */
+const pageChange = ({key, value}: PageChange): PageSettings => ({[key]: value});
+
 const pageName = () => (typeof one.settings.name === 'string' && one.settings.name) || '';
 
 /** The host's page: checked, then given to the editor. A Document that fails is refused whole, and the host is told why. */
@@ -257,14 +302,14 @@ function loadPage(payload: LoadPayload): {ok: boolean; diagnostics: Diagnostic[]
 
 /**
  * The page's settings (name, address, template, publication, history) are
- * the host's: until the Framework's page-settings panel ships, the editor
- * shows the name on its bar and carries the rest through. This is the hook
- * that panel will fill.
+ * the host's: the name heads the bar, and the page panel shows them all. An
+ * edit there changes them here and goes back with the next save.
  */
 function showSettings() {
   const name = pageName();
   if (name) editor().setAttribute('heading', name);
   else editor().removeAttribute('heading');
+  editor().pageSettings = one.document ? panelView(one.settings) : null;
 }
 
 /** Hands the page back: the host decides where it goes and answers `sf-editor:saved` with its new revision. */
@@ -294,6 +339,12 @@ async function startPage() {
     one.document = (event as CustomEvent<ChangeDetail>).detail.document;
     setDirty(true);
   });
+  element.addEventListener('sf-editor-page-change', (event) => embed.setSettings(pageChange((event as CustomEvent<PageChange>).detail)));
+  // Publishing and history are the host's: the press goes to it with the page's settings.
+  element.addEventListener('sf-editor-page-action', (event) => {
+    const {action} = (event as CustomEvent<PageAction>).detail;
+    one.host?.post({type: 'sf-editor:page-action', action, settings: {...one.settings}, revision: one.revision, dirty: one.dirty});
+  });
   bar.language.addEventListener('change', (event) => setUiLanguage((event as CustomEvent<{value: Language}>).detail.value));
   bar.save.addEventListener('click', () => void savePage());
   addEventListener('keydown', (event) => {
@@ -314,6 +365,7 @@ async function startPage() {
       one.revision = revision;
       setDirty(false);
     },
+    settings: (patch) => embed.hostSettings(patch),
   });
   translate();
   document.body.dataset.ready = 'true';
@@ -324,7 +376,7 @@ async function start() {
   // The Loader defines each element when it meets its tag. A property set
   // before that stays on the bare element and the component never reads it,
   // so the shell waits for every element it writes to.
-  await Promise.all(USED.map((tag) => customElements.whenDefined(tag)));
+  await Promise.all((pageMode() ? USED_ON_PAGE : USED).map((tag) => customElements.whenDefined(tag)));
   await holdBar();
   if (pageMode()) return startPage();
   bar.save.remove();
@@ -364,6 +416,8 @@ async function start() {
   giveSite(uiLanguage());
   element.connectPort({...sourcePort(uiLanguage), saveBlock: async (manifest: SiteBlock) => void (state.siteBlocks = [...state.siteBlocks.filter((b) => b.type !== manifest.type || b.version !== manifest.version), manifest])});
   element.addEventListener('change', (event) => void keep((event as CustomEvent<ChangeDetail>).detail));
+  element.addEventListener('sf-editor-page-change', (event) => void changeLocal((event as CustomEvent<PageChange>).detail));
+  element.addEventListener('sf-editor-page-action', (event) => void actLocal((event as CustomEvent<PageAction>).detail));
   element.addEventListener('sf-editor-block-save', (event) => {
     const {manifest} = (event as CustomEvent<{manifest: SiteBlock}>).detail;
     state.siteBlocks = [...state.siteBlocks.filter((b) => b.type !== manifest.type || b.version !== manifest.version), manifest];
@@ -399,11 +453,16 @@ const embed = {
     one.revision = revision;
     setDirty(false);
   },
-  /** A change of the page's settings, for the page-settings panel when it ships. */
+  /** A change of the page's settings made in the editor (the page panel's edits come this way): the page is dirty. */
   setSettings(patch: PageSettings) {
     one.settings = {...one.settings, ...patch};
     showSettings();
     setDirty(true);
+  },
+  /** The host's own change of the settings (published, history after a page action): shown, the page stays as clean as it was. */
+  hostSettings(patch: PageSettings) {
+    one.settings = {...one.settings, ...patch};
+    showSettings();
   },
   get dirty() {
     return one.dirty;

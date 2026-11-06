@@ -126,6 +126,18 @@ G-25, G-26; 5 by G-36 to G-38 and the new G-40; 9 differences of design,
 two of them new: S06 and S12 find no section without its own spacing). S01's
 frame click passes now; S08 goes past «Секция · Фон» and stops at G-40 (which proved the driver's, below).
 
+### Rechecked on sf-editor 1.2.0
+
+`pro-4032e9f6f316` over `ui-c759b3cb3e31`, 2026-11-05: 125 checks pass and
+16 are known: 2 by what is left of G-20 (no «Сохранённые»; a block picked
+between sections lands bare at the seam), 3 by G-23, 3 by G-25 and G-26, and
+8 differences of design. None fails. 1.2.0 closed the rest of the catalogue's
+G-20 (the + and / are the library's sections: S03's + between sections and
+on Текст, / on Текст), G-21 (S06's reset) and G-42 (S08's instance). The
+driver follows the new catalogue: a section is a row of one list, opened in
+place with «Назад», and a type listed only by its variants is picked by its
+first one.
+
 ### Rechecked on sf-editor 1.1.0
 
 `pro-978d513cf4bf` over `ui-c3015f76bcc2`, 2026-11-04: 119 checks pass and

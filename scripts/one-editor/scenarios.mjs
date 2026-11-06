@@ -135,7 +135,7 @@ export const scenarios = [
       await d.pickerSection('Маркетинг');
       await d.pick('Призыв к действию');
       const cta = await find(d, (n) => n.type === 'marketing.cta');
-      check('a block between sections stands in a section of its own, at that seam', cta && (await childIds(d, root)).indexOf(cta.parent) === sections.indexOf(a.section) + 1, JSON.stringify(cta));
+      check('a block between sections stands in a section of its own, at that seam', cta && (await childIds(d, root)).indexOf(cta.parent) === sections.indexOf(a.section) + 1, JSON.stringify({parent: cta?.parent, index: cta?.index, at: (await childIds(d, root)).indexOf(cta?.parent), want: sections.indexOf(a.section) + 1, root, rootKids: await childIds(d, root)}));
       await d.press('Escape');
       await d.press('Escape');
 

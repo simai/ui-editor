@@ -22,7 +22,9 @@ Nothing is rebuilt. Proved by
 
 sf-editor alone: its library, canvas and parameters, with the host's
 «Сохранить» and the language switch in its bar and the page's name as its
-heading. The pages panel, its toggle, «Новая страница» and the note about
+heading. When no block is chosen, the right panel is the page panel
+(sf-editor 1.2.0): the page's name, address, site template, the site theme
+(read only), publishing and history, from the host's `settings`. The pages panel, its toggle, «Новая страница» and the note about
 browser storage are not in the page at all, and the canvas takes the width.
 Nothing is written to IndexedDB or kept between visits, except the editor's
 own view preferences (panel widths).
@@ -49,6 +51,7 @@ and listens to the window's events of the same names.
 | `sf-editor:load` | `document`, `settings?`, `revision?`, `language?` (`ru`, `en`) | Checks `document` against composition-document v1 with the site's types (`SF.Composition.validate`). A valid one replaces what the editor shows and the page is clean; an invalid one is refused whole and answered with `sf-editor:error` |
 | `sf-editor:save-request` | — | Asks the editor to save, as «Сохранить» does |
 | `sf-editor:saved` | `revision` | The host kept the page: the editor takes the new revision and the page is clean again |
+| `sf-editor:settings` | `settings` (a patch) | The host changed the page's settings itself, for example after a page action (`published`, `history`): the page panel shows them; the page stays as clean or dirty as it was |
 
 ### Editor → host
 
@@ -58,6 +61,7 @@ and listens to the window's events of the same names.
 | `sf-editor:loaded` | `revision` | A page was loaded |
 | `sf-editor:error` | `code` (`document_invalid`), `diagnostics` (`{code, path, message}`) | A page was refused |
 | `sf-editor:dirty` | `dirty` | The page changed since it was loaded or saved, or became clean |
+| `sf-editor:page-action` | `action` (`publish`, `history`), `settings`, `revision`, `dirty` | A press of «Опубликовать» or «История» in the page panel. Publishing and versions are the host's: it publishes (saving first if `dirty` says so) or opens its history, and may answer `sf-editor:settings` |
 | `sf-editor:save` | `document`, `settings`, `revision` | «Сохранить», ⌘S / Ctrl+S, or `sf-editor:save-request`. `document` is the edited composition-document v1; `revision` is the one the edits were made on, for the host to detect a conflict. The host decides where the page goes and answers `sf-editor:saved` |
 
 ### The same-page API
@@ -67,19 +71,40 @@ const result = uiEditor.load({document, settings, revision}); // {ok, diagnostic
 addEventListener('sf-editor:save', (event) => keep(event.detail)); // the payload above
 uiEditor.save();             // the payload, also dispatched as the event
 uiEditor.saved(revision);    // the host kept it
-uiEditor.setSettings(patch); // the page settings changed (dirty)
+uiEditor.setSettings(patch); // the page's settings changed in the editor (dirty)
+uiEditor.hostSettings(patch); // the host changed them itself (stays clean)
+addEventListener('sf-editor:page-action', (event) => act(event.detail)); // publish, history
 uiEditor.dirty;              // true while there are unsaved changes
 ```
 
 ## Page settings
 
-The page's own settings are the host's: name, address, template, publication
-and history, or whatever else the host keeps for a page. The editor takes
-them from `settings` in `sf-editor:load`, shows the name on its bar and hands
-the whole object back with every save. Until the Framework ships the
-page-settings panel (Framework 1.1.x), the editor has no fields for them: the
-panel will fill the hook that `uiEditor.setSettings` is today, and its edits
-will come back the same way.
+The page's own settings are the host's. The editor takes them from
+`settings` in `sf-editor:load`, shows them in the page panel and the name on
+its bar, and hands the whole object back with every save, with the panel's
+edits in it. Keys it does not know are carried through untouched.
+
+| Key | Type | In the page panel |
+|:---|:---|:---|
+| `name` | string | «Название», editable; the bar's heading |
+| `address` | string | «Адрес», editable |
+| `template` | string | «Шаблон сайта», a list; the value the host keeps |
+| `templates` | `[{value, text}]` | the list's choices; without it, the demo site's `default` and `none` |
+| `published` | boolean | the status under the panel's title («опубликована» or «черновик»); «Опубликовать» is off while it is true |
+| `history` | number or `{count}` | «История · N»; without it, no history button |
+
+An edit of name, address or template is a change of the page: it marks the
+page dirty (`sf-editor:dirty`) and goes back in the next `sf-editor:save`.
+«Опубликовать» and «История» change nothing in the editor: they go to the
+host as `sf-editor:page-action`, and the host answers with
+`sf-editor:settings` when its settings change (the host demo publishes at
+once and counts versions). These messages are additive: the contract stays
+version 1.
+
+In the list mode the same panel shows the local page's settings, kept with
+it in IndexedDB: an edit renames the page in the list, and «Опубликовать»
+only marks it published, since the demo keeps no versions (no history
+button there).
 
 ## Unsaved changes
 

@@ -23,23 +23,17 @@ import {ROOT, load} from '../e2e-common.mjs';
 
 export const name = 'component';
 /**
- * Checks sf-editor 1.1.0 fails in this shell: each names its gap in
+ * Checks sf-editor 1.2.0 fails in this shell: each names its gap in
  * docs/GAPS.md or a difference of design (docs/ONE-EDITOR.md). Reported by
  * the run, not failed; a check here that passes is printed as ok, so its line
  * can go.
  */
 export const differs = {
-  "S02: its sections are Текст, Медиа, Элементы, Макет, Части страницы, Маркетинг, Данные, Формы, Сохранённые": "G-20: a type stands in one section of the library; Формы has no types and a section with none is not listed",
-  "S02: a block may stand in two sections: the button shows in Текст too": "G-20: a type stands in one section of the library; Формы has no types and a section with none is not listed",
-  "S03: between sections the + opens on the list of sections": "G-20: the + and / catalogue keep two tabs (Текст, Блоки); the library has the sections",
-  "S03: a block between sections stands in a section of its own, at that seam": "G-20: the + and / catalogue keep two tabs (Текст, Блоки); the library has the sections",
-  "S03: inside a text area the + opens straight on Текст": "G-20: the + and / catalogue keep two tabs (Текст, Блоки); the library has the sections",
-  "S03: / in an empty line opens straight on Текст": "G-20: the + and / catalogue keep two tabs (Текст, Блоки); the library has the sections",
-  "S06: «сбросить» returns the inherited value": "G-21: «Сбросить» on a value the block's variant set returns the type's value, not the variant's",
+  "S02: its sections are Текст, Медиа, Элементы, Макет, Части страницы, Маркетинг, Данные, Формы, Сохранённые": "G-20: no «Сохранённые» section (open in the Framework)",
+  "S03: a block between sections stands in a section of its own, at that seam": "G-20: a block picked between sections lands at the seam bare, not in a section of its own",
   "S07: its Data tab names the list it reads": "G-23: the Data tab: a preset, no field mapping; a seeded pagination follows no list",
   "S07: its fields are mapped by the host's preset": "G-23: the Data tab: a preset, no field mapping; a seeded pagination follows no list",
   "S07: the pagination is bound to the list, not to a source": "G-23: the Data tab: a preset, no field mapping; a seeded pagination follows no list",
-  "S08: the author sees only the exposed parameter": "G-42: a site block's instance shows «Дополнительные классы» beside the parameters exposed to its author",
   "S19: the scenario finished": "G-25: no editing of a block's own items in place",
   "S20: the scenario finished": "G-25: no editing of a block's own items in place",
   "S22: every block offers «Показывать на этом экране»": "G-26: content blocks have no visibility per screen",
@@ -251,35 +245,55 @@ function driver(page, origin) {
       await settle(200);
     },
     /**
-     * The open catalogue (+ or /): its tabs, the names it lists and the
-     * section it opened on: with no tabs, the one section every option names
-     * beside it (a text area's + and the / menu open on Текст).
+     * The open catalogue (+ or /), sf-editor 1.2.0: one list of the library's
+     * sections, a section opened in place with «Назад», or what a search found.
+     * `section` is the section it stands in (its «Назад» names it; / names
+     * its section beside every option), null on the list of sections.
      */
     picker: () => page.evaluate(() => {
       const box = document.querySelector('#page-editor .sf-editor-pop');
       if (!box) return null;
-      const tabs = [...box.querySelectorAll('sf-button-group button')].map((b) => ({name: b.textContent.trim(), pressed: b.getAttribute('aria-pressed') === 'true' || b.getAttribute('aria-checked') === 'true'}));
       const heads = [...box.querySelectorAll('li[role="option"] .sf-editor-option-note')].map((s) => s.textContent.trim());
+      const back = box.querySelector('.sf-editor-pop-back sf-button')?.getAttribute('text') ?? null;
+      const listing = box.dataset.listing;
       return {
-        section: !tabs.length && heads.length && heads.every((head) => head === heads[0]) ? heads[0] : null,
-        tabs,
+        listing,
+        section: listing === 'sections' ? null : back ?? (heads.length && heads.every((head) => head === heads[0]) ? heads[0] : null),
+        tabs: [],
         items: [...box.querySelectorAll('li[role="option"] .sf-editor-option-name')].map((name) => name.dataset.label ?? name.textContent.trim()),
         heads,
       };
     }),
-    /** A section of the + catalogue: it has two tabs (Текст, Блоки); a section by another name is not there. */
+    /** Opens a section of the catalogue's list, going back to the list first when another one is open. */
     pickerSection: async (section) => {
-      const tab = pop.locator('sf-button-group button', {hasText: exact(section)});
-      if (await tab.count()) await tab.first().click();
+      const back = pop.locator('.sf-editor-pop-back sf-button');
+      if (await back.count()) {
+        if ((await back.first().getAttribute('text')) === section) return;
+        await back.first().locator('button').click();
+        await settle();
+      }
+      const row = pop.locator('li[role="option"][data-section]').filter({has: page.locator(`.sf-editor-option-name[data-label="${section}"]`)});
+      if (await row.count()) await row.first().click();
       await settle();
     },
-    /** Pick an entry by name; with a variant, the variant (its type's name beside it). An option is the li itself. */
+    /**
+     * Pick an entry by name; with a variant, the variant (its type's name
+     * under it). An option is the li itself. On the list of sections the
+     * entry is found by the catalogue's search.
+     */
     pick: async (entry, variant) => {
-      const options = pop.locator('li[role="option"]');
-      const wanted = variant
-        ? options.filter({has: page.locator(`.sf-editor-option-name[data-label="${variant}"]`)}).filter({has: page.locator('.sf-editor-option-note', {hasText: exact(entry)})})
-        : options.filter({has: page.locator(`.sf-editor-option-name[data-label="${entry}"]`)});
-      if (await wanted.count()) await wanted.first().click();
+      const options = pop.locator('li[role="option"][data-item]');
+      const wanted = () => (variant
+        ? options.filter({has: page.locator(`.sf-editor-option-name[data-label="${variant}"]`)}).filter({has: page.locator('.sf-editor-option-sub', {hasText: entry})})
+        : options.filter({has: page.locator(`.sf-editor-option-name[data-label="${entry}"]`)}));
+      if (!(await wanted().count()) && (await pop.locator('sf-input input').count())) {
+        await pop.locator('sf-input input').fill(variant ?? entry);
+        await settle();
+      }
+      // A type listed only by its variants (the CTA's «Заголовок и текст») is picked by its first one.
+      const typed = options.filter({has: page.locator('.sf-editor-option-sub', {hasText: entry})});
+      if (await wanted().count()) await wanted().first().click();
+      else if (!variant && (await typed.count())) await typed.first().click();
       await settle(300);
     },
     pickerSearch: async (query) => {

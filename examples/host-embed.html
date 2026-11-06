@@ -29,8 +29,9 @@
     // The editor answers only this page's origin.
     frame.src = `../index.html?mode=page&host=${encodeURIComponent(location.origin)}`;
     let revision = 0;
+    let published = 1;
     /** What the host received: the end-to-end run reads it. */
-    window.hostDemo = {saves: [], dirty: false, errors: []};
+    window.hostDemo = {saves: [], dirty: false, errors: [], actions: []};
 
     addEventListener('message', async (event) => {
       if (event.source !== frame.contentWindow || event.origin !== location.origin) return;
@@ -38,6 +39,7 @@
       if (message.type === 'sf-editor:ready') {
         const page = await (await fetch(`page.${language}.json`)).json();
         revision = page.revision;
+        published = page.settings?.history ?? published;
         frame.contentWindow.postMessage({type: 'sf-editor:load', ...page, language}, location.origin);
       } else if (message.type === 'sf-editor:loaded') {
         state.textContent = `page loaded, revision ${message.revision}`;
@@ -49,6 +51,16 @@
         window.hostDemo.saves.push(message);
         revision += 1;
         frame.contentWindow.postMessage({type: 'sf-editor:saved', revision}, location.origin);
+      } else if (message.type === 'sf-editor:page-action') {
+        // Publishing and history are the host's. This demo publishes at once
+        // and keeps a count of versions; a real host publishes the saved
+        // revision and opens its own history.
+        window.hostDemo.actions.push(message);
+        if (message.action === 'publish') {
+          published += 1;
+          frame.contentWindow.postMessage({type: 'sf-editor:settings', settings: {published: true, history: published}}, location.origin);
+          state.textContent = `published, revision ${revision}`;
+        }
       } else if (message.type === 'sf-editor:error') {
         window.hostDemo.errors.push(message);
         state.textContent = `the editor refused the page: ${message.code}`;

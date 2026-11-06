@@ -133,7 +133,7 @@ before C2. The rollback is to revert C2: a page kept before it keeps its
 | The host gives the demo site's types (variants, renderers, editor manifests, words), the theme and the rights, and answers the source port with three demo sources | `scripts/e2e-one-editor.mjs` (S07, S09, S10, S12) |
 | Every change sf-editor sends is kept in IndexedDB and outlives a reload; a template change goes into every page; a new page takes the template; a page kept as a layout and its content opens as one Document | `scripts/e2e-shell.mjs` |
 | One bar: the page list's toggle in sf-editor's `start` slot, RU/EN in its `actions` slot, the page's name as its heading; the page list's panel (resize, ⌘\, remembered, no tab stop when closed, sliding below 1600 px) | `scripts/e2e-shell.mjs` |
-| The acceptance scenarios on the component, on `sf-editor` 1.1.0 (`pro-978d513cf4bf` over `ui-c3015f76bcc2`, 2026-11-04): 19 run, 119 checks pass, 22 known (each named by its gap or a difference of design), none failed | `scripts/e2e-one-editor.mjs`, [ONE-EDITOR.md](ONE-EDITOR.md) |
+| The acceptance scenarios on the component, on `sf-editor` 1.2.0 (`pro-4032e9f6f316` over `ui-c759b3cb3e31`, 2026-11-05): 19 run, 125 checks pass, 16 known (each named by its gap or a difference of design), none failed | `scripts/e2e-one-editor.mjs`, [ONE-EDITOR.md](ONE-EDITOR.md) |
 | axe-core at every size and scheme with nothing chosen, a block chosen, typing and the + open: no violation, and only axe's misreading of sf-editor 1.1.0's gutter hint with forced colours allowed (it draws black on white); the page never scrolls sideways | `scripts/e2e-a11y.mjs` |
 
 Repinned 2026-11-04 to `pro-bff42cdcb4f4` (`sf-editor` 1.0.2) on the same
@@ -183,6 +183,14 @@ features stand one under another on the phone, and the accent section
 `control/ui-editor/visual-parity-2026-11-04`). G-41 closed; G-20 and G-21
 narrowed; G-42 is new. See [GAPS.md](GAPS.md).
 
+Repinned 2026-11-05 to `pro-4032e9f6f316` (`sf-editor` 1.2.0) over
+`ui-c759b3cb3e31`: G-21 and G-42 closed, G-20 narrowed to «Сохранённые» and
+a block between sections; the accent section's colours, the card grid on the
+phone and the card headings came with it. The page panel is wired in both
+modes (below). On this pair the page list's `sf-menu` and `sf-resizer` stay
+undefined while the list is not displayed, so the page mode waits only for
+its own components. See [GAPS.md](GAPS.md).
+
 ## Two launch modes (owner, 2026-11-05)
 
 A host opens the editor for one concrete page; the page list is the
@@ -199,3 +207,5 @@ page's settings and the revision it was made on. The contract is
 | Nothing written to IndexedDB in this mode; an invalid Document refused with its diagnostics; the same-page API and its `sf-editor:save` event; leaving with unsaved changes asks first | `scripts/e2e-embed.mjs` |
 | Timing-hostile loads (the bundle late by up to 2.5 s, the CPU four times slower, cold and warm cache): each reaches «page loaded» with no console error, and no frame paints the pages panel or a control before its component is ready; 30 such loads pass, 6 run in every gate (`--loads`) | `scripts/e2e-embed.mjs` |
 | Without `?mode=page` the list mode is unchanged | `scripts/e2e-embed.mjs`, `scripts/e2e-shell.mjs` |
+| The page panel (`sf-editor` 1.2.0), nothing chosen: in the page mode it shows the host's settings (name, address, template, theme, publishing, history); an edit there makes the page dirty and goes back in the next save; «Опубликовать» goes to the host as `sf-editor:page-action`, and its `sf-editor:settings` answer shows without dirtying the page | `scripts/e2e-embed.mjs` |
+| In the list mode the same panel edits the local page: a new name renames it in the list and on the bar, and the settings outlive a reload in IndexedDB | `scripts/e2e-embed.mjs` |

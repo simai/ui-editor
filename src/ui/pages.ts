@@ -33,6 +33,12 @@ export interface Page {
    * follows a newer seed and the interface's language.
    */
   seed?: number;
+  /**
+   * The page's own settings beside its title (the page panel, sf-editor
+   * 1.2.0): its address, the site template and whether it is published. A
+   * page kept before them has none and takes the defaults when shown.
+   */
+  settings?: {address?: string; template?: string; published?: boolean};
 }
 
 export interface PageStore {
