@@ -38,8 +38,13 @@ for (const file of files) {
   if (/(^|\/)\.env(\.|$)/u.test(file)) problems.push(`${file}: an environment file is tracked`);
   if (!TEXT.test(file.split('/').pop())) continue;
   const lines = readFileSync(join(ROOT, file), 'utf8').split('\n');
+  // package/dist is the set's release build (the release route lays it): it
+  // bundles the pinned ui-source, whose code assigns patterns to names like
+  // TOKEN. The credential-assignment heuristic is left out there; the
+  // shaped secrets and the local paths are still checked.
+  const rules = file.startsWith('package/dist/') ? [...LOCAL, ...SECRET.filter(([, what]) => what !== 'a credential assignment')] : [...LOCAL, ...SECRET];
   lines.forEach((line, index) => {
-    for (const [pattern, what] of [...LOCAL, ...SECRET]) if (pattern.test(line)) problems.push(`${file}:${index + 1}: ${what}`);
+    for (const [pattern, what] of rules) if (pattern.test(line)) problems.push(`${file}:${index + 1}: ${what}`);
   });
 }
 // A page nobody can reach from the front page is a page nobody reads: every
