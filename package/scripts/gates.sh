@@ -17,8 +17,8 @@
 # taken from the ui checkout's git objects (never its working tree). Sibling
 # checkouts are the defaults: ../ui-source, ../ui, ../ui-builder beside this
 # repository. The overlay is package/.overlay (ignored): the browser probes
-# import Playwright, which Node resolves from the overlay's parent folders, so
-# it stays inside the checkout. Each gate's output lands in <workspace>/logs/; the summary in
+# import Playwright, which Node resolves from the overlay's parent folders up
+# to the repository's node_modules (playwright in devDependencies, npm ci). Each gate's output lands in <workspace>/logs/; the summary in
 # <workspace>/gates.json. Long: start it with nohup and read the log.
 set -eu
 here=$(cd "$(dirname "$0")/.." && pwd)
@@ -52,7 +52,12 @@ git -C "$ui" archive --format=tar "$pair_commit" distr | tar -x -C "$workspace/f
 free="$workspace/free/distr"
 build="$workspace/build"
 output="$build/wave-1/output/package/editor"
-export PLAYWRIGHT_BROWSERS_PATH=${PLAYWRIGHT_BROWSERS_PATH:-$repo/../.playwright-browsers}
+# Playwright is the repository's own (devDependencies, npm ci at the root),
+# never a node_modules in a folder above the checkout; its browser is the one
+# that Playwright version names, fetched once into the checkout (ignored).
+[ -f "$repo/node_modules/playwright/package.json" ] || { echo "playwright is not installed in $repo: run npm ci there" >&2; exit 2; }
+export PLAYWRIGHT_BROWSERS_PATH=${PLAYWRIGHT_BROWSERS_PATH:-$repo/.playwright-browsers}
+"$repo/node_modules/.bin/playwright" install chromium-headless-shell > "$logs/playwright-install.log" 2>&1 || { echo "playwright could not fetch its browser: $logs/playwright-install.log" >&2; exit 2; }
 
 step() { echo "== $1"; }
 step "build ($revision over ui-source $source_revision, pair $(basename "$lock" .lock.json))"

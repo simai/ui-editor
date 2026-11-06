@@ -11,3 +11,4 @@ dist/
 .overlay.package/
 .probe-output/
 package/stage/
+.playwright-browsers/
