@@ -1420,9 +1420,18 @@ class SfEditor extends EditorElement {
     let result;
 
     try {
+      // The canvas stands inside the editor's own page, which has its own
+      // main landmark: the Document's layout.page and a main region are
+      // drawn embedded, as <div data-sf-composition-landmark="main">
+      // (Composition render options.embedded, SIMAI Framework pair
+      // ui-0c23f6a0af12, ui-source #60). A pair before it ignores the
+      // option. The HTML a site prints (toHTML) keeps the landmarks.
       result = await _core_js_composition_index_mjs__WEBPACK_IMPORTED_MODULE_2__["default"].render(document, {
         registry: this.model.canvasRegistry,
         preview: true,
+        options: {
+          embedded: true
+        },
         resolveBinding: (binding, context) => this.previewBinding(binding, context)
       });
     } catch (error) {
@@ -1444,8 +1453,9 @@ class SfEditor extends EditorElement {
     }
 
     this.diagnostics = result.diagnostics ?? []; // A page with its own main landmark keeps its landmarks top level: the canvas around it is then no region.
+    // Drawn embedded, that main is <div data-sf-composition-landmark="main">: the page still has one.
 
-    const landmarks = Boolean(page.querySelector('main, [role="main"]'));
+    const landmarks = Boolean(page.querySelector('main, [role="main"], [data-sf-composition-landmark="main"]'));
 
     if (landmarks !== this.pageLandmarks) {
       this.pageLandmarks = landmarks;
@@ -4619,6 +4629,7 @@ module.exports = (globalThis.SF && globalThis.SF.runtimeModule ? globalThis.SF.r
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   BUILTIN_EDITOR_MANIFESTS: () => (/* binding */ BUILTIN_EDITOR_MANIFESTS),
+/* harmony export */   BUILTIN_PORT_ELEMENT_ALIASES: () => (/* reexport safe */ _routing_mjs__WEBPACK_IMPORTED_MODULE_4__.PORT_ELEMENT_ALIASES),
 /* harmony export */   BUILTIN_PORT_MANIFESTS: () => (/* binding */ BUILTIN_PORT_MANIFESTS),
 /* harmony export */   BUILTIN_TYPE_MANIFESTS: () => (/* binding */ BUILTIN_TYPE_MANIFESTS),
 /* harmony export */   CONTENT_ALERT_APPEARANCES: () => (/* binding */ CONTENT_ALERT_APPEARANCES),
@@ -4627,12 +4638,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CONTENT_ITEM_PARENTS: () => (/* binding */ CONTENT_ITEM_PARENTS),
 /* harmony export */   CONTENT_RATIOS: () => (/* binding */ CONTENT_RATIOS),
 /* harmony export */   CONTENT_TABLE_HEADERS: () => (/* binding */ CONTENT_TABLE_HEADERS),
+/* harmony export */   PORT_MANIFEST_SF_TABLE_1_0_0: () => (/* binding */ PORT_MANIFEST_SF_TABLE_1_0_0),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var _inline_model_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("e66d878fb4f8");
 /* harmony import */ var _regions_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("68efac8c1b57");
 /* harmony import */ var _schema_name_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("ac24888e7d3e");
 /* harmony import */ var _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("18b9c76994c9");
+/* harmony import */ var _routing_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("4aea5d6d49c7");
 
 
 
@@ -5464,18 +5477,48 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
 // Published typed ports. Framework owns the element protocol; the product owns
 // what a request means, data access and authorization.
 //
-// sf-table answers this port and lives in the SIMAI Framework Pro package since
-// 2026-10-11 (the component folder in simai/ui-pro, package pro). The port stays
-// here: it is a public contract of the free Framework (composition-ports.v1.json,
-// the routing contract lock), and the package's tests read it from this file in
-// their overlay of ui-source.
+// The list port is answered by sf-view-table (formerly sf-table), which lives
+// in the SIMAI Framework Pro package since 2026-10-11 (the component folder in
+// simai/ui-pro, package pro). The port stays here: it is a public contract of
+// the free Framework (composition-ports.v1.json, the routing contract lock), and
+// the package's tests read it from this file in their overlay of ui-source.
+
+// The list port as the routing contract 1.0.0 published it, under the former
+// tag. Frozen: its bytes are pinned by the lock (port:sf-table@1.0.0), so a
+// consumer that pinned 1.0.0 stays valid. Not registered by default.
+const PORT_MANIFEST_SF_TABLE_1_0_0 = Object.freeze({
+  ...(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_2__.schemaFields)('simai.composition.port-manifest', 1),
+  element: 'sf-table',
+  version: '1.0.0',
+  component: 'smart.data-view',
+  component_version: '1.2.0',
+  outputs: {
+    selection: {
+      value: 'record-ids.v1',
+      summary: 'Explicit current-result selection of this instance, emitted once per change, including clearing.',
+    },
+  },
+  inputs: {
+    context: {
+      value: 'record-ids.v1',
+      effect: 'request',
+      summary: 'Restricts this collection to records related to the given identities. The table clears its selection, enters loading and emits sf-table-query-intent with the route sequence; the host resolves the relation and access and answers with applyQueryResult.',
+      request_event: 'sf-table-query-intent',
+      result_method: 'applyQueryResult',
+    },
+  },
+});
+
+// 1.1.0 (2026-11-07): the same ports under the element's own tag sf-view-table
+// (sf-view-table 1.14.0, rename plan R2) and its query event; values and
+// effects unchanged.
 const BUILTIN_PORT_MANIFESTS = Object.freeze([
   {
     ...(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_2__.schemaFields)('simai.composition.port-manifest', 1),
-    element: 'sf-table',
-    version: '1.0.0',
-    component: 'smart.data-view',
-    component_version: '1.2.0',
+    element: 'sf-view-table',
+    version: '1.1.0',
+    component: 'smart.view-table',
+    component_version: '1.14.0',
     outputs: {
       selection: {
         value: 'record-ids.v1',
@@ -5486,13 +5529,17 @@ const BUILTIN_PORT_MANIFESTS = Object.freeze([
       context: {
         value: 'record-ids.v1',
         effect: 'request',
-        summary: 'Restricts this collection to records related to the given identities. The table clears its selection, enters loading and emits sf-table-query-intent with the route sequence; the host resolves the relation and access and answers with applyQueryResult.',
-        request_event: 'sf-table-query-intent',
+        summary: 'Restricts this collection to records related to the given identities. The table clears its selection, enters loading and emits sf-view-table-query with the route sequence; the host resolves the relation and access and answers with applyQueryResult.',
+        request_event: 'sf-view-table-query',
         result_method: 'applyQueryResult',
       },
     },
   },
 ]);
+
+// Former port element names (routing.mjs PORT_ELEMENT_ALIASES): a binding to
+// sf-table finds the sf-view-table manifest until the record's remove_after.
+
 
 
 
@@ -8438,13 +8485,17 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "text": {
           "default": "",
           "type": "string"
+        },
+        "tight": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "type": "object"
     },
     "kind": "custom-element",
     "manifest": "smart.badge",
-    "version": "1.2.1"
+    "version": "1.3.1"
   },
   "sf-button": {
     "inputs": {
@@ -8472,6 +8523,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "expanded": {
           "default": false,
           "type": "boolean"
+        },
+        "form": {
+          "default": "",
+          "type": "string"
         },
         "href": {
           "default": "",
@@ -8501,6 +8556,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": false,
           "type": "boolean"
         },
+        "name": {
+          "default": "",
+          "type": "string"
+        },
         "native-type": {
           "default": "button",
           "enum": [
@@ -8522,6 +8581,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "square",
             "rounded"
           ],
+          "type": "string"
+        },
+        "rel": {
+          "default": "",
           "type": "string"
         },
         "scheme": {
@@ -8581,6 +8644,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           ],
           "type": "string"
         },
+        "target": {
+          "default": "",
+          "type": "string"
+        },
         "text": {
           "default": "",
           "type": "string"
@@ -8594,13 +8661,21 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "justify"
           ],
           "type": "string"
+        },
+        "text-pressed": {
+          "default": "",
+          "type": "string"
+        },
+        "value": {
+          "default": "",
+          "type": "string"
         }
       },
       "type": "object"
     },
     "kind": "custom-element",
     "manifest": "smart.button",
-    "version": "1.4.0"
+    "version": "1.7.0"
   },
   "sf-button-icon": {
     "inputs": {
@@ -8657,6 +8732,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "icon",
             "close"
           ],
+          "type": "string"
+        },
+        "label-pressed": {
+          "default": "",
           "type": "string"
         },
         "loading": {
@@ -8740,7 +8819,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.button-icon",
-    "version": "1.4.0"
+    "version": "1.5.2"
   },
   "sf-checkbox": {
     "inputs": {
@@ -8931,7 +9010,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.dropdown",
-    "version": "1.6.0"
+    "version": "1.7.0"
   },
   "sf-icon": {
     "inputs": {
@@ -9016,7 +9095,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.icon",
-    "version": "1.1.5"
+    "version": "1.1.6"
   },
   "sf-input": {
     "inputs": {
@@ -9079,7 +9158,8 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "password",
             "search",
             "tel",
-            "url"
+            "url",
+            "number"
           ],
           "type": "string"
         },
@@ -9126,7 +9206,15 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "max": {
+          "default": "",
+          "type": "string"
+        },
         "maxlength": {
+          "default": "",
+          "type": "string"
+        },
+        "min": {
           "default": "",
           "type": "string"
         },
@@ -9167,6 +9255,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           ],
           "type": "string"
         },
+        "step": {
+          "default": "",
+          "type": "string"
+        },
         "text-end": {
           "default": "",
           "type": "string"
@@ -9180,7 +9272,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.input",
-    "version": "1.4.4"
+    "version": "1.5.0"
   },
   "sf-input-textarea": {
     "inputs": {
@@ -9389,7 +9481,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.switch",
-    "version": "1.2.3"
+    "version": "1.3.0"
   }
 });
 
@@ -9823,7 +9915,9 @@ function fieldKindRegistry() {
 __webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   FILE_ICONS: () => (/* binding */ FILE_ICONS),
 /* harmony export */   FILE_SIZE_UNITS: () => (/* reexport safe */ _format_js__WEBPACK_IMPORTED_MODULE_0__.FILE_SIZE_UNITS),
+/* harmony export */   fileIcon: () => (/* binding */ fileIcon),
 /* harmony export */   fileNameFromAddress: () => (/* binding */ fileNameFromAddress),
 /* harmony export */   fileSizeUnits: () => (/* reexport safe */ _format_js__WEBPACK_IMPORTED_MODULE_0__.fileSizeUnits),
 /* harmony export */   formatFileSize: () => (/* reexport safe */ _format_js__WEBPACK_IMPORTED_MODULE_0__.formatFileSize)
@@ -9855,6 +9949,28 @@ function fileNameFromAddress(href) {
   } catch {
     return tail;
   }
+}
+
+// The icon of a file's kind, by its media type: sf-download-file's own glyph
+// (download) when the type says nothing a reader would recognise. The
+// Composition renderer draws content.file with it; an editor that draws the
+// same row (sf-content-editor) imports it from here rather than keeping a copy.
+// Each entry is [pattern, icon]; the first pattern that matches wins.
+const FILE_ICONS = Object.freeze([
+  [/^application\/pdf$/u, 'picture_as_pdf'],
+  [/^image\//u, 'image'],
+  [/^video\//u, 'movie'],
+  [/^audio\//u, 'audio_file'],
+  [/^application\/(?:zip|x-zip-compressed|x-7z-compressed|x-rar-compressed|vnd\.rar|x-tar|gzip|x-gzip)$/u, 'folder_zip'],
+  [/^(?:text\/csv|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.spreadsheetml\.[a-z.]+|application\/vnd\.oasis\.opendocument\.spreadsheet)$/u, 'table_chart'],
+  [/^(?:application\/vnd\.ms-powerpoint|application\/vnd\.openxmlformats-officedocument\.presentationml\.[a-z.]+|application\/vnd\.oasis\.opendocument\.presentation)$/u, 'slideshow'],
+  [/^(?:text\/|application\/msword$|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.[a-z.]+$|application\/vnd\.oasis\.opendocument\.text$|application\/rtf$)/u, 'description'],
+].map((entry) => Object.freeze(entry)));
+
+// The icon name for a media type; download when there is none or nothing matches.
+function fileIcon(mime) {
+  if (typeof mime !== 'string' || !mime) return 'download';
+  return FILE_ICONS.find(([pattern]) => pattern.test(mime))?.[1] ?? 'download';
 }
 
 __webpack_async_result__();
@@ -11306,6 +11422,17 @@ function validUrl(value) {
   }
 }
 
+// A picture the host keeps in the browser (IndexedDB, before a server store)
+// is shown from an object URL. Such an address is only ever one a host's
+// resolveSource gave at render (simai/ui-source#71), never one a Document
+// stores, and only of the page's own origin: a blob: address is the page's.
+function hostBlobUrl(value) {
+  const match = /^blob:(https?:\/\/[^/]+)\//u.exec(String(value));
+  if (!match) return false;
+  const origin = globalThis.location?.origin;
+  return !origin || origin === 'null' || origin === match[1];
+}
+
 function validateInlineContent(value, path, diagnostics) {
   if (!Array.isArray(value)) return;
   for (let index = 0; index < value.length; index += 1) {
@@ -11347,12 +11474,14 @@ function inlineFields(node, path) {
 // Content rules beyond a type's own schema: links and image sources follow the
 // Document's URL rule, an item type stands only in its own parent, and a
 // layout holds at most one outlet.
-function validateContentRules(root, diagnostics) {
+function validateContentRules(root, diagnostics, { hostSources = false } = {}) {
   let outlets = 0;
   const visit = (node, path, parentType) => {
     if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(node)) return;
     for (const [content, contentPath] of inlineFields(node, path)) validateInlineContent(content, contentPath, diagnostics);
-    if ((node.type === 'content.figure' || node.type === 'content.media') && typeof node.data?.src === 'string' && !validUrl(node.data.src)) {
+    // With a host source resolver the stored name is the host's (media:<id>),
+    // and the address it resolves to is checked where it is drawn.
+    if ((node.type === 'content.figure' || node.type === 'content.media') && typeof node.data?.src === 'string' && !hostSources && !validUrl(node.data.src)) {
       diagnostics.push(diagnostic('unsafe_url', `${path}.data.src`, 'Image source protocol is not allowed'));
     }
     if (node.type === 'element.button' && typeof node.data?.href === 'string' && !validUrl(node.data.href)) {
@@ -11459,6 +11588,30 @@ function compositionTypeFromSmartManifest(manifest) {
   };
 }
 
+// How a node of an unregistered type is met: 'refuse' (the default, type_unknown
+// makes the Document invalid) or 'placeholder' (G-32).
+const UNKNOWN_MODES = new Set(['refuse', 'placeholder']);
+function unknownAsPlaceholder(options) {
+  const mode = options?.unknown ?? 'refuse';
+  if (!UNKNOWN_MODES.has(mode)) throw new TypeError(`composition_unknown_mode_invalid:${String(mode)}`);
+  return mode === 'placeholder';
+}
+
+// options.embedded (simai/ui-source#60): the Document is drawn inside a host
+// page that holds its own main landmark -- an editor's canvas. layout.page and
+// a main layout.region are drawn as plain elements marked
+// data-sf-composition-landmark="main", so the page keeps one main. The default,
+// false, is what a publishing host keeps; anything but a boolean throws.
+function renderEmbedded(options) {
+  const embedded = options?.embedded === undefined ? false : options.embedded;
+  if (typeof embedded !== 'boolean') throw new TypeError(`composition_embedded_invalid:${String(embedded)}`);
+  return embedded;
+}
+
+// The placeholder of a node whose type the host does not know: its type as
+// text, its id kept for the editor's selection, nothing of its data or slots.
+const unknownPlaceholder = (node) => `<div class="sf-composition-unknown" role="note" data-sf-composition-type="${escapeHtml(node.type)}" data-sf-composition-id="${escapeHtml(node.id)}">${escapeHtml(node.type)}</div>`;
+
 function validate(document, registry = undefined, options = {}) {
   const diagnostics = [];
   const notices = [];
@@ -11497,7 +11650,13 @@ function validate(document, registry = undefined, options = {}) {
     else ids.add(node.id);
     const manifest = resolvedRegistry.types.get(node.type);
     if (!manifest) {
-      diagnostics.push(diagnostic('type_unknown', `${path}.type`, `Unknown type ${node.type || ''}`));
+      // unknown: 'placeholder' (G-32, for an editor's canvas): a node of a
+      // type this host does not know is a notice, not a refusal; render draws
+      // it as a placeholder and the rest of the page. Its own data and slots
+      // are left unread. The default stays strict: a publishing host refuses.
+      const unknown = diagnostic('type_unknown', `${path}.type`, `Unknown type ${node.type || ''}`);
+      if (unknownAsPlaceholder(options) && typeof node.type === 'string' && node.type) notices.push(unknown);
+      else diagnostics.push(unknown);
       return;
     }
     if (!manifest.profiles.includes(document.profile)) diagnostics.push(diagnostic('type_profile_unsupported', `${path}.type`, `${node.type} does not support ${document.profile}`));
@@ -11581,7 +11740,7 @@ function validate(document, registry = undefined, options = {}) {
   if (nodeCount > limits.maxNodes) diagnostics.push(diagnostic('node_limit', '$.root', 'Composition has too many nodes'));
   else {
     (0,_regions_mjs__WEBPACK_IMPORTED_MODULE_9__.validateRegionRules)(document.root, resolvedRegistry, diagnostics);
-    validateContentRules(document.root, diagnostics);
+    validateContentRules(document.root, diagnostics, { hostSources: typeof options.resolveSource === 'function' });
     (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_11__.resolveRoutes)(document.root, resolvedRegistry, normalizePorts(options.ports), diagnostics);
     (0,_data_mjs__WEBPACK_IMPORTED_MODULE_18__.validateDataRules)(document.root, resolvedRegistry, options.shapes, diagnostics);
   }
@@ -11657,23 +11816,6 @@ function renderImage(data) {
   return `<img src="${escapeHtml(data.src)}" alt="${escapeHtml(data.alt)}"${size} loading="lazy" decoding="async">`;
 }
 
-// The icon of a file's kind, by its media type: sf-download-file's own glyph
-// when the type says nothing a reader would recognise.
-const FILE_ICONS = [
-  [/^application\/pdf$/u, 'picture_as_pdf'],
-  [/^image\//u, 'image'],
-  [/^video\//u, 'movie'],
-  [/^audio\//u, 'audio_file'],
-  [/^application\/(?:zip|x-zip-compressed|x-7z-compressed|x-rar-compressed|vnd\.rar|x-tar|gzip|x-gzip)$/u, 'folder_zip'],
-  [/^(?:text\/csv|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.spreadsheetml\.[a-z.]+|application\/vnd\.oasis\.opendocument\.spreadsheet)$/u, 'table_chart'],
-  [/^(?:application\/vnd\.ms-powerpoint|application\/vnd\.openxmlformats-officedocument\.presentationml\.[a-z.]+|application\/vnd\.oasis\.opendocument\.presentation)$/u, 'slideshow'],
-  [/^(?:text\/|application\/msword$|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.[a-z.]+$|application\/vnd\.oasis\.opendocument\.text$|application\/rtf$)/u, 'description'],
-];
-function fileIcon(mime) {
-  if (typeof mime !== 'string' || !mime) return 'download';
-  return FILE_ICONS.find(([pattern]) => pattern.test(mime))?.[1] ?? 'download';
-}
-
 // sf-download-file's row, drawn as a plain link: it downloads with no script,
 // the name falls back to the address's last part, and the size reads in the
 // Document's language.
@@ -11683,7 +11825,7 @@ function renderFile(node, locale) {
   const type = mime ? ` type="${escapeHtml(mime)}"` : '';
   const sizeText = Number.isInteger(size) ? (0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_3__.formatFileSize)(size, (0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_3__.fileSizeUnits)(locale), locale) : '';
   const sizePart = sizeText ? `<span class="sf-download-file__size sf-download-file-file-size">${escapeHtml(sizeText)}</span>` : '';
-  return `<a class="sf-download-file" href="${escapeHtml(href)}" download${type}${id(node)}><span class="sf-download-file__body sf-download-file-wrap"><span class="sf-download-file__main sf-download-file-container"><i class="sf-download-file__icon sf-icon" aria-hidden="true">${fileIcon(mime)}</i><span class="sf-download-file__name sf-download-file-file-name">${escapeHtml(name)}</span></span>${sizePart}</span></a>`;
+  return `<a class="sf-download-file" href="${escapeHtml(href)}" download${type}${id(node)}><span class="sf-download-file__body sf-download-file-wrap"><span class="sf-download-file__main sf-download-file-container"><i class="sf-download-file__icon sf-icon" aria-hidden="true">${(0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_3__.fileIcon)(mime)}</i><span class="sf-download-file__name sf-download-file-file-name">${escapeHtml(name)}</span></span>${sizePart}</span></a>`;
 }
 
 function renderTable(node) {
@@ -11785,7 +11927,12 @@ function rhythm(props) {
 }
 
 const BUILTIN_RENDERERS = {
-  'layout.page': ({ node, slots }) => `<main data-sf-composition-id="${escapeHtml(node.id)}">${slots.default || ''}</main>`,
+  // A page is the document's main landmark; drawn embedded (options.embedded,
+  // a host's canvas inside the host's own main) it is a plain element that
+  // names the landmark it stands for (simai/ui-source#60).
+  'layout.page': ({ node, slots, context }) => (renderEmbedded(context?.options)
+    ? `<div data-sf-composition-landmark="main" data-sf-composition-id="${escapeHtml(node.id)}">${slots.default || ''}</div>`
+    : `<main data-sf-composition-id="${escapeHtml(node.id)}">${slots.default || ''}</main>`),
   'layout.section': ({ node, slots, manifest }) => {
     // 1.1.0: a section given a width or columns draws the frame and content
     // parts its parameter sets place classes on. 1.2.0: its width defaults to
@@ -11807,12 +11954,15 @@ const BUILTIN_RENDERERS = {
   'content.heading': ({ node }) => `<h${node.data.level || 2} data-sf-composition-id="${escapeHtml(node.id)}">${renderInline(node.data.content)}</h${node.data.level || 2}>`,
   'content.paragraph': ({ node }) => `<p data-sf-composition-id="${escapeHtml(node.id)}">${renderInline(node.data.content)}</p>`,
   'layout.regions': ({ node, slots }) => `<div class="sf-composition-regions" data-sf-composition-id="${escapeHtml(node.id)}"><div class="sf-composition-regions-grid">${slots.regions || ''}</div></div>`,
-  'layout.region': ({ node, slots }) => {
+  'layout.region': ({ node, slots, context }) => {
     const props = node.props;
-    const element = _regions_mjs__WEBPACK_IMPORTED_MODULE_9__.REGION_ELEMENTS[props.landmark];
+    // Embedded, the main region is a plain element too: the host's page holds the one main.
+    const embeddedMain = props.landmark === 'main' && renderEmbedded(context?.options);
+    const element = embeddedMain ? 'div' : _regions_mjs__WEBPACK_IMPORTED_MODULE_9__.REGION_ELEMENTS[props.landmark];
+    const landmark = embeddedMain ? ' data-sf-composition-landmark="main"' : '';
     const sticky = props.sticky === true ? ' data-sf-region-sticky=""' : '';
     const label = props.label !== undefined ? ` aria-label="${escapeHtml(props.label)}"` : '';
-    return `<${element} class="sf-composition-region" data-sf-composition-id="${escapeHtml(node.id)}" data-sf-region="${escapeHtml(props.name)}" data-sf-region-placement="${escapeHtml(props.placement ?? 'block')}"${sticky}${label}>${slots.default || ''}</${element}>`;
+    return `<${element} class="sf-composition-region" data-sf-composition-id="${escapeHtml(node.id)}" data-sf-region="${escapeHtml(props.name)}" data-sf-region-placement="${escapeHtml(props.placement ?? 'block')}"${landmark}${sticky}${label}>${slots.default || ''}</${element}>`;
   },
   'layout.scope': ({ node, slots, routes }) => `<sf-composition-scope data-sf-composition-id="${escapeHtml(node.id)}" data-sf-routes="${escapeHtml((0,_routing_mjs__WEBPACK_IMPORTED_MODULE_11__.routesAttribute)(routes || []))}">${slots.default || ''}</sf-composition-scope>`,
   'layout.area': ({ node, slots }) => `<div data-sf-composition-area=""${id(node)}>${slots.default || ''}</div>`,
@@ -11982,9 +12132,18 @@ const BUILTIN_RENDERERS = {
   'content.outlet': ({ node, outlet }) => `<div data-sf-outlet=""${id(node)}>${outlet || ''}</div>`,
 };
 
+// context.resolveSource(src, {node}) → address: a host that keeps pictures
+// itself names them in content.figure and content.media (media:<id>) and gives
+// the address to draw at render, which may be a blob: address of the page's
+// origin (simai/ui-source#71). The address is held to the Document's URL rule
+// with that one addition; one that fails it draws nothing and is reported.
+const HOST_SOURCE_TYPES = new Set(['content.figure', 'content.media']);
+
 async function render(document, context = {}) {
   const registry = normalizeRegistry(context.registry);
-  const normalized = await normalize(document, registry, context.options || {});
+  renderEmbedded(context.options);
+  const resolveSource = typeof context.resolveSource === 'function' ? context.resolveSource : null;
+  const normalized = await normalize(document, registry, { ...(context.options || {}), ...(resolveSource ? { resolveSource } : {}) });
   if (!normalized.document) return { html: '', assets: [], hydration: [], diagnostics: normalized.diagnostics, digest: null };
   const diagnostics = [];
   const notices = [...(normalized.notices || [])].filter((entry) => !entry.code.startsWith('modifier'));
@@ -12014,8 +12173,20 @@ async function render(document, context = {}) {
   // part prints `container`). A frame inside one takes container-flush, so a
   // container in a section has no second gutter; a breakout leaves the
   // container and its own frame keeps the gutter (2026-11-04).
-  const renderNode = async (node, depth = 0, inside = false) => {
+  const renderNode = async (given, depth = 0, inside = false) => {
+    let node = given;
+    if (resolveSource && HOST_SOURCE_TYPES.has(node.type) && typeof node.data?.src === 'string') {
+      const address = await resolveSource(node.data.src, { node });
+      if (typeof address !== 'string' || !(validUrl(address) || hostBlobUrl(address))) {
+        diagnostics.push(diagnostic('unsafe_url', `node:${node.id}.data.src`, 'The resolved image source is not allowed'));
+        return '';
+      }
+      node = { ...node, data: { ...node.data, src: address } };
+    }
     const manifest = registry.types.get(node.type);
+    // Only reached under unknown: 'placeholder' (validate's notice says
+    // which node); normalize refused the Document otherwise.
+    if (!manifest) return unknownPlaceholder(node);
     // A site block draws its type's current tree with the instance's values
     // and texts (composed.mjs); the instance stays one node of the Document.
     if ((0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.isComposed)(manifest)) {
@@ -14463,6 +14634,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   CompositionRouteController: () => (/* binding */ CompositionRouteController),
 /* harmony export */   ENDPOINT_EXTENSION: () => (/* binding */ ENDPOINT_EXTENSION),
+/* harmony export */   PORT_ELEMENT_ALIASES: () => (/* binding */ PORT_ELEMENT_ALIASES),
 /* harmony export */   PORT_OUTPUT_EVENT: () => (/* binding */ PORT_OUTPUT_EVENT),
 /* harmony export */   ROUTE_STATE_EVENT: () => (/* binding */ ROUTE_STATE_EVENT),
 /* harmony export */   ROUTING_LIMITS: () => (/* binding */ ROUTING_LIMITS),
@@ -14473,6 +14645,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   defineCompositionScope: () => (/* binding */ defineCompositionScope),
 /* harmony export */   endpointName: () => (/* binding */ endpointName),
 /* harmony export */   parseRoutesAttribute: () => (/* binding */ parseRoutesAttribute),
+/* harmony export */   portManifestFor: () => (/* binding */ portManifestFor),
 /* harmony export */   portsForType: () => (/* binding */ portsForType),
 /* harmony export */   resolveRoutes: () => (/* binding */ resolveRoutes),
 /* harmony export */   routesAttribute: () => (/* binding */ routesAttribute),
@@ -14711,6 +14884,15 @@ function checkPortValue(valueType, value) {
   return checked;
 }
 
+// Former port element names, each read as its new name until remove_after
+// (change journal port-element-sf-table-to-sf-view-table, beside the tag
+// record tag-sf-table-to-sf-view-table): a binding to sf-table, or a type
+// drawn by the custom element sf-table, finds the sf-view-table manifest.
+// A registry given a manifest under the old name itself keeps that manifest.
+const PORT_ELEMENT_ALIASES = Object.freeze({
+  'sf-table': Object.freeze({ to: 'sf-view-table', journal: 'port-element-sf-table-to-sf-view-table', remove_after: '2027-01-01' }),
+});
+
 function createPortRegistry(manifests = [], options = {}) {
   const elements = new Map();
   for (const manifest of manifests) {
@@ -14722,18 +14904,29 @@ function createPortRegistry(manifests = [], options = {}) {
     }
     elements.set(manifest.element, (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_0__.canonical)(manifest));
   }
+  // An alias stands only where its new name is registered and its old name is not.
+  const aliases = new Map(Object.entries(options.aliases ?? PORT_ELEMENT_ALIASES)
+    .map(([from, entry]) => [from, typeof entry === 'string' ? entry : entry?.to])
+    .filter(([from, to]) => typeof to === 'string' && elements.has(to) && !elements.has(from)));
   const bindings = new Map(Object.entries(options.bindings || {}));
   for (const [type, element] of bindings) {
-    if (!elements.has(element)) throw new TypeError(`composition_port_binding_unknown:${type}`);
+    if (!elements.has(element) && !aliases.has(element)) throw new TypeError(`composition_port_binding_unknown:${type}`);
   }
-  return { elements, bindings };
+  return { elements, bindings, aliases };
+}
+
+// The manifest a port registry holds for an element name, a former name read
+// as its new one (PORT_ELEMENT_ALIASES).
+function portManifestFor(ports, element) {
+  if (!ports || typeof element !== 'string') return null;
+  return ports.elements.get(element) || ports.elements.get(ports.aliases?.get(element)) || null;
 }
 
 function portsForType(typeManifest, ports) {
   if (!typeManifest || !ports) return null;
   const bound = ports.bindings.get(typeManifest.type);
-  if (bound) return ports.elements.get(bound) || null;
-  if (typeManifest.renderer?.kind === 'custom-element') return ports.elements.get(typeManifest.renderer.name) || null;
+  if (bound) return portManifestFor(ports, bound);
+  if (typeManifest.renderer?.kind === 'custom-element') return portManifestFor(ports, typeManifest.renderer.name);
   return null;
 }
 
@@ -17710,7 +17903,7 @@ function within(root, ancestorId, id) {
 /***/ "b1c5d4f6dddd"
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.2.0","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"host-states":{},"css-variables":{}}');
+module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.2.1","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"host-states":{},"css-variables":{}}');
 
 /***/ },
 
