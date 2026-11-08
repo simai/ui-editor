@@ -15,8 +15,9 @@ test("the set's editor is generated into the searchable registry beside the free
   const registry = JSON.parse(readFileSync(new URL("../contracts/generated/smart-component-contract-registry.json", import.meta.url), "utf8"));
   assert.equal(registry.schema, "simai.smart-component-contract-registry.v2");
   // The free registry's Smart components at the pinned revision (71 at
-  // ec2f29df) and the set's one, sf-editor, make 72.
-  assert.equal(registry.entries.length, 72);
+  // ec2f29df) and the set's one, sf-editor, make 72. At da48ba8f (pair
+  // ui-0c23f6a0af12) the free registry holds 81: 82.
+  assert.equal(registry.entries.length, 82);
   assert.ok(registry.entries.some((entry) => entry.id === "smart.editor"), "smart.editor");
   assert.ok(registry.entries.every(({contract_schema}) => contract_schema.version === 2));
 });
@@ -24,6 +25,6 @@ test("the set's editor is generated into the searchable registry beside the free
 test("CLI describes and verifies sf-editor", () => {
   const packet = JSON.parse(run("describe", "smart.editor", "--format", "ai"));
   assert.equal(packet.public_abi.custom_element, "sf-editor");
-  assert.equal(packet.identity.version, "1.2.0");
+  assert.equal(packet.identity.version, "1.2.1");
   assert.deepEqual(JSON.parse(run("verify", "smart.editor")), {ok: true, verified: ["smart.editor"]});
 });

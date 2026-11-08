@@ -361,9 +361,16 @@ class SfEditor extends EditorElement {
         const {document, hidden} = this.model.canvasDocument(this.breakpoint);
         let result;
         try {
+            // The canvas stands inside the editor's own page, which has its own
+            // main landmark: the Document's layout.page and a main region are
+            // drawn embedded, as <div data-sf-composition-landmark="main">
+            // (Composition render options.embedded, SIMAI Framework pair
+            // ui-0c23f6a0af12, ui-source #60). A pair before it ignores the
+            // option. The HTML a site prints (toHTML) keeps the landmarks.
             result = await Composition.render(document, {
                 registry: this.model.canvasRegistry,
                 preview: true,
+                options: {embedded: true},
                 resolveBinding: (binding, context) => this.previewBinding(binding, context),
             });
         } catch (error) {
