@@ -545,7 +545,7 @@
     "source_artifacts": [
       {
         "path": "src/smart/editor/index.js",
-        "sha256": "9a0abfd3da4738fea0e0085295fc8aa206234bfbf0892567d6003682a4e73dfe"
+        "sha256": "356c9e22b660d4da1438016c3e47d86378a10e343ba2d15c6e76076ef92b9783"
       },
       {
         "path": "src/smart/editor/js/model.mjs",
@@ -577,7 +577,7 @@
       },
       {
         "path": "src/smart/editor/component.json",
-        "sha256": "3f64c2753872f892ff74b802b1a0ddbc001c61764cc85160af71ac3d6ec2cf03"
+        "sha256": "3697fb641463088717fd9029198adbe84d41089c81fb0c6aad2e39defe2b4b41"
       },
       {
         "path": "src/smart/editor/lang/en.json",

@@ -384,7 +384,8 @@ class SfEditor extends EditorElement {
         }
         this.diagnostics = result.diagnostics ?? [];
         // A page with its own main landmark keeps its landmarks top level: the canvas around it is then no region.
-        const landmarks = Boolean(page.querySelector('main, [role="main"]'));
+        // Drawn embedded, that main is <div data-sf-composition-landmark="main">: the page still has one.
+        const landmarks = Boolean(page.querySelector('main, [role="main"], [data-sf-composition-landmark="main"]'));
         if (landmarks !== this.pageLandmarks) {
             this.pageLandmarks = landmarks;
             this.refresh();

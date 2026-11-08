@@ -458,7 +458,7 @@
     "theme: read only; its defaults are a level of origin, its attributes go on the drawn page.",
     "data: a block never fetches; the host's source port (connect-port {sources, fields, preview, saveBlock?}) is wrapped by createSourcePort and only previews and lists sources.",
     "storage: none. Every change is a change event with the whole Document; site blocks go out in block-save.",
-    "version 1.2.1 (2026-11-08): a patch (accessibility). The canvas draws the page Document with Composition render options.embedded (SIMAI Framework pair ui-0c23f6a0af12, ui-source #60), so the page's layout.page and a main region become <div data-sf-composition-landmark=\"main\"> inside the editor's own page instead of a second, nested main (axe landmark-main-is-top-level, landmark-no-duplicate-main). toHTML, the HTML a site prints, keeps the landmarks. A pair before it ignores the option. Settings, values and events are unchanged."
+    "version 1.2.1 (2026-11-08): a patch (accessibility). The canvas draws the page Document with Composition render options.embedded (SIMAI Framework pair ui-0c23f6a0af12, ui-source #60), so the page's layout.page and a main region become <div data-sf-composition-landmark=\"main\"> inside the editor's own page instead of a second, nested main (axe landmark-main-is-top-level, landmark-no-duplicate-main). The canvas still counts that div as the page's main landmark, so around such a page it stays an unnamed group and the page's landmarks stay top level, as before. toHTML, the HTML a site prints, keeps the landmarks. A pair before it ignores the option. Settings, values and events are unchanged."
   ],
   "x-rule": {
     "$comment": [
