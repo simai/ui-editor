@@ -448,6 +448,7 @@ try {
         const group = row?.querySelector('.sf-button-group');
         const segments = [...(group?.querySelectorAll('.sf-button-group-segment') ?? [])];
         const active = segments.find((segment) => segment.classList.contains('active'));
+        const plate = group?.querySelector('.sf-button-group-plate');
         const probe = document.createElement('span');
         probe.style.color = 'var(--sf-primary)';
         right.append(probe);
@@ -455,7 +456,14 @@ try {
         probe.remove();
         return {
           labels: segments.map((segment) => segment.textContent.trim()), active: active?.textContent.trim(),
-          activeFill: active ? getComputedStyle(active).backgroundColor : '', activeShadow: active ? getComputedStyle(active).boxShadow : '', primary,
+          // Since sf-segmented 1.4.0 (pair ui-d6f01121baca, D11c) the track draws the
+          // choice as one plate under the chosen segment, not as the segment's fill.
+          activeFill: plate ? getComputedStyle(plate).backgroundColor : '', activeShadow: plate ? getComputedStyle(plate).boxShadow : '', primary,
+          plateUnderActive: (() => {
+            const a = active?.getBoundingClientRect();
+            const p = plate?.getBoundingClientRect();
+            return Boolean(a && p) && Math.abs(a.left - p.left) <= 1 && Math.abs(a.width - p.width) <= 1;
+          })(),
           height: group ? Math.round(group.getBoundingClientRect().height) : 0,
           more: Boolean(row?.querySelector('.sf-editor-more-steps')),
           sameRow: (() => {
@@ -468,7 +476,7 @@ try {
       });
       if (level) {
         check(`8 ${label}: the heading level is H1–H3 with the rest behind «ещё»`, level.labels.join() === 'H1,H2,H3' && level.active === 'H2' && level.more && level.sameRow, level);
-        check(`8 ${label}: the switch is light: the chosen segment a raised surface with a shadow, no primary fill anywhere`, level.activeFill !== level.primary && level.activeShadow !== 'none' && level.primaryPlates === 0 && level.height === bar.control, level);
+        check(`8 ${label}: the switch is light: the chosen segment a raised surface with a shadow, no primary fill anywhere`, level.activeFill !== level.primary && level.activeFill !== 'rgba(0, 0, 0, 0)' && level.activeShadow !== 'none' && level.plateUnderActive && level.primaryPlates === 0 && level.height === bar.control, level);
         const panel = await tab.evaluate(() => {
           const right = document.querySelector('#editor .sf-editor-right');
           const cards = [...right.querySelectorAll('.sf-editor-card')];
