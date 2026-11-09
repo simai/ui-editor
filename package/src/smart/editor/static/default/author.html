@@ -8,13 +8,13 @@
 
 
 <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="undo" aria-label="Отменить" title="Отменить (⌘Z)" disabled style="display: contents;">
-<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--ghost flex items-cross-center sf-icon-button--on-surface-variant sf-icon-button--on-surface" disabled aria-label="Отменить" title="Отменить (⌘Z)" data-sf-static>
+<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--link flex items-cross-center sf-icon-button--on-surface-variant sf-icon-button--on-surface" disabled aria-label="Отменить" title="Отменить (⌘Z)" data-sf-static>
 
 <sf-icon root-class="pointer-event-none" weight="400" aria-hidden="true" filled="false" icon="undo" style="display: contents;"><i class="sf-icon sf-icon--weight-regular pointer-event-none" style="--sf-icon--grade:0;--sf-icon--optical-size:24" aria-hidden="true" data-sf-static>undo</i></sf-icon>
 </button>
 </sf-button-icon>
 <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="redo" aria-label="Повторить" title="Повторить (⇧⌘Z)" disabled style="display: contents;">
-<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--ghost flex items-cross-center sf-icon-button--on-surface-variant sf-icon-button--on-surface" disabled aria-label="Повторить" title="Повторить (⇧⌘Z)" data-sf-static>
+<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--link flex items-cross-center sf-icon-button--on-surface-variant sf-icon-button--on-surface" disabled aria-label="Повторить" title="Повторить (⇧⌘Z)" data-sf-static>
 
 <sf-icon root-class="pointer-event-none" weight="400" aria-hidden="true" filled="false" icon="redo" style="display: contents;"><i class="sf-icon sf-icon--weight-regular pointer-event-none" style="--sf-icon--grade:0;--sf-icon--optical-size:24" aria-hidden="true" data-sf-static>redo</i></sf-icon>
 </button>
@@ -22,8 +22,9 @@
 
 
 </div>
-<sf-button-group class="sf-editor-screens" size="1/2" appearance="segmented" plate="raised" aria-label="Экран" value="desktop" style="display: contents;">
-<div role="radiogroup" class="sf-button-group sf-button-group--segmented sf-button-group--size-1/2 sf-button-group--plate-raised sf-button-group--primary" aria-label="Экран" aria-orientation="horizontal" data-value="desktop" data-sf-static>
+<sf-segmented class="sf-editor-screens" size="1/2" appearance="track" plate="raised" aria-label="Экран" value="desktop" style="display: contents;">
+<div role="radiogroup" class="sf-button-group sf-button-group--segmented sf-button-group--size-1/2 sf-button-group--plate-raised sf-button-group--primary" aria-label="Экран" aria-orientation="horizontal" data-value="desktop" data-plate="placed" data-sf-static>
+<span class="sf-button-group-plate" aria-hidden="true"></span>
 
 <button type="button" class="sf-button sf-button--size-1/2 sf-button--link sf-button--on-surface flex items-cross-center sf-button-group-segment sf-button-group-icon-only active" data-sf-button-group-value="desktop" role="radio" aria-checked="true" tabindex="0">
 
@@ -45,17 +46,17 @@
 
 </div>
 
-</sf-button-group>
+</sf-segmented>
 <div class="sf-editor-bar-end">
 
 <sf-button-icon class="sf-editor-help-open" size="1/2" appearance="ghost" scheme="on-surface-variant" icon="help" aria-haspopup="dialog" aria-label="Справка" title="Справка" aria-expanded="false" style="display: contents;">
-<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--ghost flex items-cross-center sf-icon-button--on-surface-variant sf-icon-button--on-surface" aria-label="Справка" aria-haspopup="dialog" title="Справка" aria-expanded="false" data-sf-static>
+<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--link flex items-cross-center sf-icon-button--on-surface-variant sf-icon-button--on-surface" aria-label="Справка" aria-haspopup="dialog" title="Справка" aria-expanded="false" data-sf-static>
 
 <sf-icon root-class="pointer-event-none" weight="400" aria-hidden="true" filled="false" icon="help" style="display: contents;"><i class="sf-icon sf-icon--weight-regular pointer-event-none" style="--sf-icon--grade:0;--sf-icon--optical-size:24" aria-hidden="true" data-sf-static>help</i></sf-icon>
 </button>
 </sf-button-icon>
 <sf-button-icon class="sf-editor-output-open" size="1/2" appearance="ghost" scheme="on-surface-variant" icon="data_object" aria-haspopup="dialog" aria-label="Результат" title="Результат" style="display: contents;">
-<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--ghost flex items-cross-center sf-icon-button--on-surface-variant sf-icon-button--on-surface" aria-label="Результат" aria-haspopup="dialog" title="Результат" data-sf-static>
+<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--link flex items-cross-center sf-icon-button--on-surface-variant sf-icon-button--on-surface" aria-label="Результат" aria-haspopup="dialog" title="Результат" data-sf-static>
 
 <sf-icon root-class="pointer-event-none" weight="400" aria-hidden="true" filled="false" icon="data_object" style="display: contents;"><i class="sf-icon sf-icon--weight-regular pointer-event-none" style="--sf-icon--grade:0;--sf-icon--optical-size:24" aria-hidden="true" data-sf-static>data_object</i></sf-icon>
 </button>
@@ -121,7 +122,7 @@
 <div class="sf-editor-left-body">
 
 <sf-input class="sf-editor-search" size="1/2" appearance="filled" input-type="search" icon-start="search" placeholder="Найти блок" aria-label="Найти блок" value style="display: contents;">
-<label class="sf-input  sf-input--size-1/2 sf-input--filled  flex flex-col" data-mask="false" data-mask-pattern data-mask-lazy data-mask-placeholder-char data-mask-options data-sf-input-bound="1" for="sf-editor-author-8" data-sf-static>
+<label class="sf-input  sf-input--size-1/2 sf-input--filled   flex flex-col" data-mask="false" data-mask-pattern data-mask-lazy data-mask-placeholder-char data-mask-options data-sf-input-bound="1" for="sf-editor-author-8" data-sf-static>
 
 <span class="sf-input-field items-cross-center transition flex">
 <span class="sf-input-left flex"><sf-icon icon="search" style="display: contents;"><i class="sf-icon sf-icon--weight-regular" style="--sf-icon--grade:0;--sf-icon--optical-size:24" aria-hidden="true" data-sf-static>search</i></sf-icon></span>
@@ -146,7 +147,7 @@
 <ul class="sf-editor-sections" role="list">
 <li class="sf-editor-section-row" data-section="text">
 <sf-icon size="1/2" aria-hidden="true" icon="notes" style="display: contents;"><i class="sf-icon sf-icon--size-1/2 sf-icon--weight-regular" style="--sf-icon--grade:0;--sf-icon--optical-size:24" aria-hidden="true" data-sf-static>notes</i></sf-icon>
-<sf-button class="sf-editor-section-name" size="1/2" appearance="link" scheme="on-surface" text-position="start" text="Текст" aria-label="Текст, блоков: 12" style="display: contents;">
+<sf-button class="sf-editor-section-name" size="1/2" appearance="ghost" scheme="on-surface" text-position="start" text="Текст" aria-label="Текст, блоков: 12" style="display: contents;">
 <button type="button" class="sf-button sf-button--size-1/2 sf-button--link sf-button--on-surface flex items-cross-center" aria-label="Текст, блоков: 12" data-sf-static>
 
 
@@ -161,7 +162,7 @@
 </li>
 <li class="sf-editor-section-row" data-section="media">
 <sf-icon size="1/2" aria-hidden="true" icon="image" style="display: contents;"><i class="sf-icon sf-icon--size-1/2 sf-icon--weight-regular" style="--sf-icon--grade:0;--sf-icon--optical-size:24" aria-hidden="true" data-sf-static>image</i></sf-icon>
-<sf-button class="sf-editor-section-name" size="1/2" appearance="link" scheme="on-surface" text-position="start" text="Медиа" aria-label="Медиа, блоков: 5" style="display: contents;">
+<sf-button class="sf-editor-section-name" size="1/2" appearance="ghost" scheme="on-surface" text-position="start" text="Медиа" aria-label="Медиа, блоков: 5" style="display: contents;">
 <button type="button" class="sf-button sf-button--size-1/2 sf-button--link sf-button--on-surface flex items-cross-center" aria-label="Медиа, блоков: 5" data-sf-static>
 
 
@@ -176,7 +177,7 @@
 </li>
 <li class="sf-editor-section-row" data-section="elements">
 <sf-icon size="1/2" aria-hidden="true" icon="interests" style="display: contents;"><i class="sf-icon sf-icon--size-1/2 sf-icon--weight-regular" style="--sf-icon--grade:0;--sf-icon--optical-size:24" aria-hidden="true" data-sf-static>interests</i></sf-icon>
-<sf-button class="sf-editor-section-name" size="1/2" appearance="link" scheme="on-surface" text-position="start" text="Элементы" aria-label="Элементы, блоков: 6" style="display: contents;">
+<sf-button class="sf-editor-section-name" size="1/2" appearance="ghost" scheme="on-surface" text-position="start" text="Элементы" aria-label="Элементы, блоков: 6" style="display: contents;">
 <button type="button" class="sf-button sf-button--size-1/2 sf-button--link sf-button--on-surface flex items-cross-center" aria-label="Элементы, блоков: 6" data-sf-static>
 
 
@@ -191,7 +192,7 @@
 </li>
 <li class="sf-editor-section-row" data-section="layout">
 <sf-icon size="1/2" aria-hidden="true" icon="view_quilt" style="display: contents;"><i class="sf-icon sf-icon--size-1/2 sf-icon--weight-regular" style="--sf-icon--grade:0;--sf-icon--optical-size:24" aria-hidden="true" data-sf-static>view_quilt</i></sf-icon>
-<sf-button class="sf-editor-section-name" size="1/2" appearance="link" scheme="on-surface" text-position="start" text="Макет" aria-label="Макет, блоков: 1" style="display: contents;">
+<sf-button class="sf-editor-section-name" size="1/2" appearance="ghost" scheme="on-surface" text-position="start" text="Макет" aria-label="Макет, блоков: 1" style="display: contents;">
 <button type="button" class="sf-button sf-button--size-1/2 sf-button--link sf-button--on-surface flex items-cross-center" aria-label="Макет, блоков: 7" data-sf-static>
 
 
@@ -206,7 +207,7 @@
 </li>
 <li class="sf-editor-section-row" data-section="data">
 <sf-icon size="1/2" aria-hidden="true" icon="dataset" style="display: contents;"><i class="sf-icon sf-icon--size-1/2 sf-icon--weight-regular" style="--sf-icon--grade:0;--sf-icon--optical-size:24" aria-hidden="true" data-sf-static>dataset</i></sf-icon>
-<sf-button class="sf-editor-section-name" size="1/2" appearance="link" scheme="on-surface" text-position="start" text="Данные" aria-label="Данные, блоков: 1" style="display: contents;">
+<sf-button class="sf-editor-section-name" size="1/2" appearance="ghost" scheme="on-surface" text-position="start" text="Данные" aria-label="Данные, блоков: 1" style="display: contents;">
 <button type="button" class="sf-button sf-button--size-1/2 sf-button--link sf-button--on-surface flex items-cross-center" aria-label="Данные, блоков: 1" data-sf-static>
 
 
@@ -221,7 +222,7 @@
 </li>
 <li class="sf-editor-section-row" data-section="forms">
 <sf-icon size="1/2" aria-hidden="true" icon="edit_square" style="display: contents;"><i class="sf-icon sf-icon--size-1/2 sf-icon--weight-regular" style="--sf-icon--grade:0;--sf-icon--optical-size:24" aria-hidden="true" data-sf-static>edit_square</i></sf-icon>
-<sf-button class="sf-editor-section-name" size="1/2" appearance="link" scheme="on-surface" text-position="start" text="Формы" aria-label="Формы, блоков: 7" style="display: contents;">
+<sf-button class="sf-editor-section-name" size="1/2" appearance="ghost" scheme="on-surface" text-position="start" text="Формы" aria-label="Формы, блоков: 7" style="display: contents;">
 <button type="button" class="sf-button sf-button--size-1/2 sf-button--link sf-button--on-surface flex items-cross-center" aria-label="Формы, блоков: 7" data-sf-static>
 
 
@@ -257,7 +258,7 @@
 </div>
 
 <nav class="sf-editor-path" aria-label="Где выбранный блок">
-<sf-button size="1/3" appearance="link" scheme="on-surface-variant" text="Страница" style="display: contents;">
+<sf-button size="1/3" appearance="ghost" scheme="on-surface-variant" text="Страница" style="display: contents;">
 <button type="button" class="sf-button sf-button--size-1/3 sf-button--link sf-button--on-surface-variant sf-button--on-surface flex items-cross-center" data-sf-static>
 
 
