@@ -565,7 +565,7 @@
       },
       {
         "path": "src/smart/editor/js/templates/default.css",
-        "sha256": "a733e3f94999a2ddae7bfd609396dd87386dc569ea2db744820d73e697df8a16"
+        "sha256": "dda20b6aa9105b951a728199ca5356d74da8de9e1b568e3387d77f3859e0df65"
       },
       {
         "path": "src/smart/editor/rule.js",
@@ -577,7 +577,7 @@
       },
       {
         "path": "src/smart/editor/component.json",
-        "sha256": "53a123337c1d8d4dfff36cbeaf55c7968f90762e3e7ba43dd8e2ca03f671ae09"
+        "sha256": "28502839d3e88568b3ca765c053ffb4eb8eef45f5b848df29dcc0e5b029db5d1"
       },
       {
         "path": "src/smart/editor/lang/en.json",
