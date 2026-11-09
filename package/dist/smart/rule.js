@@ -18,7 +18,7 @@ SF.RuleLoader.registerPackage("editor", {
           "name": "cl-button-icon"
         },
         {
-          "name": "cl-button-group"
+          "name": "cl-segmented"
         },
         {
           "name": "cl-tabs"

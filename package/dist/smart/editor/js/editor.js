@@ -565,6 +565,11 @@ __webpack_require__.r(__webpack_exports__);
   since: '2026-11-03',
   remove_after: '2027-01-01'
 }), Object.freeze({
+  from: 'sf-button-group',
+  to: 'sf-segmented',
+  since: '2026-11-08',
+  remove_after: '2027-01-01'
+}), Object.freeze({
   from: 'sf-change-confirm',
   to: 'sf-confirm-change',
   since: '2026-11-03',
@@ -3603,7 +3608,7 @@ var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([lit_
 // path a nav. The canvas is a named region when the page brings no landmarks;
 // a page with its own (banner, main, contentinfo) keeps them top level, and
 // the canvas is then an unnamed group that says its role. Every control is a Framework
-// part: sf-button, sf-button-icon, sf-button-group, sf-tabs, sf-input,
+// part: sf-button, sf-button-icon, sf-segmented, sf-tabs, sf-input,
 // sf-dropdown, sf-switch, sf-menu-context, sf-modal, sf-skeleton, sf-icon.
 
 /** The word for each reason a class of «Extra classes» is not taken. */
@@ -3692,17 +3697,17 @@ function bar(component, view, w) {
                                 ?disabled=${!model.canUndo} @click=${() => component.history("undo")}></sf-button-icon>
                 <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="redo" aria-label=${w("redo-label")} title=${`${w("redo-label")} (⇧⌘Z)`}
                                 ?disabled=${!model.canRedo} @click=${() => component.history("redo")}></sf-button-icon>
-                ${template ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button class="sf-editor-template-toggle" size="1/3" appearance=${model.templateEditing ? "tonal" : "link"} scheme=${model.templateEditing ? "primary" : "on-surface-variant"}
+                ${template ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button class="sf-editor-template-toggle" size="1/3" appearance=${model.templateEditing ? "tonal" : "ghost"} scheme=${model.templateEditing ? "primary" : "on-surface-variant"}
                         icon-start=${model.templateEditing ? "check" : ""} text=${w(model.templateEditing ? "template-done" : "template-edit")}
                         @click=${() => component.toggleTemplate(!model.templateEditing)}></sf-button>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
                 ${model.templateEditing ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<span class="sf-editor-badge">${w("template-badge")}</span>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
             </div>
-            <sf-button-group class="sf-editor-screens" size="1/2" appearance="segmented" plate="raised" aria-label=${w("screen-label")}
+            <sf-segmented class="sf-editor-screens" size="1/2" appearance="track" plate="raised" aria-label=${w("screen-label")}
                              .items=${view.screens} .value=${component.screenName}
                              @change=${event => {
     event.stopPropagation();
     component.setScreen(event.detail?.value ?? event.currentTarget.value);
-  }}></sf-button-group>
+  }}></sf-segmented>
             <div class="sf-editor-bar-end">
                 ${slotted(component, "actions")}
                 <sf-button-icon class="sf-editor-help-open" size="1/2" appearance="ghost" scheme="on-surface-variant" icon="help"
@@ -3763,7 +3768,7 @@ function builderBar(component, w) {
   })}</span>
             ${builder.diagnostics?.length ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<span class="sf-editor-error" role="alert">${w("builder-invalid")}: ${builder.diagnostics.map(entry => entry.message ?? entry.code).join("; ")}</span>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
             <span class="sf-editor-spacer"></span>
-            <sf-button size="1/2" appearance="link" scheme="on-surface" text=${w("cancel")} @click=${() => component.closeBuilder()}></sf-button>
+            <sf-button size="1/2" appearance="ghost" scheme="on-surface" text=${w("cancel")} @click=${() => component.closeBuilder()}></sf-button>
             <sf-button size="1/2" scheme="primary" icon-start="save" text=${w(builder.editing ? "builder-save-everywhere" : "builder-save")}
                        ?disabled=${!builder.editing && !String(builder.name ?? "").trim()} @click=${() => component.saveBuilder()}></sf-button>
         </div>
@@ -3828,7 +3833,7 @@ function library(component, view, w) {
             </div>` : open ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
             <section class="sf-editor-group sf-editor-open-section" aria-labelledby="sf-editor-h-open">
                 <div class="sf-editor-back">
-                    <sf-button size="1/2" appearance="link" scheme="on-surface" icon-start="arrow_back" text-position="start" text=${component.word(open.labelKey)}
+                    <sf-button size="1/2" appearance="ghost" scheme="on-surface" icon-start="arrow_back" text-position="start" text=${component.word(open.labelKey)}
                                aria-label=${`${w("back")}: ${component.word(open.labelKey)}`}
                                @click=${() => component.openSection("")}></sf-button>
                 </div>
@@ -3840,7 +3845,7 @@ function library(component, view, w) {
             <section class="sf-editor-group" aria-labelledby="sf-editor-h-favourites">${heading("star", w("favourites"), "sf-editor-h-favourites")}${lib.favourites.length ? rows(component, lib.favourites, w) : (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<p class="sf-editor-hint sf-editor-empty-list">${w("favourites-empty")}</p>`}</section>
             ${lib.recent.length ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<section class="sf-editor-group" aria-labelledby="sf-editor-h-recent">${heading("history", w("recent"), "sf-editor-h-recent")}${rows(component, lib.recent, w)}</section>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
             ${component.main.rights.builder && !component.builder ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
-                <sf-button class="sf-editor-make" size="1/3" appearance="link" scheme="on-surface-variant" icon-start="add"
+                <sf-button class="sf-editor-make" size="1/3" appearance="ghost" scheme="on-surface-variant" icon-start="add"
                            text=${w("builder-start")} @click=${() => component.openBuilder({
     from: null
   })}></sf-button>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
@@ -3852,7 +3857,7 @@ function library(component, view, w) {
     component.openSection(section.id);
   }}>
                         <sf-icon icon=${section.icon} size="1/2" aria-hidden="true"></sf-icon>
-                        <sf-button class="sf-editor-section-name" size="1/2" appearance="link" scheme="on-surface" text-position="start" text=${component.word(section.labelKey)}
+                        <sf-button class="sf-editor-section-name" size="1/2" appearance="ghost" scheme="on-surface" text-position="start" text=${component.word(section.labelKey)}
                                    aria-label=${w("section-open", {
     name: component.word(section.labelKey),
     count: String(section.count)
@@ -3894,7 +3899,7 @@ function typeEntry(component, type, w, from = "") {
             <li class="sf-editor-item sf-editor-variant" data-item=${`${item.type}#${item.variant}`} title=${w("item-drag-hint")}
                 @pointerdown=${event => component.onLibraryDown(event, item)}>
                 <div class="sf-editor-preview" aria-hidden="true">${skeleton(component.skeleton(item))}</div>
-                <sf-button class="sf-editor-item-name" size="1/3" appearance="link" scheme="on-surface" text-position="start" text=${item.label}
+                <sf-button class="sf-editor-item-name" size="1/3" appearance="ghost" scheme="on-surface" text-position="start" text=${item.label}
                            @click=${event => {
     if (event.detail === 0) component.insertChoice({
       type: item.type,
@@ -3924,7 +3929,7 @@ function rows(component, list, w, {
     }}>
                 <sf-icon class="sf-editor-item-icon" icon=${item.icon ?? "widgets"} size="1/2" aria-hidden="true"></sf-icon>
                 <span class="sf-editor-item-text">
-                    <sf-button class="sf-editor-item-name" size="1/2" appearance="link" scheme="on-surface" text-position="start" text=${item.label}
+                    <sf-button class="sf-editor-item-name" size="1/2" appearance="ghost" scheme="on-surface" text-position="start" text=${item.label}
                                @click=${event => {
       if (event.detail === 0) component.insertChoice({
         type: item.type,
@@ -4022,7 +4027,7 @@ function structure(component, view, w) {
   return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<ul class="sf-editor-tree" role="tree" aria-label=${w("left-structure")}>${(0,lit_directives_repeat_js__WEBPACK_IMPORTED_MODULE_1__.repeat)(view.tree, row => row.id, row => (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
         <li role="treeitem" aria-level=${row.depth + 1} aria-selected=${row.id === view.model.selected ? "true" : "false"}
             class="sf-editor-tree-row" style=${`--sf-editor-depth:${row.depth}`}>
-            <sf-button size="1/2" appearance=${row.id === view.model.selected ? "tonal" : "link"} scheme="on-surface"
+            <sf-button size="1/2" appearance=${row.id === view.model.selected ? "tonal" : "ghost"} scheme="on-surface"
                        icon-start=${row.icon} icon-end=${row.lock ? "lock" : ""} text=${row.excerpt ? `${row.label} · ${row.excerpt}` : row.label}
                        @click=${() => component.choose(row.id)}></sf-button>
         </li>`)}</ul>`;
@@ -4039,7 +4044,7 @@ function toolbar(component, view, w) {
   return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
         <div class="sf-editor-toolbar" role="region" aria-label=${w("toolbar-label")} ?hidden=${!show}>
             ${show ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<div class="sf-editor-toolbar-row" role="toolbar" aria-label=${w("toolbar-label")}>
-                <span class="sf-editor-crumbs">${crumbs.map((entry, index) => index === crumbs.length - 1 ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<strong class="sf-editor-crumb-here">${component.typeLabel(entry.type)}</strong>` : (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button size="1/3" appearance="link" scheme="on-surface-variant" text=${component.typeLabel(entry.type)} @click=${() => component.choose(entry.id)}></sf-button>
+                <span class="sf-editor-crumbs">${crumbs.map((entry, index) => index === crumbs.length - 1 ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<strong class="sf-editor-crumb-here">${component.typeLabel(entry.type)}</strong>` : (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button size="1/3" appearance="ghost" scheme="on-surface-variant" text=${component.typeLabel(entry.type)} @click=${() => component.choose(entry.id)}></sf-button>
                         <sf-icon class="sf-editor-path-sep" icon="chevron_right" size="1/3" aria-hidden="true"></sf-icon>`)}</span>
                 <sf-button-icon class="sf-editor-toolbar-grip" size="1/3" appearance="ghost" scheme="on-surface-variant" icon="drag_indicator"
                                 aria-label=${w("grip-label")} title=${w("grip-label")} aria-haspopup="menu"
@@ -4061,10 +4066,10 @@ function toolbar(component, view, w) {
 function pathBar(component, view, w) {
   return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
         <nav class="sf-editor-path" aria-label=${w("path-label")}>
-            <sf-button size="1/3" appearance="link" scheme="on-surface-variant" text=${w("path-page")} @click=${() => component.choose(null)}></sf-button>
+            <sf-button size="1/3" appearance="ghost" scheme="on-surface-variant" text=${w("path-page")} @click=${() => component.choose(null)}></sf-button>
             ${view.path.filter(node => view.model.choosable(node)).map(node => (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
                 <sf-icon icon="chevron_right" size="1/3" class="sf-editor-path-sep" aria-hidden="true"></sf-icon>
-                <sf-button size="1/3" appearance="link" scheme="on-surface-variant" class=${node.id === view.model.selected ? "sf-editor-path-here" : ""}
+                <sf-button size="1/3" appearance="ghost" scheme="on-surface-variant" class=${node.id === view.model.selected ? "sf-editor-path-here" : ""}
                            text=${component.typeLabel(node.type)} aria-current=${node.id === view.model.selected ? "true" : "false"}
                            @click=${() => component.choose(node.id)}></sf-button>`)}
             <span class="sf-editor-spacer"></span>
@@ -4286,9 +4291,9 @@ const ALIGN_ICONS = {
 
 const segmentedSwitch = (field, items, value, component, extra = lit__WEBPACK_IMPORTED_MODULE_0__.nothing) => (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
     <div class="sf-editor-control sf-editor-switch-row">
-        <sf-button-group class="sf-editor-segmented" size="1/2" appearance="segmented" plate="raised" full-width aria-label=${field.label}
+        <sf-segmented class="sf-editor-segmented" size="1/2" appearance="track" plate="raised" full-width aria-label=${field.label}
                          .items=${items} .value=${String(value)}
-                         @change=${event => component.onField(event, field)}></sf-button-group>
+                         @change=${event => component.onField(event, field)}></sf-segmented>
         ${extra}
     </div>`;
 
@@ -4350,7 +4355,7 @@ function fieldRow(component, field, w) {
                 <span class="sf-editor-field-label">${field.label}</span>
                 ${field.responsive ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-icon class="sf-editor-field-screen" icon=${SCREEN_ICON[component.screenName]} size="1/3" title=${w("per-screen")} aria-label=${w("per-screen")}></sf-icon>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
                 <span class="sf-editor-origin" data-origin=${field.origin} data-own=${own ? "true" : "false"} title=${w(`origin-${field.origin}-help`)}><span class="sf-editor-origin-dot" aria-hidden="true"></span>${field.originLabel}</span>
-                ${field.set ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button class="sf-editor-reset" size="1/3" appearance="link" scheme="on-surface-variant" text=${w("reset")}
+                ${field.set ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button class="sf-editor-reset" size="1/3" appearance="ghost" scheme="on-surface-variant" text=${w("reset")}
                         aria-label=${w("reset-field", {
     name: field.label
   })} @click=${() => component.onReset(field)}></sf-button>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
@@ -4456,8 +4461,8 @@ function dataPanel(component, view, w) {
         ${view.data.bindings.length ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
             <section class="sf-editor-group">
                 <h3>${w("data-states")}</h3>
-                <sf-button-group size="1/3" appearance="segmented" plate="raised" .items=${view.states} .value=${state}
-                                 aria-label=${w("data-states")} @change=${event => component.onState(event)}></sf-button-group>
+                <sf-segmented size="1/3" appearance="track" plate="raised" .items=${view.states} .value=${state}
+                                 aria-label=${w("data-states")} @change=${event => component.onState(event)}></sf-segmented>
                 <p class="sf-editor-quiet">${w("data-states-help")}</p>
             </section>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
     `;
@@ -4501,7 +4506,7 @@ function popover(component, view, w) {
   }}></sf-input>`}
             ${open ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
                 <div class="sf-editor-back sf-editor-pop-back">
-                    <sf-button size="1/2" appearance="link" scheme="on-surface" icon-start="arrow_back" text-position="start" text=${openName}
+                    <sf-button size="1/2" appearance="ghost" scheme="on-surface" icon-start="arrow_back" text-position="start" text=${openName}
                                aria-label=${`${w("back")}: ${openName}`} @mousedown=${event => event.preventDefault()}
                                @click=${() => component.openPopSection("")}></sf-button>
                 </div>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
@@ -8507,7 +8512,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "default",
             "tonal",
             "outline",
-            "link",
+            "ghost",
             "surface"
           ],
           "type": "string"
@@ -8640,7 +8645,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "enum": [
             "",
-            "error"
+            "danger"
           ],
           "type": "string"
         },
@@ -8666,6 +8671,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "theme-cycle": {
+          "default": "",
+          "type": "string"
+        },
         "value": {
           "default": "",
           "type": "string"
@@ -8675,7 +8684,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.button",
-    "version": "1.7.0"
+    "version": "1.9.0"
   },
   "sf-button-icon": {
     "inputs": {
@@ -8687,8 +8696,6 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "default",
             "tonal",
             "outline",
-            "link",
-            "surface",
             "ghost"
           ],
           "type": "string"
@@ -8769,7 +8776,6 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "primary",
           "enum": [
             "primary",
-            "secondary",
             "on-surface",
             "on-surface-variant"
           ],
@@ -8810,8 +8816,16 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "enum": [
             "",
-            "error"
+            "danger"
           ],
+          "type": "string"
+        },
+        "theme-cycle": {
+          "default": "",
+          "type": "string"
+        },
+        "value": {
+          "default": "",
           "type": "string"
         }
       },
@@ -8819,7 +8833,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.button-icon",
-    "version": "1.5.2"
+    "version": "1.7.1"
   },
   "sf-checkbox": {
     "inputs": {
@@ -9010,7 +9024,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.dropdown",
-    "version": "1.7.0"
+    "version": "1.7.3"
   },
   "sf-icon": {
     "inputs": {
@@ -9234,6 +9248,16 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "radius": {
+          "default": "",
+          "enum": [
+            "",
+            "default",
+            "square",
+            "rounded"
+          ],
+          "type": "string"
+        },
         "readonly": {
           "default": false,
           "type": "boolean"
@@ -9249,9 +9273,11 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "size": {
           "default": "1",
           "enum": [
+            "1/3",
             "1/2",
             "1",
-            "2"
+            "2",
+            "3"
           ],
           "type": "string"
         },
@@ -9272,7 +9298,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.input",
-    "version": "1.5.0"
+    "version": "1.6.0"
   },
   "sf-input-textarea": {
     "inputs": {
@@ -9285,6 +9311,14 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "filled",
             "flush"
           ],
+          "type": "string"
+        },
+        "aria-label": {
+          "default": "",
+          "type": "string"
+        },
+        "aria-labelledby": {
+          "default": "",
           "type": "string"
         },
         "auto-grow": {
@@ -9417,7 +9451,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.input-textarea",
-    "version": "1.7.0"
+    "version": "1.7.3"
   },
   "sf-switch": {
     "inputs": {
@@ -9481,7 +9515,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.switch",
-    "version": "1.3.0"
+    "version": "1.3.3"
   }
 });
 
@@ -17903,7 +17937,7 @@ function within(root, ancestorId, id) {
 /***/ "b1c5d4f6dddd"
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.2.1","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"host-states":{},"css-variables":{}}');
+module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.2.2","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"host-states":{},"css-variables":{}}');
 
 /***/ },
 
