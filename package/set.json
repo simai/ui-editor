@@ -14,8 +14,8 @@
     "spdx": "PolyForm-Small-Business-1.0.0 OR PolyForm-Noncommercial-1.0.0 OR LicenseRef-SIMAI-Commercial"
   },
   "framework": {
-    "core_runtime": ">=1.25.0",
-    "source_revision": "da48ba8fde776bbbb6b01b3010d32d8475a9686e"
+    "core_runtime": ">=1.42.0",
+    "source_revision": "277ef3bf9dfe4014a3d312cc7e9b2278ec176517"
   },
   "requires_sets": [],
   "families": [
@@ -30,7 +30,6 @@
       "status": "released",
       "requires": [
         "cl-button",
-        "cl-button-group",
         "cl-button-icon",
         "cl-dropdown",
         "cl-editor-inline",
@@ -38,6 +37,7 @@
         "cl-input",
         "cl-menu-context",
         "cl-modal",
+        "cl-segmented",
         "cl-skeleton",
         "cl-switch",
         "cl-tabs"

@@ -29,7 +29,7 @@ import {chromium} from 'playwright';
 
 if (!process.argv[2]) throw new Error('Build output root is required');
 const out = resolve(process.argv[2]);
-const parts = ['icon', 'button', 'button-icon', 'button-group', 'tabs', 'input', 'dropdown', 'switch', 'skeleton', 'menu-context', 'modal', 'editor-inline'];
+const parts = ['icon', 'button', 'button-icon', 'segmented', 'tabs', 'input', 'dropdown', 'switch', 'skeleton', 'menu-context', 'modal', 'editor-inline'];
 const sheets = ['buttons', 'icon-buttons', 'button-group', 'inputs', 'dropdown', 'switch', 'skeleton', 'modal', 'menu', 'context-menu', 'tabs', 'tab', 'icons']
   .map((name) => `component/component/${name}/css/${name}.css`).filter((path) => existsSync(join(out, path)));
 const styles = [
@@ -570,7 +570,7 @@ try {
       const rect = element.getBoundingClientRect();
       const centre = (node) => { const b = node.getBoundingClientRect(); return Math.round(b.top + b.height / 2); };
       const controls = [...element.querySelectorAll('button')].filter((button) => button.getBoundingClientRect().width > 0);
-      // sf-button-group's host draws no box: the screens are its buttons, first to last.
+      // sf-segmented's host draws no box: the screens are its buttons, first to last.
       const buttons = [...element.querySelectorAll('.sf-editor-screens button')].map((button) => button.getBoundingClientRect());
       const screens = {left: Math.min(...buttons.map((b) => b.left)), width: Math.max(...buttons.map((b) => b.right)) - Math.min(...buttons.map((b) => b.left))};
       const icon = (selector) => { const button = element.querySelector(`${selector} button`); const b = button?.getBoundingClientRect(); return b ? [Math.round(b.width), Math.round(b.height)] : null; };
@@ -591,7 +591,7 @@ try {
     check('7: one bar row of 48 at 1440', bar.height === 48 && bar.rows === 1, bar);
     check('7: the screens are in the centre', Math.abs(bar.screensOffset) <= 2, bar.screensOffset);
     check('7: help, output and theme are 32px icon buttons', [bar.help, bar.output, bar.theme].every((size) => size && size[0] === 32 && size[1] === 32), {help: bar.help, output: bar.output, theme: bar.theme});
-    check('7: «Изменить шаблон» is a link, not a full outlined button', bar.template && bar.template.appearance === 'link' && bar.template.height <= 32, bar.template);
+    check('7: «Изменить шаблон» is a quiet ghost button, not a full outlined one', bar.template && bar.template.appearance === 'ghost' && bar.template.height <= 32, bar.template);
     check('7: the host\'s slotted controls (slots start and actions) stand in the same row', bar.pages !== null && bar.lang !== null && Math.abs(bar.pages - bar.barCentre) <= 2 && Math.abs(bar.lang - bar.barCentre) <= 2 && bar.pagesFirst && bar.langBeforeHelp, bar);
     await tab.locator('#editor .sf-editor-help-open button').click();
     await settle(tab, 200);

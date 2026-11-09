@@ -17,8 +17,11 @@ const exemptions = [
 // A step's shadow on a surface that must stay another one. The set moved
 // sf-editor byte for byte from ui-pro 4032e9f (move, then improve), where no
 // package-wide elevation test covered it; what it does on purpose is written here.
+// A step is a numbered level (--sf-elevation-N--shadow with --sf-elevation-N--surface)
+// or, since the C16 names of pair ui-d6f01121baca, a named one: --sf-shadow-card,
+// -popup and -popup-nested with --sf-surface-card, -popup and -popup-nested.
 const stepExemptions = [
-  {file: 'src/smart/editor/js/templates/default.css', step: '1', reason: 'the page sheet (.sf-editor-frame) is the site page itself, so it keeps the page surface (--sf-surface-0) and only lifts it off the canvas with the step-1 shadow'},
+  {file: 'src/smart/editor/js/templates/default.css', step: 'card', reason: 'the page sheet (.sf-editor-frame) is the site page itself, so it keeps the page surface (--sf-surface-page) and only lifts it off the canvas with the card shadow (step 1)'},
 ];
 
 const files = (directory, pattern) => {
@@ -45,8 +48,12 @@ test('elevation: a package component does not float on a step shadow alone', () 
       if (allowed.has(id)) used.add(id);
       else offenders.push(id);
     }
-    for (const [, step] of source.matchAll(/--sf-elevation-([1-5])--shadow\b/gu)) {
-      if (source.includes(`--sf-elevation-${step}--surface`)) continue;
+    const steps = [
+      ...[...source.matchAll(/--sf-elevation-([1-5])--shadow\b/gu)].map(([, step]) => [step, `--sf-elevation-${step}--surface`]),
+      ...[...source.matchAll(/--sf-shadow-(card|popup-nested|popup)\b/gu)].map(([, step]) => [step, `--sf-surface-${step}`]),
+    ];
+    for (const [step, surface] of steps) {
+      if (new RegExp(`${surface}(?![\\w-])`, 'u').test(source)) continue;
       if (stepExemptions.some((one) => one.file === path && one.step === step)) used.add(`${path} step ${step}`);
       else offenders.push(`${path}: step ${step} shadow without its surface`);
     }

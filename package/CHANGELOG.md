@@ -3,6 +3,24 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
+## 1.1.0 — unreleased
+
+- `sf-editor` 1.2.2: the editor writes the names of SIMAI Framework
+  `ui-d6f01121baca` instead of their dated aliases, which leave on
+  2027-01-01: `sf-segmented` (appearance `track`) for `sf-button-group`
+  (appearance `segmented`), relation `cl-segmented` for `cl-button-group`;
+  appearance `ghost` for `link` on `sf-button`; the theme roles
+  `--sf-surface-page`, `--sf-surface-area`,
+  `--sf-on-surface-container-variant`, `--sf-surface-state-hover`,
+  `--sf-primary-state-select` and `--sf-shadow-card` for `--sf-surface-0`,
+  `--sf-surface-1`, `--sf-on-surface-container--variant`,
+  `--sf-surface-transparent-hover`, `--sf-primary-transparent-select` and
+  `--sf-elevation-1--shadow`. The editor draws the same.
+- Built over SIMAI Framework `ui-d6f01121baca` (ui-source `277ef3bf9dfe`,
+  npm `@simai-studio/ui@5.20261108.2127`, core.runtime 1.42.0). A minor
+  version: the set now needs core.runtime 1.42.0 or newer (it needed 1.25.0),
+  since an older pair has no `sf-segmented` and none of these names.
+
 ## 1.0.1 — 2026-11-08
 
 - `sf-editor` 1.2.1: the canvas draws the page with Composition render
