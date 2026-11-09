@@ -3,7 +3,7 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
-## 1.1.0 — unreleased
+## 1.1.0 — 2026-11-09
 
 - `sf-editor` 1.2.2: the editor writes the names of SIMAI Framework
   `ui-d6f01121baca` instead of their dated aliases, which leave on
@@ -22,13 +22,14 @@ versions in brackets.
   `--sf-elevation-2` roles; the page sheet takes `--sf-shadow-raised` for
   `--sf-shadow-card`. The former names stay until 2027-01-01. The panels
   take C20's overlay look (approved by the owner).
-- Built over SIMAI Framework `ui-d6f01121baca` (ui-source `277ef3bf9dfe`,
-  npm `@simai-studio/ui@5.20261108.2127`, core.runtime 1.42.0). A minor
-  version: the set now needs core.runtime 1.43.0 or newer (it needed 1.25.0),
-  since an older pair has no `sf-segmented`, none of these names and no
-  shadow places. Built over `ui-d6f01121baca` the shadow places are not
-  there yet: the release waits for the pair that carries C20, or is cut
-  from the commit before them (then it needs 1.42.0).
+- The reference names one `args` object per action (standard §4.4, the
+  pair's generator); the actions already took it beside the fields in order.
+  First-paint snapshots retaken over the pair.
+- Built over SIMAI Framework `ui-cb287da78ab1` (ui-source `44a5efda6649`,
+  npm `@simai-studio/ui@5.20261109.559`, core.runtime 1.45.0), the first
+  pair that carries the shadow places (C20). A minor version: the set now
+  needs core.runtime 1.43.0 or newer (it needed 1.25.0), since an older pair
+  has no `sf-segmented`, none of these names and no shadow places.
 
 ## 1.0.1 — 2026-11-08
 

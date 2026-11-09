@@ -174,8 +174,15 @@
       "summary": "Choose a block as a press does; with no id the choice is let go.",
       "arguments": [
         {
-          "name": "id",
-          "schema": {}
+          "name": "args",
+          "type": "object",
+          "required": false,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {}
+            }
+          }
         }
       ],
       "returns": {
@@ -187,8 +194,18 @@
       "summary": "Put the caret at the end of a text block.",
       "arguments": [
         {
-          "name": "id",
-          "schema": {}
+          "name": "args",
+          "type": "object",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {}
+            },
+            "required": [
+              "id"
+            ]
+          }
         }
       ],
       "returns": {
@@ -200,18 +217,22 @@
       "summary": "Add a block of a type (and variant) after a block, or where it first fits; the value is the new block's id.",
       "arguments": [
         {
-          "name": "type",
+          "name": "args",
+          "type": "object",
+          "required": true,
           "schema": {
-            "type": "string"
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "variant": {},
+              "after": {}
+            },
+            "required": [
+              "type"
+            ]
           }
-        },
-        {
-          "name": "variant",
-          "schema": {}
-        },
-        {
-          "name": "after",
-          "schema": {}
         }
       ],
       "returns": {
@@ -239,28 +260,31 @@
       "summary": "Set a parameter of a block, for a screen when it differs by screen.",
       "arguments": [
         {
-          "name": "id",
-          "schema": {}
-        },
-        {
-          "name": "key",
+          "name": "args",
+          "type": "object",
+          "required": true,
           "schema": {
-            "type": "string"
-          }
-        },
-        {
-          "name": "value",
-          "schema": {
-            "type": "string"
-          }
-        },
-        {
-          "name": "screen",
-          "schema": {
-            "enum": [
-              "desktop",
-              "tablet",
-              "phone"
+            "type": "object",
+            "properties": {
+              "id": {},
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "screen": {
+                "enum": [
+                  "desktop",
+                  "tablet",
+                  "phone"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "key",
+              "value"
             ]
           }
         }
@@ -274,9 +298,16 @@
       "summary": "Start (or end, on false) editing the site template: the header and footer of every page.",
       "arguments": [
         {
-          "name": "on",
+          "name": "args",
+          "type": "object",
+          "required": false,
           "schema": {
-            "type": "boolean"
+            "type": "object",
+            "properties": {
+              "on": {
+                "type": "boolean"
+              }
+            }
           }
         }
       ],
@@ -289,13 +320,17 @@
       "summary": "Open the block builder: a new site block, one made from a block, or a site block to change everywhere.",
       "arguments": [
         {
-          "name": "id",
-          "schema": {}
-        },
-        {
-          "name": "type",
+          "name": "args",
+          "type": "object",
+          "required": false,
           "schema": {
-            "type": "string"
+            "type": "object",
+            "properties": {
+              "id": {},
+              "type": {
+                "type": "string"
+              }
+            }
           }
         }
       ],
@@ -308,12 +343,22 @@
       "summary": "The page as JSON, HTML (utility classes) or Markdown of its text areas; the value is the text.",
       "arguments": [
         {
-          "name": "format",
+          "name": "args",
+          "type": "object",
+          "required": true,
           "schema": {
-            "enum": [
-              "json",
-              "html",
-              "markdown"
+            "type": "object",
+            "properties": {
+              "format": {
+                "enum": [
+                  "json",
+                  "html",
+                  "markdown"
+                ]
+              }
+            },
+            "required": [
+              "format"
             ]
           }
         }
@@ -577,7 +622,7 @@
       },
       {
         "path": "src/smart/editor/component.json",
-        "sha256": "28502839d3e88568b3ca765c053ffb4eb8eef45f5b848df29dcc0e5b029db5d1"
+        "sha256": "66877f600d56c060ff5ac782aa35253426dcee40726b2b1ee839a2180a1dabfd"
       },
       {
         "path": "src/smart/editor/lang/en.json",
