@@ -3,6 +3,24 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
+## 1.1.1 — 2026-11-09
+
+- `sf-editor` 1.2.3: over SIMAI Framework `ui-b4a77681f0a7` the 1/3 control
+  is 28 on a desktop (C27). The gutter's + and grip keep following
+  `--sf-ui-1/3--control-height` (28 on a desktop, the phone step on a
+  phone), with no local size. The gutter stands in the canvas's start inset,
+  which grows with the ladder, never at a negative offset: it stays inside
+  the window at 1280, 1440 and 390. At 1440 the sheet is 788 wide beside
+  the larger room. The gap between the gutter and its block is a space
+  token (`--sf-space-1/4`) instead of a number in the script; the drawing is
+  the same.
+- The parity probe reads the 1/3 control and the gutter's room from the
+  tokens: + and the grip are a 1/3 control high, the sheet fills the canvas
+  beside the room, and the gutter stays inside the window at 1440 and 390.
+- Built over SIMAI Framework `ui-b4a77681f0a7` (ui-source `a29cc9989beb`,
+  npm `@simai-studio/ui@5.20261109.1121`, core.runtime 1.47.0). The set
+  still needs core.runtime 1.43.0 or newer.
+
 ## 1.1.0 — 2026-11-09
 
 - `sf-editor` 1.2.2: the editor writes the names of SIMAI Framework

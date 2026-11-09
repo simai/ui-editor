@@ -30,7 +30,7 @@ Paid sets publish on the public npm registry (owner, 2026-11-05); nothing here
 is published by this repository's own hand. One line connects it:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@simai-studio/ui@5.20261109.559/distr/core/js/core.min.js" data-sf-sets="editor@1.1.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@simai-studio/ui@5.20261109.1121/distr/core/js/core.min.js" data-sf-sets="editor@1.1.1"></script>
 ```
 
 ## Built against a pinned ui-source
@@ -41,9 +41,10 @@ ui-source at the revision `framework.lock.json` pins (from git, never a
 working tree), with this folder's `src/` and `tests/` laid over it. A file
 here may not replace a ui-source file.
 
-The pin is `44a5efda6649`, the source of the released pair
-`ui-cb287da78ab1` (core.runtime 1.45.0), the first that carries the shadow
-places (C20); `ui-d6f01121baca` was the first that names `sf-segmented`, the
+The pin is `a29cc9989beb`, the source of the released pair
+`ui-b4a77681f0a7` (core.runtime 1.47.0), whose 1/3 control is 28 on a
+desktop (C27); `ui-cb287da78ab1` was the first that carries the shadow
+places (C20), `ui-d6f01121baca` was the first that names `sf-segmented`, the
 ghost look and the C16 surface and state roles the editor reads; `ui-0c23f6a0af12` was the first whose Composition render takes
 `options.embedded`, `ui-1e5ec795a1ce` the first whose name registry
 names this set as the owner of `sf-editor`. The passport names the same
