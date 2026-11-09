@@ -3,6 +3,34 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
+## 1.1.0 — 2026-11-09
+
+- `sf-editor` 1.2.2: the editor writes the names of SIMAI Framework
+  `ui-d6f01121baca` instead of their dated aliases, which leave on
+  2027-01-01: `sf-segmented` (appearance `track`) for `sf-button-group`
+  (appearance `segmented`), relation `cl-segmented` for `cl-button-group`;
+  appearance `ghost` for `link` on `sf-button`; the theme roles
+  `--sf-surface-page`, `--sf-surface-area`,
+  `--sf-on-surface-container-variant`, `--sf-surface-state-hover`,
+  `--sf-primary-state-select` and `--sf-shadow-card` for `--sf-surface-0`,
+  `--sf-surface-1`, `--sf-on-surface-container--variant`,
+  `--sf-surface-transparent-hover`, `--sf-primary-transparent-select` and
+  `--sf-elevation-1--shadow`. The editor draws the same.
+- Shadows by place (C20): the four floating panels (help, the floating block
+  toolbar, the catalogue, the lock note) stand on the overlay place, `--sf-surface-popup`,
+  `--sf-shadow-overlay` and `--sf-on-surface-popup-variant`, for the
+  `--sf-elevation-2` roles; the page sheet takes `--sf-shadow-raised` for
+  `--sf-shadow-card`. The former names stay until 2027-01-01. The panels
+  take C20's overlay look (approved by the owner).
+- The reference names one `args` object per action (standard §4.4, the
+  pair's generator); the actions already took it beside the fields in order.
+  First-paint snapshots retaken over the pair.
+- Built over SIMAI Framework `ui-cb287da78ab1` (ui-source `44a5efda6649`,
+  npm `@simai-studio/ui@5.20261109.559`, core.runtime 1.45.0), the first
+  pair that carries the shadow places (C20). A minor version: the set now
+  needs core.runtime 1.43.0 or newer (it needed 1.25.0), since an older pair
+  has no `sf-segmented`, none of these names and no shadow places.
+
 ## 1.0.1 — 2026-11-08
 
 - `sf-editor` 1.2.1: the canvas draws the page with Composition render
