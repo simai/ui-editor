@@ -1026,9 +1026,9 @@
     min-inline-size: 0;
   }
 
-  .sf-editor-switch-row > sf-dropdown > * {
+  /* «More» keeps its own width: the track takes the rest of the row. */
+  .sf-editor-switch-row > .sf-editor-more-steps > * {
     flex: none;
-    inline-size: calc(var(--sf-ui-1\/2--control-height) * 3);
   }
 
 

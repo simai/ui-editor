@@ -597,10 +597,16 @@ function fieldRow(component, field, w) {
         const shown = all.slice(0, 3);
         const rest = all.slice(3);
         const inRest = rest.some((item) => item.value === String(value));
-        control = segmentedSwitch(field, shown, inRest ? "" : value, component, rest.length ? html`
-            <sf-dropdown class="sf-editor-more-steps" size="1/2" aria-label=${w("more-steps", {name: field.label})} placeholder=${w("more")}
-                         .options=${rest.map((item) => ({value: item.value, text: item.label}))} .value=${inRest ? String(value) : ""}
-                         @change=${(event) => component.onField(event, field)}></sf-dropdown>` : nothing);
+        // «More» is a compact button with the editor's menu, not a field: a field's
+        // label and chevron took the room the track needs to stay a track (it folds
+        // into a dropdown when its labels do not fit, sf-segmented 1.6.0). The chosen
+        // deeper step is the button's text, so the level stays in sight.
+        const chosen = rest.find((item) => item.value === String(value));
+        const label = w("more-steps", {name: field.label});
+        const open = (event) => component.openStepsMenu(field, rest, event.currentTarget);
+        control = segmentedSwitch(field, shown, inRest ? "" : value, component, !rest.length ? nothing : chosen
+            ? html`<sf-button class="sf-editor-more-steps" size="1/2" appearance="tonal" text=${chosen.label} aria-label=${`${label}: ${chosen.label}`} title=${label} aria-haspopup="menu" @click=${open}></sf-button>`
+            : html`<sf-button-icon class="sf-editor-more-steps" size="1/2" appearance="ghost" scheme="on-surface-variant" icon="more_horiz" aria-label=${label} title=${w("more")} aria-haspopup="menu" @click=${open}></sf-button-icon>`);
     } else if (field.choiceLabels.length && segmented(field)) {
         // Alignment draws as the prototype's three icons; the words stay their names.
         const icon = field.target === "align" ? ALIGN_ICONS : null;

@@ -41,9 +41,10 @@ ui-source at the revision `framework.lock.json` pins (from git, never a
 working tree), with this folder's `src/` and `tests/` laid over it. A file
 here may not replace a ui-source file.
 
-The pin is `a29cc9989beb`, the source of the released pair
-`ui-b4a77681f0a7` (core.runtime 1.47.0), whose 1/3 control is 28 on a
-desktop (C27); `ui-cb287da78ab1` was the first that carries the shadow
+The pin is `8c13bf45aeca`, the source of the released pair
+`ui-7fb26d395af2`, whose segmented track folds into its dropdown when its
+labels do not fit (C47); `ui-b4a77681f0a7` was the first whose 1/3 control
+is 28 on a desktop (C27), `ui-cb287da78ab1` was the first that carries the shadow
 places (C20), `ui-d6f01121baca` was the first that names `sf-segmented`, the
 ghost look and the C16 surface and state roles the editor reads; `ui-0c23f6a0af12` was the first whose Composition render takes
 `options.embedded`, `ui-1e5ec795a1ce` the first whose name registry

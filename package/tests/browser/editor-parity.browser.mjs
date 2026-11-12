@@ -456,6 +456,11 @@ try {
         if (!right?.checkVisibility?.()) return null;
         const row = right.querySelector('.sf-editor-field[data-key="level"]');
         const group = row?.querySelector('.sf-button-group');
+        // sf-segmented 1.6.0 folds into its dropdown when its labels do not fit
+        // the row: the track stays in the tree, inert, to be measured, and the
+        // person sees the dropdown. What is seen is measured.
+        const folded = Boolean(group?.classList.contains('sf-button-group--folded'));
+        const seen = folded ? row.querySelector('.sf-button-group-narrow') : group;
         const segments = [...(group?.querySelectorAll('.sf-button-group-segment') ?? [])];
         const active = segments.find((segment) => segment.classList.contains('active'));
         const plate = group?.querySelector('.sf-button-group-plate');
@@ -465,7 +470,8 @@ try {
         const primary = getComputedStyle(probe).color;
         probe.remove();
         return {
-          labels: segments.map((segment) => segment.textContent.trim()), active: active?.textContent.trim(),
+          folded, labels: segments.map((segment) => segment.textContent.trim()),
+          active: folded ? seen?.querySelector('.sf-dropdown-value')?.textContent.trim() : active?.textContent.trim(),
           // Since sf-segmented 1.4.0 (pair ui-d6f01121baca, D11c) the track draws the
           // choice as one plate under the chosen segment, not as the segment's fill.
           activeFill: plate ? getComputedStyle(plate).backgroundColor : '', activeShadow: plate ? getComputedStyle(plate).boxShadow : '', primary,
@@ -474,11 +480,11 @@ try {
             const p = plate?.getBoundingClientRect();
             return Boolean(a && p) && Math.abs(a.left - p.left) <= 1 && Math.abs(a.width - p.width) <= 1;
           })(),
-          height: group ? Math.round(group.getBoundingClientRect().height) : 0,
+          height: seen ? Math.round(seen.getBoundingClientRect().height) : 0,
           more: Boolean(row?.querySelector('.sf-editor-more-steps')),
           sameRow: (() => {
             const more = row?.querySelector('.sf-editor-more-steps > *')?.getBoundingClientRect();
-            const track = group?.getBoundingClientRect();
+            const track = seen?.getBoundingClientRect();
             return Boolean(more && track) && Math.abs(more.top - track.top) <= 1 && more.left >= track.right;
           })(),
           primaryPlates: [...right.querySelectorAll('.sf-button-group--segmented > .sf-button-group-segment.active')].filter((segment) => getComputedStyle(segment).backgroundColor === primary).length,
@@ -486,7 +492,7 @@ try {
       });
       if (level) {
         check(`8 ${label}: the heading level is H1–H3 with the rest behind «ещё»`, level.labels.join() === 'H1,H2,H3' && level.active === 'H2' && level.more && level.sameRow, level);
-        check(`8 ${label}: the switch is light: the chosen segment a raised surface with a shadow, no primary fill anywhere`, level.activeFill !== level.primary && level.activeFill !== 'rgba(0, 0, 0, 0)' && level.activeShadow !== 'none' && level.plateUnderActive && level.primaryPlates === 0 && level.height === bar.control, level);
+        check(`8 ${label}: the switch is light: the chosen segment a raised surface with a shadow, no primary fill anywhere`, (level.folded || level.activeFill !== level.primary && level.activeFill !== 'rgba(0, 0, 0, 0)' && level.activeShadow !== 'none' && level.plateUnderActive) && level.primaryPlates === 0 && level.height === bar.control, level);
         const panel = await tab.evaluate(() => {
           const right = document.querySelector('#editor .sf-editor-right');
           const cards = [...right.querySelectorAll('.sf-editor-card')];

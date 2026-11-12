@@ -3,6 +3,20 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
+## Unreleased
+
+- `sf-editor` 1.2.4: over SIMAI Framework `ui-7fb26d395af2` a segmented
+  track folds into its dropdown when its labels do not fit (sf-segmented
+  1.6.0, C47). The heading level row keeps H1–H3 as a track at 1440:
+  «More» is a compact button (⋯) that opens the editor's menu with H4–H6,
+  and shows the chosen deeper level (H5) when there is one, instead of a
+  dropdown field whose label and chevron took the track's room.
+- The probes follow the pair: a card title is 14 on a phone (C34, C89); the
+  accent section's roles are read outside the bg-primary place, whose own
+  primary and on-primary are its ink and fill (C42 (4)); the parity probe
+  measures the control a person sees when the level track is folded.
+- Built over SIMAI Framework `ui-7fb26d395af2` (ui-source `8c13bf45aeca`).
+
 ## 1.1.1 — 2026-11-09
 
 - `sf-editor` 1.2.3: over SIMAI Framework `ui-b4a77681f0a7` the 1/3 control

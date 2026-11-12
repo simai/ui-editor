@@ -368,9 +368,11 @@ try {
       await settle(tab, 500);
       const seen = await tab.evaluate((id) => {
         const section = document.querySelector(`#editor .sf-editor-page [data-sf-composition-id="${id}"]`);
+        // Inside a bg-primary place --sf-primary and --sf-on-primary are the place's
+        // own ink and fill (C42 (4)): the page's roles are read outside it.
         const probe = document.createElement('span');
         probe.style.cssText = 'color: var(--sf-primary); background: var(--sf-on-primary)';
-        section.append(probe);
+        section.parentElement.append(probe);
         const want = getComputedStyle(probe);
         const text = section.querySelector('h1, h2, h3, p') ?? section;
         const result = {classes: section.className, background: getComputedStyle(section).backgroundColor, primary: want.color, text: getComputedStyle(text).color, onPrimary: want.backgroundColor};
@@ -444,7 +446,8 @@ try {
       const at = heading.getBoundingClientRect();
       return {card: {left: card.left, right: card.right}, lines, size: parseFloat(style.fontSize), weight: Number(style.fontWeight), title: {left: at.left, right: at.right}};
     }));
-    check('cards-390: a heading in a card is its title, 16 px semibold', titled.every((card) => Math.abs(card.size - 16) <= 0.5 && card.weight >= 600 && card.weight < 700), titled.map((card) => [card.size, card.weight]));
+    // A card title is 14/18 on a phone, 16/24 on a desktop (owner decisions C34, C89).
+    check('cards-390: a heading in a card is its title, 14 px semibold on the phone', titled.every((card) => Math.abs(card.size - 14) <= 0.5 && card.weight >= 600 && card.weight < 700), titled.map((card) => [card.size, card.weight]));
     check('cards-390: no line leaves its card', titled.every((card) => card.lines.every((line) => line.left >= card.card.left - 0.5 && line.right <= card.card.right + 0.5 && line.scroll <= 0)), titled);
     check('cards-390: the titles do not overlap', titled.every((card, index) => index === 0 || card.title.left >= titled[index - 1].title.right), titled.map((card) => card.title));
     check('cards-390: no page errors', cards.errors.length === 0, cards.errors.slice(0, 3));

@@ -1469,11 +1469,32 @@ class SfEditor extends EditorElement {
         menu.openFor?.(button, {side: "block-end", align: "start"});
     }
 
+    /** The deeper steps of a field (a heading's H4–H6) in the editor's menu, under their button. */
+    openStepsMenu(field, steps, anchor) {
+        const menu = this.querySelector(".sf-editor-menu");
+        if (!menu) return;
+        const current = String(field.value ?? "");
+        menu.entries = steps.map((step) => ({id: `step:${step.value}`, text: step.label, current: step.value === current}));
+        menu.dataset.for = this.model.selected ?? "";
+        this.stepsField = field;
+        const button = anchor?.querySelector?.(":scope > button, button") ?? anchor;
+        menu.openFor?.(button, {side: "block-end", align: "end"});
+    }
+
     onMenuSelect(event) {
         event.stopPropagation();
         const menu = event.currentTarget;
         const id = menu.dataset.for;
         const action = event.detail?.entry?.id ?? event.detail?.id;
+        if (typeof action === "string" && action.startsWith("step:")) {
+            const field = this.stepsField;
+            this.stepsField = null;
+            if (!field || id !== this.model.selected) return;
+            const result = this.model.setParam(id, field.key, action.slice(5), this.breakpoint);
+            if (!result.ok) this.say(this.sfWord(`refused-${result.reason}`));
+            this.redraw();
+            return;
+        }
         queueMicrotask(() => {
             // The menu closes: the keys (⌘Z first) act where a person works, on the canvas.
             if (action !== "build") this.canvasElement?.focus({preventScroll: true});
