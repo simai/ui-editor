@@ -25,6 +25,6 @@ test("the set's editor is generated into the searchable registry beside the free
 test("CLI describes and verifies sf-editor", () => {
   const packet = JSON.parse(run("describe", "smart.editor", "--format", "ai"));
   assert.equal(packet.public_abi.custom_element, "sf-editor");
-  assert.equal(packet.identity.version, "1.2.3");
+  assert.equal(packet.identity.version, "1.2.4");
   assert.deepEqual(JSON.parse(run("verify", "smart.editor")), {ok: true, verified: ["smart.editor"]});
 });
