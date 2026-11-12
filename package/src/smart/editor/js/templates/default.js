@@ -82,7 +82,7 @@ export function renderEditorTemplate(component) {
             ${component.lockNote ? html`<div class="sf-editor-lock-note" role="status"
                     style=${`inset-block-start:${component.lockNote.y + 12}px;inset-inline-start:${component.lockNote.x}px`}>
                 <sf-icon icon="lock" size="1/3"></sf-icon><span>${component.lockNote.text}</span></div>` : nothing}
-            <sf-menu-context class="sf-editor-menu" size="1/2" @sf-menu-context-select=${(event) => component.onMenuSelect(event)}></sf-menu-context>
+            <sf-menu-context class="sf-editor-menu" size="1/2" popup @sf-menu-context-select=${(event) => component.onMenuSelect(event)}></sf-menu-context>
             <sf-editor-inline></sf-editor-inline>
             ${component.outputView ? outputModal(component, w) : nothing}
         </div>

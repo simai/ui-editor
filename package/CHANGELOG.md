@@ -15,6 +15,9 @@ versions in brackets.
   accent section's roles are read outside the bg-primary place, whose own
   primary and on-primary are its ink and fill (C42 (4)); the parity probe
   measures the control a person sees when the level track is folded.
+- `sf-editor` 1.2.5: the editor's menu (the block's ⋯, the heading level's
+  H4–H6) is drawn only while open (`sf-menu-context` with `popup`); before,
+  a closed menu that had entries stayed drawn at the window's bottom.
 - Built over SIMAI Framework `ui-7fb26d395af2` (ui-source `8c13bf45aeca`).
 
 ## 1.1.1 — 2026-11-09
