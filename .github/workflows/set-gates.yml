@@ -69,3 +69,12 @@ jobs:
       - name: The gates' summary
         if: always()
         run: cat "$RUNNER_TEMP/gates/gates.json" 2>/dev/null || echo "no summary, a gate stopped the run"
+      # A gate that stops the run leaves only its own log; print the tail of
+      # every log so the failing check is named in the run, not only locally.
+      - name: The gates' logs when a gate failed
+        if: failure()
+        run: |
+          for f in "$RUNNER_TEMP"/gates/logs/*.log; do
+            [ -f "$f" ] || continue
+            echo "== $f"; tail -n 80 "$f"
+          done
