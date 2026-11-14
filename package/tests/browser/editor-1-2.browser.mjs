@@ -26,8 +26,8 @@ import {chromium} from 'playwright';
 
 if (!process.argv[2]) throw new Error('Build output root is required');
 const out = resolve(process.argv[2]);
-const parts = ['icon', 'button', 'button-icon', 'segmented', 'tabs', 'input', 'dropdown', 'switch', 'skeleton', 'menu-context', 'modal', 'editor-inline'];
-const sheets = ['card', 'buttons', 'icon-buttons', 'button-group', 'inputs', 'dropdown', 'switch', 'skeleton', 'modal', 'menu', 'context-menu', 'tabs', 'tab', 'icons']
+const parts = ['icon', 'button', 'button-icon', 'segmented', 'tabs', 'input', 'dropdown', 'switch', 'skeleton', 'menu-context', 'modal', 'editor-inline', 'tree-item', 'tree'];
+const sheets = ['card', 'buttons', 'icon-buttons', 'button-group', 'inputs', 'dropdown', 'switch', 'skeleton', 'modal', 'menu', 'context-menu', 'tabs', 'tab', 'icons', 'tree', 'tree-item']
   .map((name) => `component/component/${name}/css/${name}.css`).filter((path) => existsSync(join(out, path)));
 const styles = [
   'core/core/css/core.css', 'core/core/css/utility.full.css', ...sheets,
@@ -357,6 +357,51 @@ try {
     check('G-42: the instance shows only its exposed parameter', Boolean(id) && right.fields.join() === 'background', right);
     check('G-42: no «Extra classes» on an instance', right.modifiers === false, right);
     check('G-42: no page errors', tab.errors.length === 0, tab.errors.slice(0, 3));
+    await tab.close();
+  });
+
+  // ---------------------------------------------------------------- structure
+  // K-07 (C102): the Structure tab is the Framework tree, sf-tree, not a list
+  // of the editor's own: one tree, its rows the choosable blocks, a press or
+  // Space on a row chooses the block, a branch closes and stays closed.
+  await scenario('structure', async () => {
+    const tab = await open();
+    await tab.locator('#editor .sf-editor-left [role="tab"]', {hasText: 'Structure'}).click();
+    await settle(tab, 400);
+    const seen = await tab.evaluate(() => {
+      const editor = document.getElementById('editor');
+      const left = editor.querySelector('.sf-editor-left');
+      const trees = [...left.querySelectorAll('[role="tree"]')];
+      return {
+        trees: trees.length, host: trees[0]?.closest('sf-tree') ? 'sf-tree' : trees[0]?.tagName,
+        defined: Boolean(customElements.get('sf-tree')),
+        rows: [...left.querySelectorAll('[role="treeitem"]')].map((row) => row.dataset.sfEntry),
+        wanted: editor.view().tree.map((row) => row.id),
+        own: left.querySelectorAll('ul[role="tree"], .sf-editor-tree-row').length,
+      };
+    });
+    check('structure: one tree, drawn by sf-tree, none of the editor\'s own', seen.trees === 1 && seen.host === 'sf-tree' && seen.defined && seen.own === 0, seen);
+    check('structure: its rows are the choosable blocks in order', seen.rows.join() === seen.wanted.join() && seen.rows.length > 3, seen);
+    await tab.locator('#editor .sf-editor-left [role="treeitem"][data-sf-entry="p1"] .sf-tree-item-name').first().click();
+    await settle(tab, 300);
+    check('structure: a press on a row chooses its block', await tab.evaluate(() => document.getElementById('editor').model.selected) === 'p1', null);
+    const next = seen.wanted[seen.wanted.indexOf('p1') + 1];
+    await tab.locator('#editor .sf-editor-left [role="treeitem"][data-sf-entry="p1"]').first().focus();
+    await tab.keyboard.press('ArrowDown');
+    await tab.keyboard.press('Space');
+    await settle(tab, 300);
+    const chosen = await tab.evaluate(() => document.getElementById('editor').model.selected);
+    check('structure: ArrowDown and Space choose the next block', Boolean(next) && chosen === next, {next, chosen});
+    await tab.locator('#editor .sf-editor-left [role="treeitem"][data-sf-entry="s1"] .sf-tree-toggle').first().click();
+    await settle(tab, 300);
+    await tab.evaluate(() => document.getElementById('editor').redraw());
+    await settle(tab, 300);
+    const closed = await tab.evaluate(() => {
+      const left = document.querySelector('#editor .sf-editor-left');
+      return {expanded: left.querySelector('[role="treeitem"][data-sf-entry="s1"]')?.getAttribute('aria-expanded'), child: Boolean(left.querySelector('[role="treeitem"][data-sf-entry="p1"]'))};
+    });
+    check('structure: a closed branch stays closed after a redraw', closed.expanded === 'false' && !closed.child, closed);
+    check('structure: no page errors', tab.errors.length === 0, tab.errors.slice(0, 3));
     await tab.close();
   });
 
