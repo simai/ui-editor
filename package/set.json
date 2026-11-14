@@ -40,7 +40,8 @@
         "cl-segmented",
         "cl-skeleton",
         "cl-switch",
-        "cl-tabs"
+        "cl-tabs",
+        "cl-tree"
       ]
     }
   ]

@@ -587,16 +587,6 @@
     --sf-skeleton--color: var(--sf-editor-accent);
   }
 
-  .sf-editor-tree {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .sf-editor-tree-row {
-    padding-inline-start: calc(var(--sf-space-1\/2) * var(--sf-editor-depth, 0));
-  }
-
   /* The page: a sheet with the raised shadow (C20) on a quiet background. */
   .sf-editor-stage {
     display: grid;

@@ -1933,6 +1933,49 @@ class SfEditor extends EditorElement {
         };
     }
 
+    /** The structure as sf-tree entries: a block's name and its words, its children, a lock where it is locked. */
+    treeItems(view) {
+        const closed = this.treeClosed ?? new Set();
+        const selected = view.model.selected;
+        const root = {children: []};
+        const parents = [root];
+        for (const row of view.tree) {
+            const entry = {
+                id: row.id, label: row.excerpt ? `${row.label} · ${row.excerpt}` : row.label,
+                selected: row.id === selected, children: [],
+                // A locked block says so by its icon; the rest draw no icon, as before.
+                ...(row.lock ? {"open-icon": "lock", "closed-icon": "lock"} : {icon: false}),
+            };
+            parents.length = row.depth + 1;
+            (parents[row.depth] ?? root).children.push(entry);
+            parents[row.depth + 1] = entry;
+        }
+        const finish = (entry) => {
+            for (const child of entry.children) finish(child);
+            if (entry !== root) {
+                if (entry.children.length) entry.open = !closed.has(entry.id);
+                else delete entry.children;
+            }
+        };
+        finish(root);
+        return root.children;
+    }
+
+    onTreeSelect(event) {
+        event.stopPropagation();
+        const id = event.detail?.id;
+        if (id && id !== this.model.selected) this.choose(id);
+    }
+
+    onTreeToggle(event) {
+        event.stopPropagation();
+        const {id, open} = event.detail ?? {};
+        if (!id) return;
+        this.treeClosed ??= new Set();
+        if (open) this.treeClosed.delete(id);
+        else this.treeClosed.add(id);
+    }
+
     treeOf(node, depth) {
         const rows = [];
         const visit = (current, level) => {

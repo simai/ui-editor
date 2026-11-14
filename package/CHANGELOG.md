@@ -18,6 +18,11 @@ versions in brackets.
 - `sf-editor` 1.2.5: the editor's menu (the block's ⋯, the heading level's
   H4–H6) is drawn only while open (`sf-menu-context` with `popup`); before,
   a closed menu that had entries stayed drawn at the window's bottom.
+- `sf-editor` 1.3.0 (K-07, C102): the Structure tab is the Framework tree
+  `sf-tree` (2.1.2) instead of the editor's own list with role tree: one Tab
+  stop, the arrows walk the blocks, ArrowRight and ArrowLeft open and close a
+  branch, Space or a press chooses the block, a closed branch stays closed. A
+  locked block shows a lock icon. The set now requires `cl-tree`.
 - Built over SIMAI Framework `ui-7fb26d395af2` (ui-source `8c13bf45aeca`).
 
 ## 1.1.1 — 2026-11-09

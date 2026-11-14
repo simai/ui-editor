@@ -26,7 +26,8 @@ import {groupWordKey} from "../catalogue.mjs";
 // a page with its own (banner, main, contentinfo) keeps them top level, and
 // the canvas is then an unnamed group that says its role. Every control is a Framework
 // part: sf-button, sf-button-icon, sf-segmented, sf-tabs, sf-input,
-// sf-dropdown, sf-switch, sf-menu-context, sf-modal, sf-skeleton, sf-icon.
+// sf-dropdown, sf-switch, sf-tree, sf-menu-context, sf-modal, sf-skeleton,
+// sf-icon.
 /** The word for each reason a class of «Extra classes» is not taken. */
 const REFUSED = {
     modifier_unknown: "modifiers-unknown",
@@ -344,13 +345,13 @@ function skeleton(shapes) {
 
 function structure(component, view, w) {
     if (!view.tree.length) return html`<p class="sf-editor-quiet">${w("structure-empty")}</p>`;
-    return html`<ul class="sf-editor-tree" role="tree" aria-label=${w("left-structure")}>${repeat(view.tree, (row) => row.id, (row) => html`
-        <li role="treeitem" aria-level=${row.depth + 1} aria-selected=${row.id === view.model.selected ? "true" : "false"}
-            class="sf-editor-tree-row" style=${`--sf-editor-depth:${row.depth}`}>
-            <sf-button size="1/2" appearance=${row.id === view.model.selected ? "tonal" : "ghost"} scheme="on-surface"
-                       icon-start=${row.icon} icon-end=${row.lock ? "lock" : ""} text=${row.excerpt ? `${row.label} · ${row.excerpt}` : row.label}
-                       @click=${() => component.choose(row.id)}></sf-button>
-        </li>`)}</ul>`;
+    // The Framework tree (C102): one Tab stop, the arrows, Space chooses.
+    // A press chooses the block; a branch keeps whether it was closed.
+    return html`<sf-tree class="sf-editor-tree" selection="one" aria-label=${w("left-structure")}
+                         .items=${component.treeItems(view)} .selected=${view.model.selected ?? ""}
+                         @sf-tree-select=${(event) => component.onTreeSelect(event)}
+                         @sf-tree-toggle=${(event) => component.onTreeToggle(event)}></sf-tree>
+        `;
 }
 
 // ------------------------------------------------------------ the floating bar over the chosen block

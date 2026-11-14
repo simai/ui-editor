@@ -191,7 +191,8 @@ function driver(page, origin) {
       const index = await model((editor, wanted) => editor.view().tree.findIndex((row) => row.id === wanted), id);
       await left.locator('[role="tab"]', {hasText: 'Структура'}).click();
       await settle();
-      if (index >= 0) await left.locator('.sf-editor-tree-row').nth(index).locator('button').click();
+      // sf-editor 1.3.0 draws the Structure as sf-tree (its rows' names); before, a list of buttons.
+      if (index >= 0) await left.locator('[role="treeitem"]').nth(index).locator('.sf-tree-item-name, button').first().click();
       await left.locator('[role="tab"]', {hasText: 'Блоки'}).click();
       // The keys act on the chosen block where a person works on it: the canvas.
       await page.evaluate(() => document.querySelector('#page-editor .sf-editor-canvas')?.focus({preventScroll: true}));

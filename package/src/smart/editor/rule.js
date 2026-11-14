@@ -17,6 +17,7 @@ SF.RuleLoader['cl-editor'] = {
     { name: 'cl-dropdown' },
     { name: 'cl-switch' },
     { name: 'cl-skeleton' },
+    { name: 'cl-tree' },
     { name: 'cl-editor-inline' },
     { name: 'cl-menu-context', lazy: true },
     { name: 'cl-modal', lazy: true },
