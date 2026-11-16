@@ -57,7 +57,7 @@ export function renderEditorTemplate(component) {
                     <div class="sf-editor-canvas" tabindex="0" role=${view.landmarks ? "group" : "region"} aria-roledescription=${w("canvas-role")}
                          aria-label=${view.landmarks ? nothing : component.label || w("label")} aria-describedby="sf-editor-help">
                         <div class="sf-editor-frame" data-screen=${component.screenName}>
-                            <div class="sf-editor-page"></div>
+                            <div class="sf-editor-page" data-sf-density="compact"></div>
                         </div>
                         <div class="sf-editor-hover" hidden aria-hidden="true"></div>
                         <div class="sf-editor-chosen" hidden aria-hidden="true"></div>
@@ -481,13 +481,13 @@ function pagePanel(component, view, w) {
         <aside class="sf-editor-right" aria-label=${w("right-label")}>
             ${panelHead("article", page.name || w("page-title"), page.status ?? "")}
             <div class="sf-editor-page">
-                ${"name" in page ? html`<sf-input class="sf-editor-page-field" data-key="name" size="1/2" label=${w("page-name")} .value=${String(page.name ?? "")}
+                ${"name" in page ? html`<sf-input class="sf-editor-page-field" data-key="name" label=${w("page-name")} .value=${String(page.name ?? "")}
                         @change=${change("name")}></sf-input>` : nothing}
-                ${"address" in page ? html`<sf-input class="sf-editor-page-field" data-key="address" size="1/2" label=${w("page-address")} .value=${String(page.address ?? "")}
+                ${"address" in page ? html`<sf-input class="sf-editor-page-field" data-key="address" label=${w("page-address")} .value=${String(page.address ?? "")}
                         @change=${change("address")}></sf-input>` : nothing}
                 ${template ? html`
                     <div class="sf-editor-page-field" data-key="template">
-                        ${options.length ? html`<sf-dropdown size="1/2" label=${w("template-title")} .options=${options} .value=${String(template.value ?? "")}
+                        ${options.length ? html`<sf-dropdown label=${w("template-title")} .options=${options} .value=${String(template.value ?? "")}
                                 @change=${change("template")}></sf-dropdown>` : html`
                             <span class="sf-editor-page-label">${w("template-title")}</span><span class="sf-editor-page-value">${template.label ?? template.value ?? ""}</span>`}
                         <span class="sf-editor-hint">${template.note ?? w(component.main.rights.template ? "template-help" : "template-no-rights")}</span>
@@ -497,7 +497,7 @@ function pagePanel(component, view, w) {
                         <span class="sf-editor-page-label">${w("page-theme")}</span>
                         <div class="sf-editor-page-row">
                             <span class="sf-editor-page-value">${theme.label ?? theme.name ?? ""}</span>
-                            ${theme.settings_url ? html`<a class="sf-editor-page-link" href=${theme.settings_url} target="_top">${w("theme-settings")}<sf-icon icon="open_in_new" size="1/3" aria-hidden="true"></sf-icon></a>` : nothing}
+                            ${theme.settings_url ? html`<a class="sf-editor-page-link" href=${theme.settings_url} target="_top">${w("theme-settings")}<sf-icon icon="open_in_new" size="1/2" aria-hidden="true"></sf-icon></a>` : nothing}
                         </div>
                         <span class="sf-editor-hint">${w("theme-read-only")}</span>
                     </div>` : nothing}
@@ -505,16 +505,16 @@ function pagePanel(component, view, w) {
                     <div class="sf-editor-page-field" data-key="publish">
                         <span class="sf-editor-page-label">${w("page-publishing")}</span>
                         <div class="sf-editor-page-row">
-                            ${page.publish ? html`<sf-button size="1/2" scheme="primary" text=${page.publish.label ?? w("page-publish")}
+                            ${page.publish ? html`<sf-button scheme="primary" text=${page.publish.label ?? w("page-publish")}
                                     ?disabled=${Boolean(page.publish.disabled)} @click=${action("publish")}></sf-button>` : nothing}
-                            ${history ? html`<sf-button size="1/2" appearance="outline" scheme="on-surface" icon-start="history"
+                            ${history ? html`<sf-button appearance="outline" scheme="on-surface" icon-start="history"
                                     text=${history.label ?? (Number.isFinite(history.count) ? w("page-history", {count: String(history.count)}) : w("page-history-plain"))}
                                     @click=${action("history")}></sf-button>` : nothing}
                         </div>
                         ${page.publish?.note ? html`<span class="sf-editor-hint">${page.publish.note}</span>` : nothing}
                     </div>` : nothing}
                 ${slotted(component, "page")}
-                <p class="sf-editor-card"><sf-icon icon="arrow_selector_tool" size="1/3" aria-hidden="true"></sf-icon><span>${w("page-hint")}</span></p>
+                <p class="sf-editor-card"><sf-icon icon="arrow_selector_tool" size="1/2" aria-hidden="true"></sf-icon><span>${w("page-hint")}</span></p>
             </div>
         </aside>`;
 }
@@ -539,16 +539,16 @@ function parameters(component, view, w) {
     if (!view.form.length && !modifiers) return html`<p class="sf-editor-hint">${w("no-parameters")}</p>`;
     const sets = [...new Set(view.form.map((field) => /^sf\.composition\.set_([a-z_]+)\./u.exec(String(field.label_key ?? ""))?.[1]).filter(Boolean))];
     return html`
-        <p class="sf-editor-card sf-editor-sets"><sf-icon icon="link" size="1/3" aria-hidden="true"></sf-icon><span>${sets.length
+        <p class="sf-editor-card sf-editor-sets"><sf-icon icon="link" size="1/2" aria-hidden="true"></sf-icon><span>${sets.length
             ? w("sets-note", {sets: sets.map((set) => w(`set-${set.replace(/_/gu, "-")}`)).join(" · ")})
             : w("sets-none")}</span></p>
         ${SECTIONS.map((id) => (bySection[id].length || (id === "extra" && modifiers)) ? html`
-            <section class="sf-editor-group sf-editor-fields" aria-labelledby=${`sf-editor-h-${id}`}>
+            <section class="sf-editor-group sf-editor-fields" data-sf-density="compact" aria-labelledby=${`sf-editor-h-${id}`}>
                 <h3 class="sf-editor-heading" id=${`sf-editor-h-${id}`}>${w(`section-${id}`)}</h3>
                 ${bySection[id].map((field) => fieldRow(component, field, w))}
                 ${id === "extra" && modifiers ? modifiersRow(component, view, w) : nothing}
             </section>` : nothing)}
-        ${view.form.some((field) => field.responsive) ? html`<p class="sf-editor-card"><sf-icon icon="devices" size="1/3" aria-hidden="true"></sf-icon><span>${w("screens-note", {screen: w(`screen-${component.screenName}`)})}</span></p>` : nothing}
+        ${view.form.some((field) => field.responsive) ? html`<p class="sf-editor-card"><sf-icon icon="devices" size="1/2" aria-hidden="true"></sf-icon><span>${w("screens-note", {screen: w(`screen-${component.screenName}`)})}</span></p>` : nothing}
         <p class="sf-editor-card sf-editor-origins" aria-label=${w("origins-label")}>${w("origins-note")}</p>
     `;
 }
@@ -557,7 +557,7 @@ function modifiersRow(component, view, w) {
     return html`
         <div class="sf-editor-modifiers-row">
             <div class="sf-editor-field-head"><span class="sf-editor-field-label">${w("modifiers-label")}</span></div>
-            <sf-input class="sf-editor-modifiers" size="1/2" aria-label=${w("modifiers-label")} placeholder=${w("modifiers-placeholder")} .value=${view.modifiers}
+            <sf-input class="sf-editor-modifiers" aria-label=${w("modifiers-label")} placeholder=${w("modifiers-placeholder")} .value=${view.modifiers}
                       @change=${(event) => component.onModifiers(event)}></sf-input>
             <span class="sf-editor-hint">${w("modifiers-hint")}</span>
             ${component.dropped?.id === view.selected.id ? component.dropped.groups.map((group) => html`<p class="sf-editor-error" role="alert">${w(REFUSED[group.reason] ?? "modifiers-dropped", {classes: group.classes.join(" ")})}</p>`) : nothing}
@@ -578,7 +578,7 @@ const ALIGN_ICONS = {start: "format_align_left", center: "format_align_center", 
 /** The light segmented look of the prototype: a quiet track, the chosen segment a raised surface, not a primary fill. */
 const segmentedSwitch = (field, items, value, component, extra = nothing) => html`
     <div class="sf-editor-control sf-editor-switch-row">
-        <sf-segmented class="sf-editor-segmented" size="1/2" appearance="track" plate="raised" full-width aria-label=${field.label}
+        <sf-segmented class="sf-editor-segmented" appearance="track" plate="raised" full-width aria-label=${field.label}
                          .items=${items} .value=${String(value)}
                          @change=${(event) => component.onField(event, field)}></sf-segmented>
         ${extra}
@@ -606,8 +606,8 @@ function fieldRow(component, field, w) {
         const label = w("more-steps", {name: field.label});
         const open = (event) => component.openStepsMenu(field, rest, event.currentTarget);
         control = segmentedSwitch(field, shown, inRest ? "" : value, component, !rest.length ? nothing : chosen
-            ? html`<sf-button class="sf-editor-more-steps" size="1/2" appearance="tonal" text=${chosen.label} aria-label=${`${label}: ${chosen.label}`} title=${label} aria-haspopup="menu" @click=${open}></sf-button>`
-            : html`<sf-button-icon class="sf-editor-more-steps" size="1/2" appearance="ghost" scheme="on-surface-variant" icon="more_horiz" aria-label=${label} title=${w("more")} aria-haspopup="menu" @click=${open}></sf-button-icon>`);
+            ? html`<sf-button class="sf-editor-more-steps" appearance="tonal" text=${chosen.label} aria-label=${`${label}: ${chosen.label}`} title=${label} aria-haspopup="menu" @click=${open}></sf-button>`
+            : html`<sf-button-icon class="sf-editor-more-steps" appearance="ghost" scheme="on-surface-variant" icon="more_horiz" aria-label=${label} title=${w("more")} aria-haspopup="menu" @click=${open}></sf-button-icon>`);
     } else if (field.choiceLabels.length && segmented(field)) {
         // Alignment draws as the prototype's three icons; the words stay their names.
         const icon = field.target === "align" ? ALIGN_ICONS : null;
@@ -615,11 +615,11 @@ function fieldRow(component, field, w) {
             ? {value: choice.value, label: choice.text, icon: icon[choice.value], "icon-only": true}
             : {value: choice.value, label: choice.text})), value, component);
     } else if (field.choiceLabels.length) {
-        control = html`<sf-dropdown class="sf-editor-control" size="1/2" aria-label=${field.label} .options=${field.choiceLabels} .value=${String(value)}
+        control = html`<sf-dropdown class="sf-editor-control" aria-label=${field.label} .options=${field.choiceLabels} .value=${String(value)}
                                     @change=${(event) => component.onField(event, field)}></sf-dropdown>`;
     } else {
         const numeric = field.kind === "number" || field.kind === "integer";
-        control = html`<sf-input class="sf-editor-control" size="1/2" aria-label=${field.label} inputmode=${numeric ? "numeric" : ""} .value=${String(value)}
+        control = html`<sf-input class="sf-editor-control" aria-label=${field.label} inputmode=${numeric ? "numeric" : ""} .value=${String(value)}
                                  @change=${(event) => component.onField(event, field)}></sf-input>`;
     }
     const own = field.origin === "block" || field.origin === "screen";
@@ -627,16 +627,16 @@ function fieldRow(component, field, w) {
         <div class="sf-editor-field" id=${id} data-key=${field.key} data-origin=${field.origin}>
             <div class="sf-editor-field-head">
                 <span class="sf-editor-field-label">${field.label}</span>
-                ${field.responsive ? html`<sf-icon class="sf-editor-field-screen" icon=${SCREEN_ICON[component.screenName]} size="1/3" title=${w("per-screen")} aria-label=${w("per-screen")}></sf-icon>` : nothing}
+                ${field.responsive ? html`<sf-icon class="sf-editor-field-screen" icon=${SCREEN_ICON[component.screenName]} size="1/2" title=${w("per-screen")} aria-label=${w("per-screen")}></sf-icon>` : nothing}
                 <span class="sf-editor-origin" data-origin=${field.origin} data-own=${own ? "true" : "false"} title=${w(`origin-${field.origin}-help`)}><span class="sf-editor-origin-dot" aria-hidden="true"></span>${field.originLabel}</span>
-                ${field.set ? html`<sf-button class="sf-editor-reset" size="1/3" appearance="ghost" scheme="on-surface-variant" text=${w("reset")}
+                ${field.set ? html`<sf-button class="sf-editor-reset" size="1/2" appearance="ghost" scheme="on-surface-variant" text=${w("reset")}
                         aria-label=${w("reset-field", {name: field.label})} @click=${() => component.onReset(field)}></sf-button>` : nothing}
             </div>
             ${control}
             ${(field.min !== undefined || field.max !== undefined) && !steps(field) ? html`<span class="sf-editor-hint">${w("range-hint", {min: String(field.min ?? ""), max: String(field.max ?? "")})}</span>` : nothing}
             ${field.responsive && field.screens.length ? html`<span class="sf-editor-hint">${w("set-for", {screens: field.screensLabel})}</span>` : nothing}
             ${field.utility ? html`<code class="sf-editor-utility" title=${w("utility-help")}>${w("binding", {classes: field.utility})}</code>` : nothing}
-            ${builder ? html`<sf-switch size="1/2" class="sf-editor-expose" label=${w("expose")} .checked=${Boolean(exposed)}
+            ${builder ? html`<sf-switch class="sf-editor-expose" label=${w("expose")} .checked=${Boolean(exposed)}
                     @change=${(event) => {
                         event.stopPropagation();
                         component.toggleExposed(component.model.selected, field, Boolean(event.currentTarget.checked));
@@ -660,41 +660,41 @@ function dataPanel(component, view, w) {
             const fields = ref ? component.answer(`fields:${ref}`, (p) => p.fields(ref)) ?? [] : [];
             const shapeFields = component.shapeFields(entry.shape);
             return html`
-                <section class="sf-editor-group" aria-label=${entry.target}>
+                <section class="sf-editor-group sf-editor-data-group" data-sf-density="compact" aria-label=${entry.target}>
                     <h3>${w("data-binding", {target: component.word(entry.target)})}</h3>
-                    <sf-dropdown size="1/2" label=${w("data-source")} placeholder=${w("data-none")} ?disabled=${!port}
+                    <sf-dropdown label=${w("data-source")} placeholder=${w("data-none")} ?disabled=${!port}
                                  .options=${[{value: "", text: w("data-none")}, ...sources.map((item) => ({value: item.id, text: item.label}))]} .value=${ref}
                                  @change=${(event) => component.onSource(event, entry)}></sf-dropdown>
-                    ${source?.presets?.length ? html`<sf-dropdown size="1/2" label=${w("data-preset")}
+                    ${source?.presets?.length ? html`<sf-dropdown label=${w("data-preset")}
                                  .options=${[{value: "", text: w("data-own-mapping")}, ...source.presets.map((preset) => ({value: preset.id, text: preset.label ?? preset.id}))]}
                                  .value=${entry.settings.preset ?? ""}
                                  @change=${(event) => component.onSetting(event, entry, "preset")}></sf-dropdown>` : nothing}
                     ${ref && !entry.settings.preset ? html`<div class="sf-editor-mapping">
                         <h4>${w("data-mapping")}</h4>
-                        ${shapeFields.map((field) => html`<sf-dropdown size="1/2" label=${field}
+                        ${shapeFields.map((field) => html`<sf-dropdown label=${field}
                                  .options=${[{value: "", text: w("data-none")}, ...fields.map((item) => ({value: item.key, text: item.label}))]}
                                  .value=${entry.settings.mapping?.[field] ?? ""}
                                  @change=${(event) => component.onMapping(event, entry, field)}></sf-dropdown>`)}
                     </div>` : nothing}
-                    ${ref && component.listShape(entry.shape) ? html`<sf-input size="1/2" label=${w("data-limit")} inputmode="numeric" .value=${String(entry.settings.limit ?? "")}
+                    ${ref && component.listShape(entry.shape) ? html`<sf-input label=${w("data-limit")} inputmode="numeric" .value=${String(entry.settings.limit ?? "")}
                             @change=${(event) => component.onSetting(event, entry, "limit", (value) => (value === "" ? undefined : Math.max(1, Math.min(500, Number.parseInt(value, 10) || 1))))}></sf-input>` : nothing}
-                    <sf-input size="1/2" label=${w("data-empty-text")} placeholder=${entry.empty_key ? component.word(entry.empty_key) : ""} .value=${entry.settings.empty_text ?? ""}
+                    <sf-input label=${w("data-empty-text")} placeholder=${entry.empty_key ? component.word(entry.empty_key) : ""} .value=${entry.settings.empty_text ?? ""}
                               @change=${(event) => component.onSetting(event, entry, "empty_text", (value) => String(value ?? "").slice(0, 500))}></sf-input>
                 </section>`;
         })}
         ${view.data.runtime.map((entry) => html`
-            <section class="sf-editor-group">
+            <section class="sf-editor-group sf-editor-data-group" data-sf-density="compact">
                 <h3>${w("data-runtime", {target: component.word(entry.target)})}</h3>
-                <sf-dropdown size="1/2" label=${w("data-follows")}
+                <sf-dropdown label=${w("data-follows")}
                              .options=${[{value: "", text: w("data-none")}, ...entry.publishers.map((item) => ({value: `${item.id}#${item.state}`, text: `${component.typeLabel(item.type)} · ${item.state}`}))]}
                              .value=${entry.binding?.ref ?? ""}
                              @change=${(event) => component.onRuntime(event, entry)}></sf-dropdown>
                 ${entry.publishers.length ? nothing : html`<p class="sf-editor-quiet">${w("data-no-publishers")}</p>`}
             </section>`)}
         ${view.data.bindings.length ? html`
-            <section class="sf-editor-group">
+            <section class="sf-editor-group sf-editor-data-group" data-sf-density="compact">
                 <h3>${w("data-states")}</h3>
-                <sf-segmented size="1/3" appearance="track" plate="raised" .items=${view.states} .value=${state}
+                <sf-segmented size="1/2" appearance="track" plate="raised" .items=${view.states} .value=${state}
                                  aria-label=${w("data-states")} @change=${(event) => component.onState(event)}></sf-segmented>
                 <p class="sf-editor-quiet">${w("data-states-help")}</p>
             </section>` : nothing}

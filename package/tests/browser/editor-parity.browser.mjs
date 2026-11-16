@@ -529,9 +529,13 @@ try {
           const head = one.querySelector('.sf-editor-field-head').getBoundingClientRect();
           const control = one.querySelector('.sf-editor-control');
           const target = (control.getBoundingClientRect().height ? control : control.firstElementChild).getBoundingClientRect();
-          return {label: getComputedStyle(one.querySelector('.sf-editor-field-label')).fontSize, toControl: Math.round(target.top - head.bottom), between: Math.round(two.getBoundingClientRect().top - one.getBoundingClientRect().bottom)};
+          const own = getComputedStyle(one.querySelector('.sf-editor-field-label'));
+          return {label: own.fontSize, weight: Number(own.fontWeight), color: own.color, text: getComputedStyle(document.querySelector('#editor .sf-editor')).color, density: fields.dataset.sfDensity, toControl: Math.round(target.top - head.bottom), between: Math.round(two.getBoundingClientRect().top - one.getBoundingClientRect().bottom)};
         });
-        check(`8 ${label}: the panel's rhythm: label 12px, 8 to the control, 16 between fields`, rhythm.label === '12px' && rhythm.toControl === 8 && rhythm.between === 16, rhythm);
+        // The field group is a compact region (C22): its steps one down, so the
+        // label is the 1/2 text step (12 at 1440, C153 (1) as sf-form), 4 to the
+        // control (1/3) and --sf-space-1 (12) between fields (C52).
+        check(`8 ${label}: the panel's rhythm in its compact region: label 12px, 4 to the control, 12 between fields`, rhythm.label === '12px' && rhythm.toControl === 4 && rhythm.between === 12 && rhythm.density === 'compact' && rhythm.weight < 500 && rhythm.color === rhythm.text, rhythm);
         // The first-use hint beside the chosen block's floating bar: nothing overlaps.
         await choose(tab, 'h2');
         await settle(tab, 300);
