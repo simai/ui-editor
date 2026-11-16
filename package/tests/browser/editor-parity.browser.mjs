@@ -492,7 +492,10 @@ try {
       });
       if (level) {
         check(`8 ${label}: the heading level is H1–H3 with the rest behind «ещё»`, level.labels.join() === 'H1,H2,H3' && level.active === 'H2' && level.more && level.sameRow, level);
-        check(`8 ${label}: the switch is light: the chosen segment a raised surface with a shadow, no primary fill anywhere`, (level.folded || level.activeFill !== level.primary && level.activeFill !== 'rgba(0, 0, 0, 0)' && level.activeShadow !== 'none' && level.plateUnderActive) && level.primaryPlates === 0 && level.height === bar.control, level);
+        // At 1440 the field group's compact region draws the default size as
+        // the bar's 1/2; below 60rem density does not apply (the phone ladder
+        // is the dense one, C22), so the field's control is the 1 step.
+        check(`8 ${label}: the switch is light: the chosen segment a raised surface with a shadow, no primary fill anywhere`, (level.folded || level.activeFill !== level.primary && level.activeFill !== 'rgba(0, 0, 0, 0)' && level.activeShadow !== 'none' && level.plateUnderActive) && level.primaryPlates === 0 && (options.viewport ? level.height >= bar.control : level.height === bar.control), level);
         const panel = await tab.evaluate(() => {
           const right = document.querySelector('#editor .sf-editor-right');
           const cards = [...right.querySelectorAll('.sf-editor-card')];
