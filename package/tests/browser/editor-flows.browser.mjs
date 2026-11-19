@@ -30,6 +30,7 @@ const styles = [
   ...parts.map((name) => `smart/smart/${name}/css/${name}.css`).filter((path) => existsSync(join(out, path))),
   'smart/smart/editor/css/editor.css',
 ].map((path) => join(out, path));
+const russian = join(out, 'core/core/lang/ru.js');
 const modules = [
   'core/core/js/core.js', 'core/core/js/smart-base.js',
   ...parts.map((name) => `smart/smart/${name}/js/${name}.js`),
@@ -74,6 +75,9 @@ try {
     await page.route('https://editor.probe/**', (route) => route.fulfill({status: 200, contentType: 'text/html; charset=utf-8', body: markup}));
     await page.goto('https://editor.probe/');
     for (const style of styles) await page.addStyleTag({path: style}).catch(() => {});
+    // A Russian page's one line before core (C282): the Framework's Russian words are a
+    // language file, not inside the bundles; this page answers every other path with HTML.
+    if (existsSync(russian)) await page.addScriptTag({path: russian});
     for (const module of modules) await page.addScriptTag({path: module, type: 'module'}).catch(() => {});
     await page.waitForFunction(() => Boolean(customElements.get('sf-editor')));
     await page.evaluate(async ({doc, rights}) => {

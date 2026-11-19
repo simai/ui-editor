@@ -53,7 +53,7 @@ const combined = join(overlay, '.probe-output');
 rmSync(combined, {force: true, recursive: true});
 mkdirSync(join(combined, 'smart'), {recursive: true});
 for (const product of ['core', 'component', 'utility']) symlinkSync(join(free, product), join(combined, product));
-cpSync(join(free, 'smart', 'smart'), join(combined, 'smart', 'smart'), {recursive: true});
+cpSync(join(free, 'smart', 'smart'), join(combined, 'smart', 'smart'), {recursive: true, dereference: true});
 for (const entry of readdirSync(join(built, 'smart'))) {
   const destination = join(combined, 'smart', 'smart', entry);
   if (existsSync(destination)) throw new Error(`the package output would replace the free smart/${entry}`);
