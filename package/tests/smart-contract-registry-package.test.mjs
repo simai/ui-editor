@@ -17,8 +17,9 @@ test("the set's editor is generated into the searchable registry beside the free
   // The free registry's Smart components at the pinned revision (71 at
   // ec2f29df) and the set's one, sf-editor, make 72. At da48ba8f (pair
   // ui-0c23f6a0af12) the free registry holds 81: 82. At 8c13bf45 (pair
-  // ui-7fb26d395af2) it holds 83: 84.
-  assert.equal(registry.entries.length, 84);
+  // ui-7fb26d395af2) it holds 83: 84. At 1dd18375 (pair ui-dc9fc39aeb26)
+  // it holds 86: 87.
+  assert.equal(registry.entries.length, 87);
   assert.ok(registry.entries.some((entry) => entry.id === "smart.editor"), "smart.editor");
   assert.ok(registry.entries.every(({contract_schema}) => contract_schema.version === 2));
 });

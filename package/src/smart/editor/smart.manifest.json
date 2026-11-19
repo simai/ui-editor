@@ -32,6 +32,7 @@
       "smart.button-icon",
       "smart.dropdown",
       "smart.editor-inline",
+      "smart.empty-state",
       "smart.icon",
       "smart.input",
       "smart.menu-context",
@@ -615,7 +616,7 @@
       },
       {
         "path": "src/smart/editor/rule.js",
-        "sha256": "bdbdd5daadb78539505bdd5fdbc2b70057a980d383f4d7d9f6fb4eabc84c1aca"
+        "sha256": "5794810c22347720a9a355d49fdded3eb06975c91f32062cf4317ff60a0bd07e"
       },
       {
         "path": "src/smart/editor/docs.md",
