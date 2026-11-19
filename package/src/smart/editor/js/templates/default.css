@@ -402,10 +402,6 @@
     color: var(--sf-on-surface-variant);
   }
 
-  .sf-editor-chevron:dir(rtl) > * {
-    transform: scaleX(-1);
-  }
-
   .sf-editor-back {
     border-block-end: var(--sf-border--width) solid var(--sf-outline-variant);
     border-radius: 0;
@@ -854,10 +850,6 @@
 
   .sf-editor-keys {
     color: var(--sf-on-surface-variant);
-  }
-
-  .sf-editor-path-sep:dir(rtl) > * {
-    transform: scaleX(-1);
   }
 
   .sf-editor-keys {

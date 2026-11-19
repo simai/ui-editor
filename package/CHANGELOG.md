@@ -38,6 +38,9 @@ versions in brackets.
   stay their own stops. On a grip ↓, the menu key and Shift+F10 open the
   block's menu (C164 (2)). The editor relates `cl-empty-state` (lazy), the
   error state of a failed fragment; the set now requires it.
+  Right to left, the path chevrons and separators point the right way:
+  the editor no longer turns `chevron_right` a second time over the
+  Framework's icon layer.
 - Built over SIMAI Framework `ui-dc9fc39aeb26` (ui-source `1dd18375cbc2`),
   which carries `simai.document-port` 1.0.0, `sf-form` and core's roving
   helper.

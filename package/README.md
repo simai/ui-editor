@@ -33,6 +33,24 @@ is published by this repository's own hand. One line connects it:
 <script src="https://cdn.jsdelivr.net/npm/@simai-studio/ui@5.20261109.1121/distr/core/js/core.min.js" data-sf-sets="editor@1.1.1"></script>
 ```
 
+## A Russian page needs the Russian language file
+
+Since SIMAI Framework pair `ui-dc9fc39aeb26` (owner decision C282) the
+Framework's bundles carry English only; Russian is the language file
+`distr/core/lang/ru.js`. `sf-editor` reads the Framework's composition words
+(block types, catalogue sections, parameter names) through it, so a host that
+shows the editor in Russian includes it with one line before core:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@simai-studio/ui@<version>/distr/core/lang/ru.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@simai-studio/ui@<version>/distr/core/js/core.min.js" data-sf-sets="editor@<version>"></script>
+```
+
+Without it core fetches the Russian parts the page shows; a host that serves
+no `distr/core/lang/` shows those words in English. The editor's own words
+(`src/smart/editor/lang/`) are in its bundle.
+
+
 ## Built against a pinned ui-source
 
 The component imports the free SIMAI Framework by relative path
