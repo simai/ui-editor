@@ -3,7 +3,7 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
-## Unreleased
+## 1.4.0 — 2026-11-19
 
 - `sf-editor` 1.2.4: over SIMAI Framework `ui-7fb26d395af2` a segmented
   track folds into its dropdown when its labels do not fit (sf-segmented
@@ -23,14 +23,12 @@ versions in brackets.
   stop, the arrows walk the blocks, ArrowRight and ArrowLeft open and close a
   branch, Space or a press chooses the block, a closed branch stays closed. A
   locked block shows a lock icon. The set now requires `cl-tree`.
-- Built over SIMAI Framework `ui-7fb26d395af2` (ui-source `8c13bf45aeca`).
 - `sf-editor` 1.3.1 (form study FM-1, FM-2, FM-5; C52, C153 (1), C22): the
   parameter groups, the page panel and the data groups are compact regions
   (`data-sf-density="compact"`); their fields take the default size instead
   of `size="1/2"` by hand. Fields stand `--sf-space-1` apart, groups
   `--sf-space-3` over a line. A field's label is in the text colour and
   regular, one step under the value as in `sf-form`, 14 on a phone.
-
 - `sf-editor` 1.4.0: takes back the simai/ui-pro copy (1.2.6, 1.3.2) and
   TL-4 of the toolbar study (C184 (1)(3)). The bar and the chosen block's
   tool row are toolbars: one Tab stop each, ← → walk the buttons and wrap,
@@ -43,7 +41,10 @@ versions in brackets.
   Framework's icon layer.
 - Built over SIMAI Framework `ui-dc9fc39aeb26` (ui-source `1dd18375cbc2`),
   which carries `simai.document-port` 1.0.0, `sf-form` and core's roving
-  helper.
+  helper (npm `@simai-studio/ui@5.20261118.1205`, core.runtime 1.61.0). A
+  Russian page includes `distr/core/lang/ru.js` (README). The set still
+  needs core.runtime 1.43.0 or newer.
+
 ## 1.1.1 — 2026-11-09
 
 - `sf-editor` 1.2.3: over SIMAI Framework `ui-b4a77681f0a7` the 1/3 control
