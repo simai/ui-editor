@@ -1,5 +1,5 @@
 @charset "UTF-8";
-@layer sf.reset, sf.tokens, sf.base, sf.utilities, sf.components, sf.overrides, sf.states;
+@layer sf.reset, sf.tokens, sf.base, sf.paint, sf.utilities, sf.components, sf.overrides, sf.states;
 @layer sf.components {
   /* sf-editor, the one block editor: one bar, the library and structure on
      the left, the page in the middle as a sheet on a quiet background drawn
@@ -263,6 +263,9 @@
     border-right: var(--sf-border--width) solid var(--sf-outline-variant);
   }
   .sf-editor-right {
+    /* The panel's gap, read where the panel's density holds: the compact
+       field groups inside take it off their own group gap. */
+    --sf-editor-panel-gap: var(--sf-space-1\/2);
     padding: var(--sf-space-1\/2) var(--sf-space-1);
     -webkit-border-start: var(--sf-border--width) solid var(--sf-outline-variant);
             border-inline-start: var(--sf-border--width) solid var(--sf-outline-variant);
@@ -580,10 +583,6 @@
     flex: none;
     color: var(--sf-on-surface-variant);
   }
-  .sf-editor-chevron:dir(rtl) > * {
-    -webkit-transform: scaleX(-1);
-            transform: scaleX(-1);
-  }
   .sf-editor-back {
     border-bottom: var(--sf-border--width) solid var(--sf-outline-variant);
     -webkit-border-after: var(--sf-border--width) solid var(--sf-outline-variant);
@@ -784,67 +783,6 @@
   }
   .sf-editor-shape-accent {
     --sf-skeleton--color: var(--sf-editor-accent);
-  }
-  .sf-editor-tree {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-tree-row{
-    padding-left: calc(var(--sf-space-1\/2) * 0);
-    padding-left: calc(var(--sf-space-1\/2) * var(--sf-editor-depth, 0));
-  }
-  @supports not (padding-inline-start: initial){
-  html:not([dir="rtl"]) .sf-editor-tree-row{
-    padding-left: calc(var(--sf-space-1\/2) * 0);
-    padding-left: calc(var(--sf-space-1\/2) * var(--sf-editor-depth, 0));
-    }
-  }
-  .sf-editor-tree-row:where(:dir(ltr)){
-    padding-left: calc(var(--sf-space-1\/2) * 0);
-    padding-left: calc(var(--sf-space-1\/2) * var(--sf-editor-depth, 0));
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-tree-row{
-    padding-right: calc(var(--sf-space-1\/2) * 0);
-    padding-right: calc(var(--sf-space-1\/2) * var(--sf-editor-depth, 0));
-  }
-  @supports not (padding-inline-start: initial){
-  [dir="rtl"] .sf-editor-tree-row{
-    padding-right: calc(var(--sf-space-1\/2) * 0);
-    padding-right: calc(var(--sf-space-1\/2) * var(--sf-editor-depth, 0));
-    }
-  }
-  .sf-editor-tree-row:where(:dir(rtl)){
-    padding-right: calc(var(--sf-space-1\/2) * 0);
-    padding-right: calc(var(--sf-space-1\/2) * var(--sf-editor-depth, 0));
-  }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-tree-row{
-    padding-left: calc(var(--sf-space-1\/2) * 0);
-  }
-  @supports not (padding-inline-start: initial){
-  html:not([dir="rtl"]) .sf-editor-tree-row{
-    padding-left: calc(var(--sf-space-1\/2) * 0);
-    }
-  }
-  .sf-editor-tree-row:where(:dir(ltr)){
-    padding-left: calc(var(--sf-space-1\/2) * 0);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-tree-row{
-    padding-right: calc(var(--sf-space-1\/2) * 0);
-  }
-  @supports not (padding-inline-start: initial){
-  [dir="rtl"] .sf-editor-tree-row{
-    padding-right: calc(var(--sf-space-1\/2) * 0);
-    }
-  }
-  .sf-editor-tree-row:where(:dir(rtl)){
-    padding-right: calc(var(--sf-space-1\/2) * 0);
-  }
-  .sf-editor-tree-row {
-    -webkit-padding-start: calc(var(--sf-space-1\/2) * 0);
-            padding-inline-start: calc(var(--sf-space-1\/2) * 0);
-    -webkit-padding-start: calc(var(--sf-space-1\/2) * var(--sf-editor-depth, 0));
-            padding-inline-start: calc(var(--sf-space-1\/2) * var(--sf-editor-depth, 0));
   }
   /* The page: a sheet with the raised shadow (C20) on a quiet background. */
   .sf-editor-stage {
@@ -1262,10 +1200,6 @@
   .sf-editor-keys {
     color: var(--sf-on-surface-variant);
   }
-  .sf-editor-path-sep:dir(rtl) > * {
-    -webkit-transform: scaleX(-1);
-            transform: scaleX(-1);
-  }
   .sf-editor-keys {
     color: var(--sf-on-surface-variant);
     font-size: var(--sf-editor-small);
@@ -1336,18 +1270,17 @@
     gap: var(--sf-space-1\/3);
   }
   .sf-editor-page-label {
-    color: var(--sf-on-surface-variant);
-    font-size: var(--sf-editor-small);
-    line-height: var(--sf-editor-small-height);
-    font-weight: var(--sf-font-weight-medium);
+    color: var(--sf-on-surface);
+    font-size: var(--sf-text-size-1\/2);
+    line-height: var(--sf-text-height-1\/2);
   }
   .sf-editor-page-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--sf-space-1\/3);
-    min-height: var(--sf-ui-1\/2--control-height);
-    min-block-size: var(--sf-ui-1\/2--control-height);
+    min-height: var(--sf-ui-1--control-height);
+    min-block-size: var(--sf-ui-1--control-height);
   }
   .sf-editor-page-value {
     flex: 1 1 auto;
@@ -1377,21 +1310,36 @@
     flex-direction: column;
     margin: 0;
   }
-  .sf-editor-fields {
+  /* The field groups are compact regions (data-sf-density, C22): their
+     fields take the default size and the region draws them one step down.
+     Fields stand --sf-space-1 apart, groups --sf-space-3 over a line (C52),
+     as in sf-form. */
+  .sf-editor-fields,
+  .sf-editor-data-group {
     gap: var(--sf-space-1);
-    padding-bottom: var(--sf-space-1\/2);
-    -webkit-padding-after: var(--sf-space-1\/2);
-            padding-block-end: var(--sf-space-1\/2);
+  }
+  .sf-editor-fields {
+    padding-bottom: var(--sf-space-3);
+    -webkit-padding-after: var(--sf-space-3);
+            padding-block-end: var(--sf-space-3);
     border-bottom: var(--sf-border--width) solid var(--sf-outline-variant);
     -webkit-border-after: var(--sf-border--width) solid var(--sf-outline-variant);
             border-block-end: var(--sf-border--width) solid var(--sf-outline-variant);
   }
+  .sf-editor-fields + .sf-editor-fields {
+    padding-top: max(0px, var(--sf-space-3) - var(--sf-editor-panel-gap));
+    -webkit-padding-before: max(0px, var(--sf-space-3) - var(--sf-editor-panel-gap));
+            padding-block-start: max(0px, var(--sf-space-3) - var(--sf-editor-panel-gap));
+  }
   .sf-editor-fields:last-of-type {
+    padding-bottom: 0;
+    -webkit-padding-after: 0;
+            padding-block-end: 0;
     border-bottom: 0;
     -webkit-border-after: 0;
             border-block-end: 0;
   }
-  /* The prototype's rhythm: label 12/16, 8 to the control, 16 between fields. */
+  /* A field: its label, then the control. */
   .sf-editor-field,
   .sf-editor-modifiers-row {
     display: flex;
@@ -1416,29 +1364,36 @@
     min-width: 0;
     min-inline-size: 0;
   }
-  .sf-editor-switch-row > sf-dropdown > * {
+  /* «More» keeps its own width: the track takes the rest of the row. */
+  .sf-editor-switch-row > .sf-editor-more-steps > * {
     flex: none;
-    width: calc(var(--sf-ui-1\/2--control-height) * 3);
-    inline-size: calc(var(--sf-ui-1\/2--control-height) * 3);
   }
   .sf-editor-field-head {
     display: flex;
     align-items: center;
     gap: var(--sf-space-1\/3);
-    min-height: var(--sf-ui-1\/3--control-height);
-    min-block-size: var(--sf-ui-1\/3--control-height);
+    min-height: var(--sf-ui-1\/2--control-height);
+    min-block-size: var(--sf-ui-1\/2--control-height);
   }
+  /* The label in the text colour, one step under the value (C153 (1)), as
+     sf-form's label; 14 on a phone too. */
   .sf-editor-field-label {
     flex: 1 1 auto;
     min-width: 0;
     min-inline-size: 0;
     overflow: hidden;
     color: var(--sf-on-surface);
-    font-size: var(--sf-editor-small);
-    line-height: var(--sf-editor-small-height);
-    font-weight: var(--sf-font-weight-medium);
+    font-size: var(--sf-text-size-1\/2);
+    line-height: var(--sf-text-height-1\/2);
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  @media not all and (min-width: 60rem) {
+    .sf-editor-field-label,
+    .sf-editor-page-label {
+      font-size: var(--sf-text-size-1);
+      line-height: var(--sf-text-height-1);
+    }
   }
   .sf-editor-field-screen {
     flex: none;

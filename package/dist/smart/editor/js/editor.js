@@ -2,6 +2,153 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "1412c5875b4d"
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   RELATIVE: () => (/* binding */ RELATIVE),
+/* harmony export */   densityOf: () => (/* binding */ densityOf),
+/* harmony export */   drawing: () => (/* binding */ drawing),
+/* harmony export */   followDensity: () => (/* binding */ followDensity),
+/* harmony export */   markRelativeSizes: () => (/* binding */ markRelativeSizes),
+/* harmony export */   noteAuthored: () => (/* binding */ noteAuthored),
+/* harmony export */   sizeOf: () => (/* binding */ sizeOf),
+/* harmony export */   sizeStep: () => (/* binding */ sizeStep),
+/* harmony export */   sizedBefore: () => (/* binding */ sizedBefore)
+/* harmony export */ });
+// Density (owner decision C22, 2026-11-09). data-sf-density="compact" on the
+// root or on a container moves every component one ladder step down; the CSS
+// does it (core/scss/_sf_css__density.scss): each step variable holds the step
+// below. An explicit size is a step on the region's ladder (owner decision
+// C79, 2026-11-12, changing C22): it comes down with the region, and only
+// data-sf-density="normal" takes the normal ladder back.
+//
+// A size a component's template gives an element it draws (sf-input's clear
+// button, a pager's buttons, a submenu) is relative to the component's own
+// size; those are still marked data-sf-size-relative once the component has
+// drawn. Since C79 the density CSS treats both alike; the mark stays a
+// published runtime mark (host-runtime-marks) for hosts that read it.
+//
+// What a component holds of the page's own (captured slot content, children
+// left in place) keeps its size explicit. The store is on the shared global:
+// every bundle carries its own copy of this module.
+const store = () => {
+  const SF = globalThis.SF = globalThis.SF || {};
+  const internal = SF.__internal || (SF.__internal = {});
+  return internal.density ||= {
+    authored: new WeakSet(),
+    depth: 0
+  };
+};
+
+const RELATIVE = 'data-sf-size-relative'; // Page content a component captured to place in its own drawing. Content a
+// template hands to a child while it draws is the template's, not the page's.
+
+function noteAuthored(nodes) {
+  const state = store();
+  if (state.depth > 0) return;
+
+  for (const node of nodes) if (node && typeof node === 'object') state.authored.add(node);
+}
+function drawing(callback) {
+  const state = store();
+  state.depth += 1;
+
+  try {
+    return callback();
+  } finally {
+    state.depth -= 1;
+  }
+} // The sized elements present before a host first draws are the page's.
+// A printed first-paint picture is the drawing's, not the page's.
+
+function sizedBefore(host) {
+  return new Set(Array.from(host.querySelectorAll?.('[size]') ?? []).filter(element => {
+    const picture = element.closest('[data-sf-static]');
+    return !picture || !host.contains(picture);
+  }));
+} // After a host drew: every sized element its drawing holds that is not the
+// page's is relative to the host.
+
+function markRelativeSizes(host, before = null) {
+  const {
+    authored
+  } = store();
+
+  for (const element of host.querySelectorAll?.('[size]') ?? []) {
+    if (element.hasAttribute(RELATIVE) || before?.has(element)) continue;
+    let node = element;
+    let page = false;
+
+    while (node && node !== host) {
+      if (authored.has(node)) {
+        page = true;
+        break;
+      }
+
+      node = node.parentNode;
+    }
+
+    if (!page) element.setAttribute(RELATIVE, '');
+  }
+} // A popup a component builds itself and places outside its own box (a menu on
+// <body>, in an open dialog): sized from the component, so relative, and in
+// the component's density, not the density of where it was placed.
+
+function followDensity(element, from) {
+  if (!element?.setAttribute) return element;
+  if (element.hasAttribute('size')) element.setAttribute(RELATIVE, '');
+  const density = densityOf(from);
+  if (density) element.setAttribute('data-sf-density', density);else element.removeAttribute('data-sf-density');
+  return element;
+} // The density an element stands in: the nearest region's (an explicit size
+// follows its region since C79); null outside any.
+
+function densityOf(from) {
+  for (let node = from; node?.nodeType === 1; node = node.parentElement) {
+    if (node.hasAttribute('data-sf-density')) return node.getAttribute('data-sf-density');
+  }
+
+  return null;
+} // The size step of the control a popup opens from (owner remark 2026-11-15:
+// the row menu of a table of size 1 opened at 1/2). A popup a component
+// builds outside itself -- a menu on <body> or in the open dialog -- stood on
+// the default step whatever opened it. The step is the first size written
+// from the opener up: the opener's own (a row's «⋯», the native button an
+// sf-button draws), else its component's, else the Smart component that
+// holds it (sf-view-table size="1"). A size a template gave a part it draws
+// (data-sf-size-relative) follows its host, so the walk goes on past it. It
+// ends on the default step (null) at the second custom element without a
+// size: the opener's own component may stand on its default, the host
+// holding it decides.
+
+function sizeOf(from) {
+  let own = true;
+
+  for (let node = from; node?.nodeType === 1; node = node.parentElement) {
+    if (node.hasAttribute('size')) {
+      if (!node.hasAttribute(RELATIVE)) return node.getAttribute('size');
+      continue;
+    }
+
+    if (!node.localName.includes('-')) continue;
+    if (!own) return null;
+    own = false;
+  }
+
+  return null;
+} // A size step as a number of the ladder ("1/2" is 0.5, "2" is 2); NaN for
+// anything else.
+
+function sizeStep(size) {
+  const [top, bottom = '1'] = String(size ?? '').trim().split('/');
+  const step = Number(top) / Number(bottom);
+  return top !== '' && Number.isFinite(step) && step > 0 ? step : Number.NaN;
+}
+
+/***/ },
+
 /***/ "e577837dd70a"
 (module, __webpack_exports__, __webpack_require__) {
 
@@ -10,7 +157,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   calendarDayOffset: () => (/* binding */ calendarDayOffset),
 /* harmony export */   formatDate: () => (/* binding */ formatDate),
+/* harmony export */   knownTimeZone: () => (/* binding */ knownTimeZone),
 /* harmony export */   msUntilNextDay: () => (/* binding */ msUntilNextDay),
+/* harmony export */   timeZoneOffset: () => (/* binding */ timeZoneOffset),
 /* harmony export */   toDate: () => (/* reexport safe */ _format_intl_js__WEBPACK_IMPORTED_MODULE_0__.toDate)
 /* harmony export */ });
 /* harmony import */ var _format_intl_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("15b4e93ff6ed");
@@ -39,8 +188,10 @@ function hasDateStyle(style) {
  *
  * `date` and `time` are Intl styles (short, medium, long, full); `intl` gives
  * Intl.DateTimeFormat options outright, for a form the styles do not name (a
- * chart's tick, «14:05» with two-digit hours). Anything that is not a date is
- * `gap`, '' by default.
+ * chart's tick, «14:05» with two-digit hours). `timeZone` (an IANA name,
+ * Europe/Moscow) writes the moment on that zone's clock instead of the
+ * reader's (owner decision C183 (3): a product that knows the person's zone).
+ * Anything that is not a date is `gap`, '' by default.
  */
 
 
@@ -48,6 +199,7 @@ function formatDate(value, {
   date = 'medium',
   time = null,
   intl = null,
+  timeZone = '',
   gap = '',
   ...where
 } = {}) {
@@ -62,23 +214,107 @@ function formatDate(value, {
     if (!options.dateStyle && !options.timeStyle) options.dateStyle = 'medium';
   }
 
+  if (knownTimeZone(timeZone)) options = { ...options,
+    timeZone
+  };
   return (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('DateTimeFormat', (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.formatLocale)(where), options).format(moment);
 }
 /**
- * Calendar days from `now` to the value in the reader's time zone: 0 today,
- * -1 yesterday, 1 tomorrow; NaN when the value is no date. Counted on
- * calendar dates, not 24-hour spans, so 23:59 yesterday is -1 at 00:01 and a
- * day of a clock change is still one day.
+ * Whether the platform knows an IANA time zone name (Europe/Moscow, UTC). An
+ * empty or unknown name is the reader's own zone everywhere here.
+ */
+
+function knownTimeZone(timeZone) {
+  const name = String(timeZone ?? '').trim();
+  if (!name) return false;
+  const root = typeof globalThis !== 'undefined' ? globalThis : {};
+  if (!(root.__sfTimeZones instanceof Map)) root.__sfTimeZones = new Map();
+  if (root.__sfTimeZones.has(name)) return root.__sfTimeZones.get(name);
+  let known = true;
+
+  try {
+    new Intl.DateTimeFormat('en', {
+      timeZone: name
+    });
+  } catch {
+    known = false;
+  }
+
+  if (root.__sfTimeZones.size < 64) root.__sfTimeZones.set(name, known);
+  return known;
+} // The calendar date and the clock of a moment in a zone, as numbers: the
+// reader's own when the zone is none.
+
+function wallClock(moment, timeZone) {
+  if (!knownTimeZone(timeZone)) {
+    return {
+      year: moment.getFullYear(),
+      month: moment.getMonth(),
+      day: moment.getDate(),
+      hour: moment.getHours(),
+      minute: moment.getMinutes(),
+      second: moment.getSeconds()
+    };
+  }
+
+  const parts = {};
+
+  for (const part of (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('DateTimeFormat', 'en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric'
+  }).formatToParts(moment)) {
+    if (part.type !== 'literal') parts[part.type] = Number(part.value);
+  }
+
+  return {
+    year: parts.year,
+    month: parts.month - 1,
+    day: parts.day,
+    hour: parts.hour % 24,
+    minute: parts.minute,
+    second: parts.second
+  };
+}
+/**
+ * The zone's offset from UTC at a moment, in minutes (Moscow +180, New York
+ * -300 in winter); the reader's own when the zone is none.
+ */
+
+
+function timeZoneOffset(value, {
+  timeZone = ''
+} = {}) {
+  const moment = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.toDate)(value);
+  if (!moment) return Number.NaN;
+  if (!knownTimeZone(timeZone)) return -moment.getTimezoneOffset();
+  const clock = wallClock(moment, timeZone);
+  const asUtc = Date.UTC(clock.year, clock.month, clock.day, clock.hour, clock.minute, clock.second);
+  return Math.round((asUtc - Math.floor(moment.getTime() / 1000) * 1000) / 60000);
+}
+/**
+ * Calendar days from `now` to the value in the reader's time zone (or
+ * `timeZone`'s): 0 today, -1 yesterday, 1 tomorrow; NaN when the value is no
+ * date. Counted on calendar dates, not 24-hour spans, so 23:59 yesterday is
+ * -1 at 00:01 and a day of a clock change is still one day.
  */
 
 function calendarDayOffset(value, {
-  now = new Date()
+  now = new Date(),
+  timeZone = ''
 } = {}) {
   const moment = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.toDate)(value);
   const today = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.toDate)(now);
   if (!moment || !today) return Number.NaN;
-  const day = Date.UTC(moment.getFullYear(), moment.getMonth(), moment.getDate());
-  const base = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  const at = wallClock(moment, timeZone);
+  const from = wallClock(today, timeZone);
+  const day = Date.UTC(at.year, at.month, at.day);
+  const base = Date.UTC(from.year, from.month, from.day);
   return Math.round((day - base) / DAY_MS);
 }
 /**
@@ -88,10 +324,26 @@ function calendarDayOffset(value, {
  * draws them again; «сегодня» said yesterday is wrong by morning.
  */
 
-function msUntilNextDay(now = new Date()) {
+function msUntilNextDay(now = new Date(), {
+  timeZone = ''
+} = {}) {
   const today = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.toDate)(now) ?? new Date();
-  const next = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-  return next.getTime() - today.getTime();
+
+  if (!knownTimeZone(timeZone)) {
+    const next = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    return next.getTime() - today.getTime();
+  } // In a named zone: the time left on its clock until 24:00, corrected by a
+  // change of its offset before then (a clock change at night).
+
+
+  const clock = wallClock(today, timeZone);
+  const left = DAY_MS - ((clock.hour * 60 + clock.minute) * 60 + clock.second) * 1000 - today.getMilliseconds();
+  const shift = timeZoneOffset(today, {
+    timeZone
+  }) - timeZoneOffset(new Date(today.getTime() + left), {
+    timeZone
+  });
+  return Math.max(1, left + shift * 60000);
 }
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
@@ -109,25 +361,62 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   formatFileSize: () => (/* binding */ formatFileSize)
 /* harmony export */ });
 /* harmony import */ var _format_intl_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("15b4e93ff6ed");
+/* harmony import */ var _lang_file_size_index_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("4294700087dc");
 var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_format_intl_js__WEBPACK_IMPORTED_MODULE_0__]);
 var __webpack_async_dependencies_result__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 _format_intl_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_async_dependencies_result__[0];
 // File sizes in the page's language («1,4 МБ»), with no top-level side
 // effects (format-intl.js). The same functions as core/js/format.js,
 // composition/file-size.mjs and SF.format.fileSize.
- // The four words of a size, in the languages the SIMAI Framework ships; any
-// other language reads the English words with its own digits. A component
-// with words of its own passes them as `units`.
+ // The four words of a size live in core's language files
+// (core/js/lang/file-size, localization study LC-3): English ships in the
+// bundle; Russian and any other language take the words their language file
+// or a product registers for `sf-file-size` (owner decision C282;
+// SF.language.register('sf-file-size', 'de', {b, kb, mb, gb})), else the
+// English words with its own digits. A component with words of its own passes
+// them as `units`. The registry is read from the shared global the page
+// language keeps (core/js/page-language.js), so this module still runs
+// nothing on load.
 
-const FILE_SIZE_UNITS = /* @__PURE__ */Object.freeze({
-  en: /* @__PURE__ */Object.freeze(['B', 'KB', 'MB', 'GB']),
-  ru: /* @__PURE__ */Object.freeze(['Б', 'КБ', 'МБ', 'ГБ'])
-});
-/** The unit words for a locale: its language's, else English. */
+
+const UNIT_KEYS = /* @__PURE__ */Object.freeze(['b', 'kb', 'mb', 'gb']);
+
+function unitsOf(words) {
+  return Object.freeze(UNIT_KEYS.map(key => words[key]));
+}
+
+function registeredUnits(code) {
+  const words = globalThis.__sfPageLanguage?.registered?.get?.('sf-file-size')?.get?.(code);
+  return words && UNIT_KEYS.every(key => typeof words[key] === 'string') ? unitsOf(words) : null;
+} // The built-in languages' units (English; owner decision C282), and `ru` as
+// before for a reader of SF.format.FILE_SIZE_UNITS.ru: the units the ru
+// language file registered, null until it is on the page.
+
+
+function unitTable(words) {
+  const table = {};
+
+  for (const [code, own] of Object.entries(words)) table[code] = unitsOf(own);
+
+  if (!table.ru) Object.defineProperty(table, 'ru', {
+    enumerable: true,
+    get: () => registeredUnits('ru')
+  });
+  return Object.freeze(table);
+}
+
+const FILE_SIZE_UNITS = /* @__PURE__ */unitTable(_lang_file_size_index_mjs__WEBPACK_IMPORTED_MODULE_1__["default"]);
+/** The unit words for a locale: registered for it, its own, its language's, else English. */
 
 function fileSizeUnits(locale = 'en') {
-  const language = String(locale || 'en').toLowerCase().split('-')[0];
-  return Object.hasOwn(FILE_SIZE_UNITS, language) ? FILE_SIZE_UNITS[language] : FILE_SIZE_UNITS.en;
+  const wanted = String(locale || 'en').trim().toLowerCase().replace('_', '-');
+
+  for (const code of [...new Set([wanted, wanted.split('-')[0]])]) {
+    const units = registeredUnits(code) ?? (Object.hasOwn(FILE_SIZE_UNITS, code) ? FILE_SIZE_UNITS[code] : null);
+    if (units) return units;
+  }
+
+  return registeredUnits('en') ?? FILE_SIZE_UNITS.en;
 }
 /**
  * A size as people read it: «512 Б», «2 КБ», «1,4 МБ», «12 GB». Binary steps
@@ -257,7 +546,9 @@ __webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __we
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   formatNumber: () => (/* binding */ formatNumber),
-/* harmony export */   numberOptions: () => (/* binding */ numberOptions)
+/* harmony export */   numberOptions: () => (/* binding */ numberOptions),
+/* harmony export */   percentSign: () => (/* binding */ percentSign),
+/* harmony export */   percentText: () => (/* binding */ percentText)
 /* harmony export */ });
 /* harmony import */ var _format_intl_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("15b4e93ff6ed");
 var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_format_intl_js__WEBPACK_IMPORTED_MODULE_0__]);
@@ -275,20 +566,42 @@ _format_intl_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_async_dependencies_resu
  *   number (default)  1 234,5   as many digits as `step` needs, at most 6; 2 without one
  *   integer           1 235
  *   decimal-<n>       n digits after the point, always (0 to 20)
- *   percent           a share 0..1 as 12 %
+ *   share             a share 0..1 as 12 % (0.125 is 12,5 %)
+ *   percent           the same share: the charts' word, kept
+ *   unit-percent      a value that already is the percent (12.5 is 12,5 %),
+ *                     as the property type `percent` stores it
  *   compact           1,2 тыс.  /  1.2K
  *   currency-<CODE>   1 234,50 ₽ (an ISO 4217 code)
  *   unit-<unit>       45,3 ГБ (an Intl unit: gigabyte, megabit-per-second)
  *
- * Anything else reads as number.
+ * Anything else reads as number. Words join with a space: a kind (currency-,
+ * unit-, percent) and a precision (integer, decimal-<n>, compact), so
+ * «currency-RUB integer» is 1 235 ₽, «currency-RUB decimal-2» 1 234,50 ₽ and
+ * «currency-RUB compact» 1,1 млн ₽. The precision wins whatever the order.
  */
 
 function numberOptions(format = 'number', step = 0) {
-  const word = String(format || 'number').trim();
+  const words = String(format || 'number').trim().split(/\s+/u).filter(Boolean);
+
+  if (words.length > 1) {
+    const PRECISION = /^(?:integer|compact|decimal-\d{1,2})$/u;
+    const kinds = words.filter(one => !PRECISION.test(one));
+    const precision = words.filter(one => PRECISION.test(one));
+    return [...kinds, ...precision].reduce((options, one) => ({ ...options,
+      ...numberOptions(one, step)
+    }), {});
+  }
+
+  const word = words[0] ?? 'number';
   if (word === 'integer') return {
+    minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  };
-  if (word === 'percent') return {
+  }; // Two meanings of «percent» met in the Framework (C294, MP-4): this word
+  // multiplies a share by 100, while the property type `percent` holds the
+  // percent itself. `share` says which one it is; `percent` stays its alias for
+  // the charts that write it, and `unit-percent` is the percent itself.
+
+  if (word === 'share' || word === 'percent') return {
     style: 'percent',
     maximumFractionDigits: 1
   };
@@ -340,7 +653,35 @@ function formatNumber(value, format = 'number', {
   if (typeof number !== 'number' || !Number.isFinite(number)) return gap;
   const options = numberOptions(format, step);
   if (grouping === false) options.useGrouping = false;
-  return (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('NumberFormat', (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.formatLocale)(where), options).format(number);
+  const text = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('NumberFormat', (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.formatLocale)(where), options).format(number);
+  return options.style === 'percent' || options.unit === 'percent' ? percentSign(text) : text;
+}
+/**
+ * One spelling of a per cent in every language (owner decision C203 (3), DEV
+ * msg-913fd9e4, 2026-11-15): the number, a no-break space (U+00A0) and «%» --
+ * «72 %», «12,5 %», and «72 %» in English too, where Intl writes «72%». A
+ * language that writes the sign first («%72») keeps its order.
+ */
+
+function percentSign(text) {
+  // A right-to-left language writes direction marks around the sign («12.5‎%‎»
+  // in Arabic); they go with the space it had, and the number keeps the mark
+  // it starts with (C294).
+  return String(text).replace(/[\s\u00a0\u202f\u200e\u200f\u061c]*%[\u200e\u200f\u061c]*$/u, '\u00a0%');
+}
+/**
+ * A value that already is a per cent (0..100, «72», «72.5») as the progress
+ * family shows and says it (owner decision C203 (3), IM-3): the number in the
+ * language of the node's part of the page, as many digits as it has (up to
+ * 2), a no-break space and «%» -- «72 %», «72,5 %».
+ */
+
+function percentText(value, node) {
+  const number = Number(value);
+  return percentSign(`${formatNumber(Number.isFinite(number) ? number : 0, 'number', {
+    node,
+    grouping: false
+  })}%`);
 }
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
@@ -354,7 +695,8 @@ __webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __we
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   formatRelativeDay: () => (/* binding */ formatRelativeDay),
-/* harmony export */   formatRelativeTime: () => (/* binding */ formatRelativeTime)
+/* harmony export */   formatRelativeTime: () => (/* binding */ formatRelativeTime),
+/* harmony export */   intlSpeaks: () => (/* binding */ intlSpeaks)
 /* harmony export */ });
 /* harmony import */ var _format_intl_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("15b4e93ff6ed");
 /* harmony import */ var _format_date_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("e577837dd70a");
@@ -369,6 +711,53 @@ var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_for
 function capitalise(text, locale) {
   const first = Array.from(text)[0] ?? '';
   return first ? first.toLocaleUpperCase(locale || undefined) + text.slice(first.length) : text;
+} // «сегодня», «вчера», «завтра» are the platform's words, except where the
+// platform has no words of the language: a browser without a language's
+// relative-time data says «yesterday» on a page in it. Then the words come
+// from core's language files (core/js/lang/relative-day, registered as
+// `sf-relative-day`), which a language pack or a product brings
+// (SF.language.register('sf-relative-day', 'de', {today, yesterday,
+// tomorrow})). ru and en are never looked up: every platform speaks them.
+
+
+const DAY_KEYS = /* @__PURE__ */Object.freeze({
+  0: 'today',
+  [-1]: 'yesterday',
+  1: 'tomorrow'
+});
+/** Whether Intl's relative-time words are those of the locale's language, not a fallback's. */
+
+function intlSpeaks(locale) {
+  const wanted = String(locale || '').trim().toLowerCase().replace('_', '-').split('-')[0];
+  if (!wanted) return true;
+  if (wanted === 'en') return true;
+
+  try {
+    const own = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('RelativeTimeFormat', locale, {
+      numeric: 'auto'
+    });
+    if (String(own.resolvedOptions().locale).toLowerCase().split('-')[0] !== wanted) return false; // A platform may answer the locale's name over English data (a trimmed
+    // ICU): its «yesterday» is then English's.
+
+    return own.format(-1, 'day') !== (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('RelativeTimeFormat', 'en', {
+      numeric: 'auto'
+    }).format(-1, 'day');
+  } catch {
+    return false;
+  }
+}
+
+function packDayWord(offset, locale) {
+  if (intlSpeaks(locale)) return null;
+  const words = globalThis.__sfPageLanguage?.registered?.get?.('sf-relative-day');
+  const wanted = String(locale || '').trim().toLowerCase().replace('_', '-');
+
+  for (const code of [...new Set([wanted, wanted.split('-')[0]])]) {
+    const word = words?.get?.(code)?.[DAY_KEYS[offset]];
+    if (typeof word === 'string' && word.trim()) return word;
+  }
+
+  return null;
 }
 /**
  * The day a moment fell on, as a list says it: «сегодня», «вчера», «завтра»,
@@ -378,6 +767,8 @@ function capitalise(text, locale) {
  * its own passes them (`today`, `yesterday`, `tomorrow`) and they win.
  * `weekday: false` goes from yesterday straight to the date; `capital: true`
  * starts the word with a capital, as a heading or a divider does.
+ *
+ * `timeZone` counts the days and writes them on that zone's clock.
  *
  * The answer changes at the reader's midnight: msUntilNextDay (format-date.js)
  * says when.
@@ -391,6 +782,7 @@ function formatRelativeDay(value, {
   tomorrow,
   weekday = true,
   capital = false,
+  timeZone = '',
   gap = '',
   ...where
 } = {}) {
@@ -398,8 +790,12 @@ function formatRelativeDay(value, {
   if (!moment) return gap;
   const locale = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.formatLocale)(where);
   const offset = (0,_format_date_js__WEBPACK_IMPORTED_MODULE_1__.calendarDayOffset)(moment, {
-    now
+    now,
+    timeZone
   });
+  const zone = (0,_format_date_js__WEBPACK_IMPORTED_MODULE_1__.knownTimeZone)(timeZone) ? {
+    timeZone
+  } : {};
   const own = {
     0: today,
     [-1]: yesterday,
@@ -410,12 +806,13 @@ function formatRelativeDay(value, {
   if (own) {
     text = String(own);
   } else if (offset >= -1 && offset <= 1) {
-    text = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('RelativeTimeFormat', locale, {
+    text = packDayWord(offset, locale) ?? (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('RelativeTimeFormat', locale, {
       numeric: 'auto'
     }).format(offset, 'day');
   } else if (weekday && offset < -1 && offset > -7) {
     text = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('DateTimeFormat', locale, {
-      weekday: 'long'
+      weekday: 'long',
+      ...zone
     }).format(moment);
   } else {
     const year = moment.getFullYear() === (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.toDate)(now).getFullYear() ? {} : {
@@ -424,7 +821,8 @@ function formatRelativeDay(value, {
     text = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('DateTimeFormat', locale, {
       day: 'numeric',
       month: 'long',
-      ...year
+      ...year,
+      ...zone
     }).format(moment);
   }
 
@@ -549,6 +947,635 @@ __webpack_async_result__();
 
 /***/ },
 
+/***/ "2db3a835ac11"
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   actionEntry: () => (/* binding */ actionEntry),
+/* harmony export */   chooseBeside: () => (/* binding */ chooseBeside),
+/* harmony export */   controlOf: () => (/* binding */ controlOf),
+/* harmony export */   drawnBox: () => (/* binding */ drawnBox),
+/* harmony export */   fitBesideMore: () => (/* binding */ fitBesideMore),
+/* harmony export */   fitByPriority: () => (/* binding */ fitByPriority),
+/* harmony export */   fitInOrder: () => (/* binding */ fitInOrder),
+/* harmony export */   isMainAction: () => (/* binding */ isMainAction),
+/* harmony export */   isPressed: () => (/* binding */ isPressed),
+/* harmony export */   layoutActionRow: () => (/* binding */ layoutActionRow),
+/* harmony export */   measureShown: () => (/* binding */ measureShown),
+/* harmony export */   openRowMenu: () => (/* binding */ openRowMenu),
+/* harmony export */   readPriority: () => (/* binding */ readPriority),
+/* harmony export */   rowRoom: () => (/* binding */ rowRoom),
+/* harmony export */   spanOf: () => (/* binding */ spanOf),
+/* harmony export */   spanOfUnits: () => (/* binding */ spanOfUnits),
+/* harmony export */   standardMenu: () => (/* binding */ standardMenu),
+/* harmony export */   textWidth: () => (/* binding */ textWidth),
+/* harmony export */   triggerExtra: () => (/* binding */ triggerExtra)
+/* harmony export */ });
+/* harmony import */ var _density_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("1412c5875b4d");
+// One row of items that do not all fit, and a trailing «Ещё (n)» that holds
+// the rest (owner decision C54): the items in their order up to the first
+// that does not fit, each whole in the row or in «Ещё»; the items that must
+// stay (the current one, the pinned ones) stay, the last kept others giving
+// way to them; the room is taken with the width «Ещё (n)» will have with its
+// own count. Only the arithmetic and the measuring are here -- the element
+// keeps its markup, its classes and its menu entries.
+//
+// Taken out of sf-tabs (fix/tabs-overflow-more, C54 and its returns D1, D2)
+// so a second row (sf-contents layout="bar", CT-05) lays out by the same
+// rules instead of a copy of them. Every number is a width in CSS pixels,
+// fractional; half a pixel is the tolerance, as the tabs measured it.
+
+const TOLERANCE = 0.5; // The items in their order up to the first that does not fit in available:
+// their indices, or null when every item fits.
+
+function fitInOrder(widths, gap, available) {
+  const kept = [];
+  let used = 0;
+
+  for (let at = 0; at < widths.length; at += 1) {
+    const next = used + (kept.length ? gap : 0) + widths[at];
+    if (next > available + TOLERANCE) break;
+    kept.push(at);
+    used = next;
+  }
+
+  return kept.length === widths.length ? null : kept;
+} // The width of some items laid side by side.
+
+function spanOf(widths, gap, indices) {
+  return indices.reduce((sum, at, n) => sum + widths[at] + (n ? gap : 0), 0);
+} // The row beside «Ещё», in available: the items in order, then the items that
+// must stay put back in -- the last kept items that need not stay give way to
+// them, and when the must-stay items alone do not fit, they give way too, the
+// last first, but never the current one.
+
+function chooseBeside({
+  widths,
+  gap = 0,
+  available,
+  must = [],
+  current = -1
+}) {
+  let chosen = fitInOrder(widths, gap, available) ?? widths.map((_, at) => at);
+  const missing = must.filter(at => !chosen.includes(at));
+  if (!missing.length) return chosen;
+  const next = [...chosen, ...missing];
+
+  while (spanOf(widths, gap, next) > available + TOLERANCE) {
+    const dropAt = next.slice().reverse().find(at => !must.includes(at)) ?? next.slice().reverse().find(at => at !== current);
+    if (dropAt === undefined) break;
+    next.splice(next.indexOf(dropAt), 1);
+  }
+
+  chosen = next.sort((a, b) => a - b);
+  return chosen;
+} // The row beside «Ещё (n)»: room is the row's room with the trigger standing
+// as it is drawn now; extra(count) is how much wider (or narrower) the
+// trigger will be with count in it. Of the rows that fit beside their own
+// count, the one with the most items; when no count agrees with its row, the
+// row that fits beside the widest. squeezed is the current item when it alone
+// is left and still wider than the room (it alone may be shortened), else -1.
+
+function fitBesideMore({
+  widths,
+  gap = 0,
+  room,
+  must = [],
+  current = -1,
+  extra = null
+}) {
+  let kept = null;
+
+  if (typeof extra === 'function') {
+    const besides = [];
+
+    for (let count = 1; count < widths.length && !kept; count += 1) {
+      const more = extra(count);
+      besides.push(more);
+      const chosen = chooseBeside({
+        widths,
+        gap,
+        available: room - more,
+        must,
+        current
+      });
+      if (widths.length - chosen.length === count) kept = chosen;
+    }
+
+    if (!kept && besides.length) kept = chooseBeside({
+      widths,
+      gap,
+      available: room - Math.max(...besides),
+      must,
+      current
+    });
+  }
+
+  kept ??= chooseBeside({
+    widths,
+    gap,
+    available: room,
+    must,
+    current
+  });
+  const squeezed = kept.length === 1 && kept[0] === current && spanOf(widths, gap, kept) > room + TOLERANCE ? current : -1;
+  return {
+    kept,
+    squeezed
+  };
+} // The content box of a row that clips and has no scrollbar, in fractional
+// pixels: clientWidth is a whole pixel, and a row 383.6 px wide read as 383 or
+// 384 laid out differently (C54 return).
+
+function rowRoom(list) {
+  const style = getComputedStyle(list);
+  const edges = ['borderInlineStartWidth', 'borderInlineEndWidth', 'paddingInlineStart', 'paddingInlineEnd'];
+  return list.getBoundingClientRect().width - edges.reduce((sum, edge) => sum + (parseFloat(style[edge]) || 0), 0);
+} // A text measurer in an element's own face, or null without a canvas: the
+// width «Ещё (7)» will have before its button draws it.
+
+let measureCanvas = null;
+function textWidth(element) {
+  const style = getComputedStyle(element);
+  measureCanvas ??= globalThis.document?.createElement('canvas') ?? null;
+  const context = measureCanvas?.getContext?.('2d');
+  if (!context) return null;
+  context.font = style.font;
+  if ('letterSpacing' in context) context.letterSpacing = style.letterSpacing === 'normal' ? '0px' : style.letterSpacing;
+  return text => context.measureText(text).width;
+} // extra(count) for a trigger whose text box shows label(count) now.
+
+function triggerExtra(textBox, label) {
+  const measure = textBox ? textWidth(textBox) : null;
+  if (!measure) return null;
+  const drawn = measure(textBox.textContent.trim());
+  return count => measure(label(count)) - drawn;
+} // The standard menu «Ещё» opens: sf-menu-context, a relation fetched when
+// first used (SF.Loader.ensure: asked for, waited for up to 3 s, never
+// thrown), one per owner and field, on the body or in the open dialog. The
+// one copy in core (defect TL-8): the sortable inserter and the handle's move
+// menu place theirs through it too. null when no sf-menu-context came (no
+// Loader, or the relation failed): an element that never upgrades opens
+// nothing. setup(menu) runs once on a new menu, for the listeners an owner
+// adds beside select.
+
+async function standardMenu(owner, field, select, {
+  setup
+} = {}) {
+  await globalThis.SF?.Loader?.ensure?.(['sf-menu-context']);
+  if (owner[field]?.isConnected) return owner[field];
+  if (!globalThis.customElements?.get('sf-menu-context')) return null;
+  const doc = owner.ownerDocument || globalThis.document;
+  const menu = doc.createElement('sf-menu-context');
+  menu.setAttribute('popup', '');
+  if (select) menu.addEventListener('sf-menu-context-select', event => select(event.detail?.id, event));
+  setup?.(menu);
+  (owner.closest('dialog[open]') || doc.body).append(menu);
+  owner[field] = menu;
+  return menu;
+} // ─── Rows of actions and tools (owner decision C155, 2026-11-14) ─────────────
+// The one row engine of the Framework: the navigation rows above (sf-tabs,
+// sf-contents, sf-menu) and the action and tool rows below (sf-header-page's
+// actions, sf-input-rich's toolbar, .sf-button-group) share the measuring and
+// the rule. What does not fit leaves for «Ещё»: from the end by default, by
+// an author's priority where one is given (priority="1" is the most important,
+// a bigger number leaves sooner, an item without one before every numbered
+// item); the main action, a pressed or current item and priority="pin" never
+// leave (C155 (3)). A toolbar's units are its groups: a group leaves whole and
+// takes its separator with it (C155 (4)).
+// An author's priority as the engine reads it: a whole number from 1, pin, or
+// nothing (leaves first, the last first).
+
+function readPriority(value) {
+  if (value === null || value === undefined) return {
+    rank: Infinity,
+    pin: false
+  };
+  const text = String(value).trim().toLowerCase();
+  if (text === 'pin') return {
+    rank: 0,
+    pin: true
+  };
+  const number = Number(text);
+  return Number.isFinite(number) && text !== '' ? {
+    rank: number,
+    pin: false
+  } : {
+    rank: Infinity,
+    pin: false
+  };
+} // The span of some units laid side by side: their widths, the row's gap
+// between neighbours and, where two neighbours belong to different groups, a
+// separator with the gap on each of its sides.
+
+function spanOfUnits(units, gap, separator, indices) {
+  let span = 0;
+  indices.forEach((at, n) => {
+    if (n) {
+      span += gap;
+      if (separator && units[indices[n - 1]].group !== units[at].group) span += separator + gap;
+    }
+
+    span += units[at].width;
+  });
+  return span;
+} // Which units stay in a row that is room wide. units: [{width, rank, pin,
+// group}] in the row's order; more: the width «Ещё» adds when it shows (its
+// own width, the gap before it and, in a toolbar, its separator). Answers the
+// indices that stay, in order, and the ones that left; every unit stays when
+// all fit. The units that leave go by rank, the biggest first, and among equal
+// ranks the last first; a pinned unit never leaves, even when the pinned ones
+// alone do not fit (the row then clips, as a current tab is squeezed).
+
+function fitByPriority({
+  units,
+  gap = 0,
+  separator = 0,
+  room,
+  more = 0
+}) {
+  const all = units.map((_, at) => at);
+  const whole = spanOfUnits(units, gap, separator, all);
+  if (whole <= room + TOLERANCE) return {
+    kept: all,
+    out: [],
+    span: whole,
+    fits: true
+  };
+  const order = all.filter(at => !units[at].pin).sort((a, b) => units[b].rank - units[a].rank || b - a);
+  const kept = all.slice();
+  const out = [];
+
+  const used = () => spanOfUnits(units, gap, separator, kept) + (kept.length ? more : more - gap);
+
+  while (order.length && used() > room + TOLERANCE) {
+    const at = order.shift();
+    kept.splice(kept.indexOf(at), 1);
+    out.push(at);
+  }
+
+  const span = used();
+  return {
+    kept,
+    out: out.sort((a, b) => a - b),
+    span,
+    fits: span <= room + TOLERANCE
+  };
+} // The box an element draws: a Framework host with display: contents (sf-button,
+// sf-button-icon) has none of its own, so its first drawn child's.
+
+function drawnBox(element) {
+  let box = element;
+
+  while (box && getComputedStyle(box).display === 'contents') box = box.firstElementChild;
+
+  return box ? box.getBoundingClientRect() : {
+    width: 0,
+    height: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0
+  };
+} // Every element's drawn width with all of them shown, in one task: the class
+// that takes an element out of the row is lifted for the measure and put back
+// before anything is painted (the row never draws all its items at once).
+
+function measureShown(elements, outClass) {
+  const was = elements.map(element => element.classList.contains(outClass));
+
+  for (const element of elements) element.classList.remove(outClass);
+
+  const widths = elements.map(element => drawnBox(element).width);
+  elements.forEach((element, at) => element.classList.toggle(outClass, was[at]));
+  return widths;
+} // A row of actions or tools laid out by the rule above, in one task.
+// row: the flex row; units: [{element, rank, pin, group}]; more: the «Ещё»
+// element (inside the row, last); moreSeparator: a separator before it (a
+// toolbar's), separators: [{element, after: group}] -- a separator standing
+// after a group, shown only between two groups that keep something; outClass:
+// the row's own class that takes an element out (display: none); room: the
+// room the row has, when it is not the row's own content box (a row sized by
+// its content). Answers {out: the indices that left, fits: whether what
+// stays fits the room}.
+
+function layoutActionRow({
+  row,
+  units,
+  more,
+  moreSeparator = null,
+  separators = [],
+  outClass,
+  room = null
+}) {
+  const style = getComputedStyle(row);
+  const gap = parseFloat(style.columnGap) || 0;
+  const elements = units.map(unit => unit.element);
+  const extra = [more, moreSeparator, ...separators.map(one => one.element)].filter(Boolean);
+  const widths = measureShown([...elements, ...extra], outClass);
+  const moreWidth = widths[elements.length];
+  const separatorWidth = separators.length || moreSeparator ? Math.max(0, ...widths.slice(elements.length + 1)) : 0;
+  const measured = units.map((unit, at) => ({ ...unit,
+    width: widths[at]
+  }));
+  const {
+    out,
+    fits
+  } = fitByPriority({
+    units: measured,
+    gap,
+    separator: separatorWidth,
+    room: room ?? rowRoom(row),
+    more: moreWidth + gap + (moreSeparator ? separatorWidth + gap : 0)
+  });
+  const gone = new Set(out);
+  elements.forEach((element, at) => element.classList.toggle(outClass, gone.has(at))); // A separator stands after its group only while that group and a group
+  // after it both keep something: an emptied group leaves with its separator,
+  // and none stands first or last.
+
+  const keeps = group => units.some((unit, at) => unit.group === group && !gone.has(at));
+
+  const groups = [...new Set(units.map(unit => unit.group))];
+
+  for (const {
+    element,
+    after
+  } of separators) {
+    const later = groups.slice(groups.indexOf(after) + 1);
+    element.classList.toggle(outClass, !(keeps(after) && later.some(keeps)));
+  }
+
+  more?.classList.toggle(outClass, !out.length);
+  moreSeparator?.classList.toggle(outClass, !out.length || gone.size === units.length);
+  return {
+    out,
+    fits
+  };
+} // ─── «Ещё» of an action or tool row ──────────────────────────────────────────
+// Whether an action is the row's main one: a filled sf-button (no appearance,
+// or default) -- one per row (C116, C161 (3)).
+
+function isMainAction(element) {
+  if (!element?.matches?.('sf-button, .sf-button')) return false;
+  const look = element.getAttribute('appearance') ?? element.getAttribute('variant');
+  return look === null || look === '' || look === 'default' || look === 'filled';
+} // Whether a toggle in a row is on: a pressed sf-button or icon button, or a
+// button saying aria-pressed="true".
+
+function isPressed(element) {
+  if (!element) return false;
+  const value = element.getAttribute('pressed');
+  if (value !== null && value !== 'false') return true;
+  return element.getAttribute('aria-pressed') === 'true' || element.querySelector?.(':scope > button[aria-pressed="true"]') != null;
+} // The control a row item is pressed through: its own button or link.
+
+function controlOf(element) {
+  if (!element) return null;
+  if (element.matches('button, a[href]')) return element;
+  return element.querySelector(':scope > button, :scope > a[href], button, a[href]') || element;
+} // The menu row an action of a row becomes in «Ещё»: its words, its icon, and
+// a check when it is a pressed toggle (C155 (6), (7)).
+
+function actionEntry(element, id) {
+  const control = controlOf(element);
+  const text = (element.getAttribute('text') || element.getAttribute('aria-label') || element.getAttribute('title') || control?.getAttribute('aria-label') || element.textContent || '').trim();
+  const icon = element.getAttribute('icon-start') || element.getAttribute('icon') || element.getAttribute('icon-end') || control?.querySelector?.('.sf-icon')?.textContent.trim() || undefined;
+  const entry = {
+    id: String(id),
+    text,
+    icon: icon || undefined
+  };
+  const toggle = element.hasAttribute('pressed') || control?.hasAttribute?.('aria-pressed');
+
+  if (toggle) {
+    entry.kind = 'check';
+    entry.checked = isPressed(element);
+  }
+
+  if (element.hasAttribute('disabled') || control?.disabled || control?.getAttribute?.('aria-disabled') === 'true') entry.disabled = true;
+  return entry;
+} // The «Ещё» menu of a row: the standard sf-menu-context (standardMenu), named
+// «Ещё», on the row's size and density, listing entries; toggled from anchor.
+
+async function openRowMenu(owner, {
+  anchor,
+  entries,
+  select,
+  label,
+  size = '1'
+}) {
+  if (!entries.length) return null;
+  const menu = await standardMenu(owner, '_sfRowMoreMenu', (id, event) => owner._sfRowMoreSelect?.(id, event));
+  if (!menu) return null;
+  owner._sfRowMoreSelect = select;
+  if (label) menu.setAttribute('aria-label', label);
+  menu.setAttribute('size', size);
+  (0,_density_js__WEBPACK_IMPORTED_MODULE_0__.followDensity)(menu, owner);
+  menu.entries = entries;
+  menu.toggleFor(anchor);
+  return menu;
+}
+
+/***/ },
+
+/***/ "557c99eb8f3a"
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   focusTarget: () => (/* binding */ focusTarget),
+/* harmony export */   roving: () => (/* binding */ roving)
+/* harmony export */ });
+// One Tab stop for a row of controls, and the arrows between them (owner
+// decision C184 (1)-(3), 2026-11-14; study control/research/2026-11-14-
+// toolbar-menu-open.md, K-02). A toolbar is not a component of its own
+// (C155 (8): no sf-toolbar): it is ordinary sf-button-icon groups, 4 apart
+// inside a group and a separator between groups (C144), and this helper gives
+// them the keyboard of the WAI-ARIA toolbar pattern:
+//
+// - the row is one Tab stop; Tab comes back to the control the person left
+//   (memory, C184 (3)), or to the first one (memory: false);
+// - the arrows of the row's orientation move between the controls, in the
+//   row's direction (right-to-left reverses ← and →), Home and End go to the
+//   ends, and the walk wraps;
+// - a control that cannot be used now (aria-disabled) stays in the walk,
+//   dimmed by its component, with its reason as a tooltip (C184 (2), as
+//   C164 (4) does for a menu row); disabled: 'skip' leaves it out. A control
+//   with the native disabled attribute cannot take the focus and is skipped;
+// - a control inside «Ещё» (the C155 row engine marks the part that left the
+//   row with .out or [hidden]) is not in the walk;
+// - ↓ (↑) on a menu button of a horizontal row opens its menu, as the
+//   pattern's menu button does.
+//
+// It is also the list's keyboard (C184 (5)): a list is one Tab stop and ↑ ↓
+// move between its rows (orientation 'vertical').
+//
+// roving(container, options) -> {refresh, set, current, items, destroy}.
+// The look stays with the components; this module holds no state of its own
+// outside the controller it returns, so every bundle may carry its own copy.
+const NATIVE_FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex], [contenteditable=""], [contenteditable="true"]';
+const OUT = '.out, [hidden], [data-sf-out], [inert]'; // The element that takes the focus for an item: the item itself when it can
+// (a <button>, a row with a tabindex), else the control inside it -- an
+// sf-button-icon host draws a <button> and is display: contents.
+
+function focusTarget(item) {
+  if (!item) return null;
+  if (item.matches?.(NATIVE_FOCUSABLE)) return item;
+  return item.querySelector?.('button, a[href], [role="button"], [tabindex]') ?? item;
+}
+
+const isUnavailable = target => target.getAttribute?.('aria-disabled') === 'true';
+
+const isDisabled = target => Boolean(target.disabled) || target.matches?.(':disabled');
+
+function roving(container, {
+  items: itemsOf = 'button',
+  orientation = 'horizontal',
+  wrap = true,
+  disabled = 'focusable',
+  memory = true,
+  out = OUT,
+  onMove = null,
+  observe = true
+} = {}) {
+  let current = null; // Every item of the row, in order, as the targets that take the focus.
+
+  const all = () => {
+    const found = typeof itemsOf === 'function' ? itemsOf() : [...container.querySelectorAll(itemsOf)];
+    const targets = [];
+
+    for (const item of found) {
+      const target = focusTarget(item);
+      if (!target || !container.contains(target) || targets.includes(target)) continue; // Out of the row: a part inside it that left (into «Ещё») or is
+      // hidden. The row itself being hidden for now does not count.
+
+      const away = target.closest(out);
+      if (away && away !== container && container.contains(away)) continue;
+      targets.push(target);
+    }
+
+    return targets;
+  }; // The items the walk stops on.
+
+
+  const items = () => all().filter(target => !isDisabled(target) && (disabled === 'focusable' || !isUnavailable(target)));
+
+  function set(element) {
+    const target = focusTarget(element);
+    const every = all();
+    if (!target || !every.includes(target)) return;
+    current = target;
+
+    for (const other of every) {
+      const next = other === target ? '0' : '-1';
+      if (other.getAttribute('tabindex') !== next) other.setAttribute('tabindex', next);
+    }
+  } // After a drawing or a change of the row: the one Tab stop is the item
+  // remembered, or the first one when it is gone (or the row forgets).
+
+
+  function refresh() {
+    const list = items();
+
+    if (!list.length) {
+      // Nothing to stop on: no item keeps a stop either (a disabled field's
+      // toolbar is not a Tab stop).
+      for (const other of all()) if (other.getAttribute('tabindex') !== '-1') other.setAttribute('tabindex', '-1');
+
+      current = null;
+      return;
+    }
+
+    set(current && list.includes(current) ? current : list[0]);
+  }
+
+  const vertical = orientation === 'vertical';
+  const both = orientation === 'both';
+
+  function onKeydown(event) {
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    const list = items();
+    const target = list.find(one => one === event.target || one.contains(event.target));
+    if (!target) return; // A field inside an item (a link's address) keeps its own keys.
+
+    if (event.target !== target && event.target.matches?.('input, textarea, select, [contenteditable="true"], [contenteditable=""]')) return;
+    const rtl = getComputedStyle(container).direction === 'rtl';
+    const forward = vertical ? ['ArrowDown'] : both ? ['ArrowDown', rtl ? 'ArrowLeft' : 'ArrowRight'] : [rtl ? 'ArrowLeft' : 'ArrowRight'];
+    const back = vertical ? ['ArrowUp'] : both ? ['ArrowUp', rtl ? 'ArrowRight' : 'ArrowLeft'] : [rtl ? 'ArrowRight' : 'ArrowLeft'];
+    const at = list.indexOf(target);
+    let next = null;
+
+    if (!vertical && !both && (event.key === 'ArrowDown' || event.key === 'ArrowUp') && target.getAttribute('aria-haspopup') === 'menu' && !isUnavailable(target)) {
+      event.preventDefault();
+      target.click();
+      return;
+    }
+
+    if (forward.includes(event.key)) next = at + 1 < list.length ? list[at + 1] : wrap ? list[0] : null;else if (back.includes(event.key)) next = at > 0 ? list[at - 1] : wrap ? list[list.length - 1] : null;else if (event.key === 'Home') next = list[0];else if (event.key === 'End') next = list[list.length - 1];else return;
+    event.preventDefault();
+    if (!next || next === target) return;
+    set(next);
+    next.focus();
+    onMove?.(next, event.key);
+  }
+
+  function onFocusIn(event) {
+    const target = all().find(one => one === event.target);
+    if (!target || target === current) return;
+    set(target);
+    onMove?.(target, 'focus');
+  }
+
+  function onFocusOut(event) {
+    if (memory || container.contains(event.relatedTarget)) return;
+    const list = items();
+    if (list.length) set(list[0]);
+  }
+
+  container.addEventListener('keydown', onKeydown);
+  container.addEventListener('focusin', onFocusIn);
+  container.addEventListener('focusout', onFocusOut); // Items drawn later -- a host that draws its <button> on its own schedule
+  // (sf-button-icon), a row added -- join the walk with tabindex -1 at once:
+  // the row stays one Tab stop whatever draws when.
+
+  let queued = false;
+  const watcher = observe && typeof MutationObserver === 'function' ? new MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    queueMicrotask(() => {
+      queued = false;
+      refresh();
+    });
+  }) : null;
+  watcher?.observe(container, {
+    childList: true,
+    subtree: true
+  });
+  refresh();
+  return {
+    refresh,
+    set,
+    items,
+
+    get current() {
+      return current;
+    },
+
+    destroy() {
+      watcher?.disconnect();
+      container.removeEventListener('keydown', onKeydown);
+      container.removeEventListener('focusin', onFocusIn);
+      container.removeEventListener('focusout', onFocusOut);
+    }
+
+  };
+}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (roving);
+
+/***/ },
+
 /***/ "f28a9d913ce0"
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
@@ -598,7 +1625,8 @@ __webpack_require__.r(__webpack_exports__);
   from: 'sf-content-editor',
   to: 'sf-editor-content',
   since: '2026-11-03',
-  remove_after: '2027-01-01'
+  remove_after: '2027-01-01',
+  package: 'pro'
 }), Object.freeze({
   from: 'sf-context-menu',
   to: 'sf-menu-context',
@@ -618,7 +1646,8 @@ __webpack_require__.r(__webpack_exports__);
   from: 'sf-data-view',
   to: 'sf-view',
   since: '2026-11-03',
-  remove_after: '2027-01-01'
+  remove_after: '2027-01-01',
+  package: 'pro'
 }), Object.freeze({
   from: 'sf-datepicker',
   to: 'sf-input-date',
@@ -658,7 +1687,8 @@ __webpack_require__.r(__webpack_exports__);
   from: 'sf-property-view',
   to: 'sf-view-properties',
   since: '2026-11-03',
-  remove_after: '2027-01-01'
+  remove_after: '2027-01-01',
+  package: 'pro'
 }), Object.freeze({
   from: 'sf-quantity',
   to: 'sf-input-quantity',
@@ -683,7 +1713,8 @@ __webpack_require__.r(__webpack_exports__);
   from: 'sf-table',
   to: 'sf-view-table',
   since: '2026-11-03',
-  remove_after: '2027-01-01'
+  remove_after: '2027-01-01',
+  package: 'pro'
 }), Object.freeze({
   from: 'sf-textarea',
   to: 'sf-input-textarea',
@@ -693,7 +1724,8 @@ __webpack_require__.r(__webpack_exports__);
   from: 'sf-thread-list',
   to: 'sf-chat-threads',
   since: '2026-11-03',
-  remove_after: '2027-01-01'
+  remove_after: '2027-01-01',
+  package: 'pro'
 })]));
 
 /***/ },
@@ -813,7 +1845,10 @@ function registerTagAliasRows(rows) {
       from: row.from,
       to: row.to,
       since: String(row.since ?? ''),
-      remove_after: String(row.remove_after ?? '')
+      remove_after: String(row.remove_after ?? ''),
+      ...(typeof row.package === 'string' && row.package ? {
+        package: row.package
+      } : {})
     });
     addRow(shared, clean);
     taken.push(clean);
@@ -875,15 +1910,18 @@ function noteTagAlias(row) {
     tag: row.to,
     since: row.since,
     remove_after: row.remove_after,
-    expired
+    expired,
+    package: row.package
   });
   if (shared.noted.has(row.from)) return;
   shared.noted.add(row.from); // deprecations.js prints an expired name itself, and every name when the
   // page opted in; the note here is for the rest.
 
   const optedIn = globalThis.document?.documentElement?.dataset?.sfDeprecations === 'warn' || globalThis.SF?.deprecations?.warn === true;
-  if (expired || optedIn) return;
-  globalThis.console?.warn?.(`[SIMAI Framework] <${row.from}> is now <${row.to}>; the old tag works until ${row.remove_after}. Write <${row.to}>. See contracts/changes/journal.json.`);
+  if (expired || optedIn) return; // A package's element says which package ships it now (C174 NM-3).
+
+  const where = row.package ? ` from the component package ${row.package}` : '';
+  globalThis.console?.warn?.(`[SIMAI Framework] <${row.from}> is now <${row.to}>; the old tag works until ${row.remove_after}. Write <${row.to}>${where}. See contracts/changes/journal.json.`);
 } // Defines each old tag of `tag` as a subclass of `Base` (the class that
 // defines `tag`), through `define(name, Class)`: the Smart base passes its
 // definition queue, so both names are defined in the same batch. Returns the
@@ -950,15 +1988,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_js_composition_composed_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("e2cb52b018e5");
 /* harmony import */ var _core_js_composition_inline_editor_mjs__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("f0e430451ca1");
 /* harmony import */ var _core_js_page_language_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__("43090d1c8307");
-/* harmony import */ var _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__("50d340b22253");
-/* harmony import */ var _js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__("8d9331f1f24f");
-/* harmony import */ var _js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__("c584913fd94f");
-/* harmony import */ var _js_templates_default_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__("d62589d9772e");
-/* harmony import */ var _component_json__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__("b1c5d4f6dddd");
-/* harmony import */ var _lang_en_json__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__("5bf8f84cf5a8");
-/* harmony import */ var _lang_ru_json__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__("362a712abf5e");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_core_js_smart_base__WEBPACK_IMPORTED_MODULE_0__, _core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__, _core_js_composition_index_mjs__WEBPACK_IMPORTED_MODULE_2__, _core_js_composition_inline_editor_mjs__WEBPACK_IMPORTED_MODULE_5__, _core_js_page_language_js__WEBPACK_IMPORTED_MODULE_6__, _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__, _js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__, _js_templates_default_js__WEBPACK_IMPORTED_MODULE_10__]);
-([_core_js_smart_base__WEBPACK_IMPORTED_MODULE_0__, _core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__, _core_js_composition_index_mjs__WEBPACK_IMPORTED_MODULE_2__, _core_js_composition_inline_editor_mjs__WEBPACK_IMPORTED_MODULE_5__, _core_js_page_language_js__WEBPACK_IMPORTED_MODULE_6__, _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__, _js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__, _js_templates_default_js__WEBPACK_IMPORTED_MODULE_10__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* harmony import */ var _core_js_roving_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__("557c99eb8f3a");
+/* harmony import */ var _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__("50d340b22253");
+/* harmony import */ var _js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__("8d9331f1f24f");
+/* harmony import */ var _js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__("c584913fd94f");
+/* harmony import */ var _js_templates_default_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__("d62589d9772e");
+/* harmony import */ var _component_json__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__("b1c5d4f6dddd");
+/* harmony import */ var _lang_en_json__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__("5bf8f84cf5a8");
+/* harmony import */ var _lang_ru_json__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__("362a712abf5e");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_core_js_smart_base__WEBPACK_IMPORTED_MODULE_0__, _core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__, _core_js_composition_index_mjs__WEBPACK_IMPORTED_MODULE_2__, _core_js_composition_inline_editor_mjs__WEBPACK_IMPORTED_MODULE_5__, _core_js_page_language_js__WEBPACK_IMPORTED_MODULE_6__, _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__, _js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__, _js_templates_default_js__WEBPACK_IMPORTED_MODULE_11__]);
+([_core_js_smart_base__WEBPACK_IMPORTED_MODULE_0__, _core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__, _core_js_composition_index_mjs__WEBPACK_IMPORTED_MODULE_2__, _core_js_composition_inline_editor_mjs__WEBPACK_IMPORTED_MODULE_5__, _core_js_page_language_js__WEBPACK_IMPORTED_MODULE_6__, _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__, _js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__, _js_templates_default_js__WEBPACK_IMPORTED_MODULE_11__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 /* harmony import */ var _core_js_smart_base__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_core_js_smart_base__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _core_js_page_language_js__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_core_js_page_language_js__WEBPACK_IMPORTED_MODULE_6__);
@@ -979,6 +2018,7 @@ var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_cor
 // composed site blocks, named places and data from the host's source port.
 // The model (js/model.mjs) holds the Document and every change; this element
 // draws it with the Framework's own renderers and its own Smart components.
+
 
 
 
@@ -1033,11 +2073,11 @@ const SCREEN_ICONS = {
   phone: "smartphone"
 };
 const STATES = ["auto", "empty", "error", "loading"];
-const EditorElement = (0,_core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__.elementFromManifest)(_component_json__WEBPACK_IMPORTED_MODULE_11__, {
+const EditorElement = (0,_core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__.elementFromManifest)(_component_json__WEBPACK_IMPORTED_MODULE_12__, {
   base: (_core_js_smart_base__WEBPACK_IMPORTED_MODULE_0___default()),
   lang: {
-    en: _lang_en_json__WEBPACK_IMPORTED_MODULE_12__,
-    ru: _lang_ru_json__WEBPACK_IMPORTED_MODULE_13__
+    en: _lang_en_json__WEBPACK_IMPORTED_MODULE_13__,
+    ru: _lang_ru_json__WEBPACK_IMPORTED_MODULE_14__
   },
   source: "en",
   actions: {
@@ -1095,7 +2135,7 @@ const EditorElement = (0,_core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__.
       value,
       screen
     } = {}) {
-      const breakpoint = _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.SCREENS[screen] ?? _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.SCREENS[this.screenName];
+      const breakpoint = _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.SCREENS[screen] ?? _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.SCREENS[this.screenName];
       const result = this.model.setParam(String(id ?? ""), String(key ?? ""), value, breakpoint);
       if (!result.ok) return refused(result.reason);
       this.redraw();
@@ -1142,7 +2182,7 @@ class SfEditor extends EditorElement {
       }
     }
 
-    this.model = new _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.EditorModel();
+    this.model = new _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.EditorModel();
     this.main = this.model;
     this.builder = null;
     this.adopted = undefined;
@@ -1180,11 +2220,11 @@ class SfEditor extends EditorElement {
 
 
   get screenName() {
-    return _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.SCREENS[this.screen] ? this.screen : "desktop";
+    return _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.SCREENS[this.screen] ? this.screen : "desktop";
   }
 
   get breakpoint() {
-    return _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.SCREENS[this.screenName];
+    return _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.SCREENS[this.screenName];
   }
 
   get locale() {
@@ -1257,7 +2297,7 @@ class SfEditor extends EditorElement {
   word(key, vars) {
     if (!key) return "";
     const locale = this.locale;
-    const host = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.isPlainObject)(this.words) ? this.words : {};
+    const host = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.isPlainObject)(this.words) ? this.words : {};
     const hosted = host[locale]?.[key] ?? host[locale.split("-")[0]]?.[key] ?? host.en?.[key];
     if (hosted !== undefined) return format(hosted, vars);
     const site = this.builderWords?.[locale]?.[key];
@@ -1281,9 +2321,9 @@ class SfEditor extends EditorElement {
 
 
   wordsOf(key) {
-    const host = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.isPlainObject)(this.words) ? this.words : {};
-    const site = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.isPlainObject)(this.builderWords) ? this.builderWords : {};
-    const own = [_lang_en_json__WEBPACK_IMPORTED_MODULE_12__, _lang_ru_json__WEBPACK_IMPORTED_MODULE_13__].map(dictionary => dictionary.runtime?.[key]);
+    const host = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.isPlainObject)(this.words) ? this.words : {};
+    const site = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.isPlainObject)(this.builderWords) ? this.builderWords : {};
+    const own = [_lang_en_json__WEBPACK_IMPORTED_MODULE_13__, _lang_ru_json__WEBPACK_IMPORTED_MODULE_14__].map(dictionary => dictionary.runtime?.[key]);
     const hosted = [...Object.values(host), ...Object.values(site)].map(dictionary => dictionary?.[key]);
     const field = ["en", "ru"].map(locale => _core_js_composition_index_mjs__WEBPACK_IMPORTED_MODULE_2__.EDITOR_FIELD_WORDS[locale]?.[key]);
     return [...own, ...hosted, ...field].filter(value => typeof value === "string");
@@ -1292,7 +2332,7 @@ class SfEditor extends EditorElement {
   typeLabel(type) {
     const manifest = this.model.manifestOf(type);
     const key = manifest?.catalogue?.label_key;
-    return key ? this.word(key) : this.word((0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.typeWordKey)(type));
+    return key ? this.word(key) : this.word((0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.typeWordKey)(type));
   } // ------------------------------------------------------------ lifecycle
 
 
@@ -1324,6 +2364,34 @@ class SfEditor extends EditorElement {
     if (this.pageElement && !this.drawToken) this.redraw();else this.placeOverlays();
     this.wireSearch();
     this.watchToolbar();
+    this.watchKeys();
+  }
+  /**
+   * The bar and the chosen block's tool row are toolbars of the WAI-ARIA
+   * pattern (defect TL-4 of the toolbar study): each is one Tab stop that
+   * comes back to the button left, ← → walk its buttons (reversed right to
+   * left), Home and End go to the ends, and the walk wraps; ↓ on a menu
+   * button opens its menu. Core's roving helper (core/js/roving.js, owner
+   * decision C184) holds the keys; a host's own controls in the bar's slots
+   * and the screen switch (sf-segmented, its own arrows) stay their own
+   * stops. Each row is bound again when it is drawn anew.
+   */
+
+
+  watchKeys() {
+    const rows = [["barKeys", ".sf-editor-bar", ":scope > .sf-editor-bar-start > sf-button-icon, :scope > .sf-editor-bar-start > sf-button, :scope > .sf-editor-bar-end > sf-button-icon, :scope > .sf-editor-bar-end > sf-button"], ["toolbarKeys", ".sf-editor-toolbar", "sf-button, sf-button-icon"]];
+
+    for (const [field, selector, items] of rows) {
+      const row = this.querySelector(selector);
+      if (row === (this[field]?.row ?? null)) continue;
+      this[field]?.keys.destroy();
+      this[field] = row ? {
+        row,
+        keys: (0,_core_js_roving_js__WEBPACK_IMPORTED_MODULE_7__.roving)(row, {
+          items
+        })
+      } : null;
+    }
   }
   /** sf-input names its own input only: the catalogue's search is a combobox over the list, said on the native input. */
 
@@ -1367,7 +2435,7 @@ class SfEditor extends EditorElement {
     const key = this.preferencesKey ? `sf-editor/${this.preferencesKey}` : "";
     const stored = key ? globalThis.SF?.Preferences?.read?.(key) : null;
 
-    if ((0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.isPlainObject)(stored)) {
+    if ((0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.isPlainObject)(stored)) {
       this.recent = Array.isArray(stored.recent) ? stored.recent.map(String) : [];
       this.favourites = Array.isArray(stored.favourites) ? stored.favourites.map(String) : [];
       this.hintSeen = stored.hint_seen === true;
@@ -1453,7 +2521,7 @@ class SfEditor extends EditorElement {
     page.innerHTML = result.html;
     page.dataset.sfEditorDrawn = "true";
 
-    for (const [name, value] of Object.entries((0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.isPlainObject)(this.model.theme?.attributes) ? this.model.theme.attributes : {})) {
+    for (const [name, value] of Object.entries((0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.isPlainObject)(this.model.theme?.attributes) ? this.model.theme.attributes : {})) {
       if (/^(?:data-[a-z0-9-]+|class|lang|dir)$/u.test(name)) page.setAttribute(name, String(value));
     }
 
@@ -1524,7 +2592,7 @@ class SfEditor extends EditorElement {
       const node = this.model.textNode(id);
       if (node && TEXT_TAGS.has(node.type) && !element.textContent.trim()) element.dataset.placeholder = this.sfWord(node.type === "content.heading" ? "heading-placeholder" : "text-placeholder");
       if (id.includes(":")) element.classList.add("sf-editor-part");
-      const own = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.locate)(this.model.doc.root, id)?.node;
+      const own = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.locate)(this.model.doc.root, id)?.node;
       if (own && !lock) this.drawEmptyPlaces(own, element);
     }
   }
@@ -2084,7 +3152,7 @@ class SfEditor extends EditorElement {
       return;
     }
 
-    const at = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.locate)(this.model.doc.root, id);
+    const at = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.locate)(this.model.doc.root, id);
     if (!at?.parent) return;
     if (this.pop?.mode !== "slash") this.openCatalogue(element, {
       parent: at.parent.id,
@@ -2306,7 +3374,7 @@ class SfEditor extends EditorElement {
 
 
   catalogue(place) {
-    return (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.catalogueAt)(this.model, place, {
+    return (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.catalogueAt)(this.model, place, {
       word: key => this.word(key),
       groups: _core_js_composition_catalogue_mjs__WEBPACK_IMPORTED_MODULE_3__.CATALOGUE_GROUPS
     });
@@ -2326,8 +3394,8 @@ class SfEditor extends EditorElement {
     // sections, in a text flow and for / on Text, when the place takes some;
     // a place that takes one section only (a named place of media) opens it.
 
-    const wanted = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.sectionForPlace)(this.model, place, mode);
-    const fitting = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.sectionsOf)(this.catalogue(place).items);
+    const wanted = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.sectionForPlace)(this.model, place, mode);
+    const fitting = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.sectionsOf)(this.catalogue(place).items);
     const section = wanted && fitting.some(entry => entry.id === wanted) ? wanted : fitting.length === 1 ? fitting[0].id : "";
     this.pop = {
       mode,
@@ -2393,7 +3461,7 @@ class SfEditor extends EditorElement {
 
 
   popSections() {
-    return this.pop ? (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.sectionsOf)(this.catalogue(this.pop.place).items) : [];
+    return this.pop ? (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.sectionsOf)(this.catalogue(this.pop.place).items) : [];
   }
   /**
    * What the catalogue lists: with a search, what it found in every
@@ -2408,17 +3476,17 @@ class SfEditor extends EditorElement {
     const at = this.catalogue(this.pop.place);
 
     if (this.popQuery) {
-      const found = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.searchItems)(at.items, this.popQuery, {
+      const found = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.searchItems)(at.items, this.popQuery, {
         word: key => this.word(key),
         words: key => this.wordsOf(key)
       });
-      return (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.sectionsOf)(found, {
+      return (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.sectionsOf)(found, {
         own: true
       }).flatMap(section => section.types.flatMap(type => type.items));
     }
 
     if (!this.pop.section) return [];
-    return (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.sectionsOf)(at.items).find(section => section.id === this.pop.section)?.types.flatMap(type => type.items) ?? [];
+    return (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.sectionsOf)(at.items).find(section => section.id === this.pop.section)?.types.flatMap(type => type.items) ?? [];
   }
   /** The options the keys move over: the sections, or the blocks. */
 
@@ -2519,12 +3587,12 @@ class SfEditor extends EditorElement {
   }
 
   remember(item) {
-    this.recent = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.pushRecent)(this.recent, (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.itemKey)(item));
+    this.recent = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.pushRecent)(this.recent, (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.itemKey)(item));
     this.writePreferences();
   }
 
   favourite(item) {
-    this.favourites = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.toggleFavourite)(this.favourites, (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.itemKey)(item));
+    this.favourites = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.toggleFavourite)(this.favourites, (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.itemKey)(item));
     this.writePreferences();
     this.refresh();
   } // ------------------------------------------------------------ the gutter, the grip and drag
@@ -2533,9 +3601,12 @@ class SfEditor extends EditorElement {
 
 
   onGripKey(event, id = this.gutterId) {
-    if (!id) return;
+    if (!id) return; // ↓ opens the grip's menu as a menu button's (the tool row's arrows
+    // are core's roving keys), and so do the menu key and Shift+F10 (C164 (2)).
 
-    if (event.key === "Enter" || event.key === " ") {
+    const opens = event.key === "Enter" || event.key === " " || event.key === "ArrowDown" && !event.altKey && !event.shiftKey || event.key === "ContextMenu" || event.shiftKey && event.key === "F10";
+
+    if (opens) {
       event.preventDefault();
       event.stopPropagation();
       this.hintUsed();
@@ -2676,10 +3747,10 @@ class SfEditor extends EditorElement {
     let block = this.blockAt(under);
 
     while (block) {
-      const at = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.locate)(this.model.doc.root, block.id);
+      const at = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.locate)(this.model.doc.root, block.id);
       if (!at?.parent) return null;
 
-      if (this.drag.kind === "move" && (block.id === this.drag.id || (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.locate)(this.model.node(this.drag.id), block.id))) {
+      if (this.drag.kind === "move" && (block.id === this.drag.id || (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.locate)(this.model.node(this.drag.id), block.id))) {
         block = this.blockAt(block.element.parentElement);
         continue;
       }
@@ -2692,9 +3763,9 @@ class SfEditor extends EditorElement {
       const beside = besideId && besideId !== block.id ? this.blockElement(besideId) : block.element;
       const outer = beside?.getBoundingClientRect();
       const outerRatio = outer ? (x - outer.left) / Math.max(1, outer.width) : 0.5;
-      const besideAt = besideId ? (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.locate)(this.model.doc.root, besideId) : null;
+      const besideAt = besideId ? (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.locate)(this.model.doc.root, besideId) : null;
 
-      if (besideAt && (outerRatio < SIDE_ZONE || outerRatio > 1 - SIDE_ZONE) && (this.drag.kind === "move" ? !(0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.locate)(this.model.node(besideId), this.drag.id) : this.model.standsBeside(type)) && !this.model.placeLock(besideAt.parent.id)) {
+      if (besideAt && (outerRatio < SIDE_ZONE || outerRatio > 1 - SIDE_ZONE) && (this.drag.kind === "move" ? !(0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.locate)(this.model.node(besideId), this.drag.id) : this.model.standsBeside(type)) && !this.model.placeLock(besideAt.parent.id)) {
         const left = outerRatio < SIDE_ZONE;
         return {
           beside: {
@@ -2800,7 +3871,7 @@ class SfEditor extends EditorElement {
     const menu = this.querySelector(".sf-editor-menu");
     if (!menu) return;
     const node = this.model.node(id);
-    const at = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.locate)(this.model.doc.root, id);
+    const at = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.locate)(this.model.doc.root, id);
     const columns = node?.type === "layout.columns";
     const entries = [{
       id: "up",
@@ -2823,7 +3894,7 @@ class SfEditor extends EditorElement {
       id: "columns",
       text: this.sfWord(columns ? "menu-add-column" : "menu-columns"),
       icon: "view_column",
-      disabled: columns && node.slots?.columns?.length >= _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.MAX_COLUMNS
+      disabled: columns && node.slots?.columns?.length >= _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.MAX_COLUMNS
     }] : []), ...(this.model.rights.builder && !this.builder ? [{
       id: "build",
       text: this.sfWord((0,_core_js_composition_composed_mjs__WEBPACK_IMPORTED_MODULE_4__.isComposed)(this.model.manifestOf(node?.type)) ? "menu-change-block" : "menu-make-block"),
@@ -2844,12 +3915,43 @@ class SfEditor extends EditorElement {
       align: "start"
     });
   }
+  /** The deeper steps of a field (a heading's H4–H6) in the editor's menu, under their button. */
+
+
+  openStepsMenu(field, steps, anchor) {
+    const menu = this.querySelector(".sf-editor-menu");
+    if (!menu) return;
+    const current = String(field.value ?? "");
+    menu.entries = steps.map(step => ({
+      id: `step:${step.value}`,
+      text: step.label,
+      current: step.value === current
+    }));
+    menu.dataset.for = this.model.selected ?? "";
+    this.stepsField = field;
+    const button = anchor?.querySelector?.(":scope > button, button") ?? anchor;
+    menu.openFor?.(button, {
+      side: "block-end",
+      align: "end"
+    });
+  }
 
   onMenuSelect(event) {
     event.stopPropagation();
     const menu = event.currentTarget;
     const id = menu.dataset.for;
     const action = event.detail?.entry?.id ?? event.detail?.id;
+
+    if (typeof action === "string" && action.startsWith("step:")) {
+      const field = this.stepsField;
+      this.stepsField = null;
+      if (!field || id !== this.model.selected) return;
+      const result = this.model.setParam(id, field.key, action.slice(5), this.breakpoint);
+      if (!result.ok) this.say(this.sfWord(`refused-${result.reason}`));
+      this.redraw();
+      return;
+    }
+
     queueMicrotask(() => {
       // The menu closes: the keys (⌘Z first) act where a person works, on the canvas.
       if (action !== "build") this.canvasElement?.focus({
@@ -2907,7 +4009,7 @@ class SfEditor extends EditorElement {
       name: type ? this.typeLabel(type) : "",
       diagnostics: []
     };
-    this.model = new _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.EditorModel({
+    this.model = new _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.EditorModel({
       document: doc,
       types: this.main.types,
       siteBlocks: this.main.siteBlocks,
@@ -2934,7 +4036,7 @@ class SfEditor extends EditorElement {
     const root = this.model.doc.root.slots.default[0];
     const result = this.main.saveBuilder({ ...session,
       root,
-      exposed: session.exposed.filter(entry => (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.locate)(root, entry.path))
+      exposed: session.exposed.filter(entry => (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.locate)(root, entry.path))
     }, {
       name: session.name,
       locale: this.locale
@@ -3057,7 +4159,7 @@ class SfEditor extends EditorElement {
         value: String(choice),
         text: this.choiceWord(field, choice)
       })),
-      screensLabel: field.screens.map(key => this.sfWord(`screen-${Object.keys(_js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.SCREENS).find(name => _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.SCREENS[name] === key) ?? key}`)).join(", ")
+      screensLabel: field.screens.map(key => this.sfWord(`screen-${Object.keys(_js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.SCREENS).find(name => _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.SCREENS[name] === key) ?? key}`)).join(", ")
     }));
   }
 
@@ -3092,13 +4194,13 @@ class SfEditor extends EditorElement {
     const result = this.model.setModifiers(this.model.selected, String(value));
     this.dropped = {
       id: this.model.selected,
-      groups: (0,_js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.refusedClasses)(result.dropped)
+      groups: (0,_js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.refusedClasses)(result.dropped)
     };
     this.redraw();
   }
 
   setScreen(name) {
-    if (!_js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.SCREENS[name]) return;
+    if (!_js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.SCREENS[name]) return;
     this.screen = name;
   }
 
@@ -3118,7 +4220,7 @@ class SfEditor extends EditorElement {
     if (this.codeCache.has(key)) return this.codeCache.get(key);
 
     if (format === "json") {
-      const node = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.locate)(this.model.toJSON?.().root ?? this.model.doc.root, id)?.node ?? this.model.node(id);
+      const node = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.locate)(this.model.toJSON?.().root ?? this.model.doc.root, id)?.node ?? this.model.node(id);
       const text = JSON.stringify(node ?? null, null, 2);
       this.codeCache.set(key, text);
       return text;
@@ -3356,7 +4458,7 @@ class SfEditor extends EditorElement {
   }
 
   template() {
-    return (0,_js_templates_default_js__WEBPACK_IMPORTED_MODULE_10__.renderEditorTemplate)(this);
+    return (0,_js_templates_default_js__WEBPACK_IMPORTED_MODULE_11__.renderEditorTemplate)(this);
   }
   /** Everything the template draws, worked out once per render. */
 
@@ -3371,15 +4473,15 @@ class SfEditor extends EditorElement {
       runtime: []
     };
     const libraryAt = this.catalogue(null);
-    const libraryItems = this.libraryQuery ? (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.searchItems)(libraryAt.items, this.libraryQuery, {
+    const libraryItems = this.libraryQuery ? (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.searchItems)(libraryAt.items, this.libraryQuery, {
       word: key => this.word(key),
       words: key => this.wordsOf(key)
     }) : libraryAt.items;
-    const sections = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.sectionsOf)(libraryAt.items);
+    const sections = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.sectionsOf)(libraryAt.items);
     const section = sections.some(entry => entry.id === this.librarySection) ? this.librarySection : "";
     const entry = typeManifest ? (0,_core_js_composition_catalogue_mjs__WEBPACK_IMPORTED_MODULE_3__.catalogueEntry)(typeManifest) : null;
     const manifestGroup = entry?.group;
-    const at = selected ? (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_9__.locate)(model.doc.root, selected.id) : null;
+    const at = selected ? (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.locate)(model.doc.root, selected.id) : null;
     return {
       model,
       selected,
@@ -3393,14 +4495,14 @@ class SfEditor extends EditorElement {
       library: {
         sections,
         section,
-        found: this.libraryQuery ? (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.sectionsOf)(libraryItems, {
+        found: this.libraryQuery ? (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.sectionsOf)(libraryItems, {
           own: true
         }) : [],
-        favourites: (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.pick)(libraryAt.items, this.favourites),
-        recent: (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.pick)(libraryAt.items, this.recent)
+        favourites: (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.pick)(libraryAt.items, this.favourites),
+        recent: (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.pick)(libraryAt.items, this.recent)
       },
-      typeIcon: selected ? entry?.icon ?? (manifestGroup ? (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.groupIcon)(manifestGroup) : "widgets") : "",
-      sectionLabel: manifestGroup ? this.word((0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.groupWordKey)(manifestGroup)) : "",
+      typeIcon: selected ? entry?.icon ?? (manifestGroup ? (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.groupIcon)(manifestGroup) : "widgets") : "",
+      sectionLabel: manifestGroup ? this.word((0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.groupWordKey)(manifestGroup)) : "",
       position: at?.parent ? {
         first: at.index === 0,
         last: at.index >= at.parent.slots[at.slot].length - 1
@@ -3419,7 +4521,7 @@ class SfEditor extends EditorElement {
         value,
         label: this.sfWord(`state-${value}`)
       })),
-      origins: _js_model_mjs__WEBPACK_IMPORTED_MODULE_7__.ORIGINS,
+      origins: _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__.ORIGINS,
       hasTemplate: this.main.hasRegions(),
       heading: this.getAttribute("heading") || "",
       caption: this.getAttribute("caption") || "",
@@ -3427,6 +4529,64 @@ class SfEditor extends EditorElement {
       landmarks: Boolean(this.pageLandmarks),
       tree: this.treeOf(model.doc.root, 0)
     };
+  }
+  /** The structure as sf-tree entries: a block's name and its words, its children, a lock where it is locked. */
+
+
+  treeItems(view) {
+    const closed = this.treeClosed ?? new Set();
+    const selected = view.model.selected;
+    const root = {
+      children: []
+    };
+    const parents = [root];
+
+    for (const row of view.tree) {
+      const entry = {
+        id: row.id,
+        label: row.excerpt ? `${row.label} · ${row.excerpt}` : row.label,
+        selected: row.id === selected,
+        children: [],
+        // A locked block says so by its icon; the rest draw no icon, as before.
+        ...(row.lock ? {
+          "open-icon": "lock",
+          "closed-icon": "lock"
+        } : {
+          icon: false
+        })
+      };
+      parents.length = row.depth + 1;
+      (parents[row.depth] ?? root).children.push(entry);
+      parents[row.depth + 1] = entry;
+    }
+
+    const finish = entry => {
+      for (const child of entry.children) finish(child);
+
+      if (entry !== root) {
+        if (entry.children.length) entry.open = !closed.has(entry.id);else delete entry.children;
+      }
+    };
+
+    finish(root);
+    return root.children;
+  }
+
+  onTreeSelect(event) {
+    event.stopPropagation();
+    const id = event.detail?.id;
+    if (id && id !== this.model.selected) this.choose(id);
+  }
+
+  onTreeToggle(event) {
+    event.stopPropagation();
+    const {
+      id,
+      open
+    } = event.detail ?? {};
+    if (!id) return;
+    this.treeClosed ??= new Set();
+    if (open) this.treeClosed.delete(id);else this.treeClosed.add(id);
   }
 
   treeOf(node, depth) {
@@ -3451,7 +4611,7 @@ class SfEditor extends EditorElement {
   }
 
   skeleton(item) {
-    return (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_8__.skeletonOf)(this.model, item);
+    return (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.skeletonOf)(this.model, item);
   }
 
 } // ------------------------------------------------------------ helpers
@@ -3611,7 +4771,8 @@ var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([lit_
 // a page with its own (banner, main, contentinfo) keeps them top level, and
 // the canvas is then an unnamed group that says its role. Every control is a Framework
 // part: sf-button, sf-button-icon, sf-segmented, sf-tabs, sf-input,
-// sf-dropdown, sf-switch, sf-menu-context, sf-modal, sf-skeleton, sf-icon.
+// sf-dropdown, sf-switch, sf-tree, sf-menu-context, sf-modal, sf-skeleton,
+// sf-icon.
 
 /** The word for each reason a class of «Extra classes» is not taken. */
 
@@ -3647,7 +4808,7 @@ function renderEditorTemplate(component) {
                     <div class="sf-editor-canvas" tabindex="0" role=${view.landmarks ? "group" : "region"} aria-roledescription=${w("canvas-role")}
                          aria-label=${view.landmarks ? lit__WEBPACK_IMPORTED_MODULE_0__.nothing : component.label || w("label")} aria-describedby="sf-editor-help">
                         <div class="sf-editor-frame" data-screen=${component.screenName}>
-                            <div class="sf-editor-page"></div>
+                            <div class="sf-editor-page" data-sf-density="compact"></div>
                         </div>
                         <div class="sf-editor-hover" hidden aria-hidden="true"></div>
                         <div class="sf-editor-chosen" hidden aria-hidden="true"></div>
@@ -3673,7 +4834,7 @@ function renderEditorTemplate(component) {
             ${component.lockNote ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<div class="sf-editor-lock-note" role="status"
                     style=${`inset-block-start:${component.lockNote.y + 12}px;inset-inline-start:${component.lockNote.x}px`}>
                 <sf-icon icon="lock" size="1/3"></sf-icon><span>${component.lockNote.text}</span></div>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
-            <sf-menu-context class="sf-editor-menu" size="1/2" @sf-menu-context-select=${event => component.onMenuSelect(event)}></sf-menu-context>
+            <sf-menu-context class="sf-editor-menu" size="1/2" popup @sf-menu-context-select=${event => component.onMenuSelect(event)}></sf-menu-context>
             <sf-editor-inline></sf-editor-inline>
             ${component.outputView ? outputModal(component, w) : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
         </div>
@@ -4025,14 +5186,14 @@ function skeleton(shapes) {
 }
 
 function structure(component, view, w) {
-  if (!view.tree.length) return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<p class="sf-editor-quiet">${w("structure-empty")}</p>`;
-  return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<ul class="sf-editor-tree" role="tree" aria-label=${w("left-structure")}>${(0,lit_directives_repeat_js__WEBPACK_IMPORTED_MODULE_1__.repeat)(view.tree, row => row.id, row => (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
-        <li role="treeitem" aria-level=${row.depth + 1} aria-selected=${row.id === view.model.selected ? "true" : "false"}
-            class="sf-editor-tree-row" style=${`--sf-editor-depth:${row.depth}`}>
-            <sf-button size="1/2" appearance=${row.id === view.model.selected ? "tonal" : "ghost"} scheme="on-surface"
-                       icon-start=${row.icon} icon-end=${row.lock ? "lock" : ""} text=${row.excerpt ? `${row.label} · ${row.excerpt}` : row.label}
-                       @click=${() => component.choose(row.id)}></sf-button>
-        </li>`)}</ul>`;
+  if (!view.tree.length) return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<p class="sf-editor-quiet">${w("structure-empty")}</p>`; // The Framework tree (C102): one Tab stop, the arrows, Space chooses.
+  // A press chooses the block; a branch keeps whether it was closed.
+
+  return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-tree class="sf-editor-tree" selection="one" aria-label=${w("left-structure")}
+                         .items=${component.treeItems(view)} .selected=${view.model.selected ?? ""}
+                         @sf-tree-select=${event => component.onTreeSelect(event)}
+                         @sf-tree-toggle=${event => component.onTreeToggle(event)}></sf-tree>
+        `;
 } // ------------------------------------------------------------ the floating bar over the chosen block
 
 /** The chosen block's bar: where it stands (the last three steps of its path), the grip, up, down, duplicate, more. */
@@ -4180,13 +5341,13 @@ function pagePanel(component, view, w) {
         <aside class="sf-editor-right" aria-label=${w("right-label")}>
             ${panelHead("article", page.name || w("page-title"), page.status ?? "")}
             <div class="sf-editor-page">
-                ${"name" in page ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-input class="sf-editor-page-field" data-key="name" size="1/2" label=${w("page-name")} .value=${String(page.name ?? "")}
+                ${"name" in page ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-input class="sf-editor-page-field" data-key="name" label=${w("page-name")} .value=${String(page.name ?? "")}
                         @change=${change("name")}></sf-input>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
-                ${"address" in page ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-input class="sf-editor-page-field" data-key="address" size="1/2" label=${w("page-address")} .value=${String(page.address ?? "")}
+                ${"address" in page ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-input class="sf-editor-page-field" data-key="address" label=${w("page-address")} .value=${String(page.address ?? "")}
                         @change=${change("address")}></sf-input>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
                 ${template ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
                     <div class="sf-editor-page-field" data-key="template">
-                        ${options.length ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-dropdown size="1/2" label=${w("template-title")} .options=${options} .value=${String(template.value ?? "")}
+                        ${options.length ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-dropdown label=${w("template-title")} .options=${options} .value=${String(template.value ?? "")}
                                 @change=${change("template")}></sf-dropdown>` : (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
                             <span class="sf-editor-page-label">${w("template-title")}</span><span class="sf-editor-page-value">${template.label ?? template.value ?? ""}</span>`}
                         <span class="sf-editor-hint">${template.note ?? w(component.main.rights.template ? "template-help" : "template-no-rights")}</span>
@@ -4196,7 +5357,7 @@ function pagePanel(component, view, w) {
                         <span class="sf-editor-page-label">${w("page-theme")}</span>
                         <div class="sf-editor-page-row">
                             <span class="sf-editor-page-value">${theme.label ?? theme.name ?? ""}</span>
-                            ${theme.settings_url ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<a class="sf-editor-page-link" href=${theme.settings_url} target="_top">${w("theme-settings")}<sf-icon icon="open_in_new" size="1/3" aria-hidden="true"></sf-icon></a>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
+                            ${theme.settings_url ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<a class="sf-editor-page-link" href=${theme.settings_url} target="_top">${w("theme-settings")}<sf-icon icon="open_in_new" size="1/2" aria-hidden="true"></sf-icon></a>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
                         </div>
                         <span class="sf-editor-hint">${w("theme-read-only")}</span>
                     </div>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
@@ -4204,9 +5365,9 @@ function pagePanel(component, view, w) {
                     <div class="sf-editor-page-field" data-key="publish">
                         <span class="sf-editor-page-label">${w("page-publishing")}</span>
                         <div class="sf-editor-page-row">
-                            ${page.publish ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button size="1/2" scheme="primary" text=${page.publish.label ?? w("page-publish")}
+                            ${page.publish ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button scheme="primary" text=${page.publish.label ?? w("page-publish")}
                                     ?disabled=${Boolean(page.publish.disabled)} @click=${action("publish")}></sf-button>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
-                            ${history ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button size="1/2" appearance="outline" scheme="on-surface" icon-start="history"
+                            ${history ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button appearance="outline" scheme="on-surface" icon-start="history"
                                     text=${history.label ?? (Number.isFinite(history.count) ? w("page-history", {
     count: String(history.count)
   }) : w("page-history-plain"))}
@@ -4215,7 +5376,7 @@ function pagePanel(component, view, w) {
                         ${page.publish?.note ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<span class="sf-editor-hint">${page.publish.note}</span>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
                     </div>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
                 ${slotted(component, "page")}
-                <p class="sf-editor-card"><sf-icon icon="arrow_selector_tool" size="1/3" aria-hidden="true"></sf-icon><span>${w("page-hint")}</span></p>
+                <p class="sf-editor-card"><sf-icon icon="arrow_selector_tool" size="1/2" aria-hidden="true"></sf-icon><span>${w("page-hint")}</span></p>
             </div>
         </aside>`;
 }
@@ -4241,16 +5402,16 @@ function parameters(component, view, w) {
   if (!view.form.length && !modifiers) return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<p class="sf-editor-hint">${w("no-parameters")}</p>`;
   const sets = [...new Set(view.form.map(field => /^sf\.composition\.set_([a-z_]+)\./u.exec(String(field.label_key ?? ""))?.[1]).filter(Boolean))];
   return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
-        <p class="sf-editor-card sf-editor-sets"><sf-icon icon="link" size="1/3" aria-hidden="true"></sf-icon><span>${sets.length ? w("sets-note", {
+        <p class="sf-editor-card sf-editor-sets"><sf-icon icon="link" size="1/2" aria-hidden="true"></sf-icon><span>${sets.length ? w("sets-note", {
     sets: sets.map(set => w(`set-${set.replace(/_/gu, "-")}`)).join(" · ")
   }) : w("sets-none")}</span></p>
         ${SECTIONS.map(id => bySection[id].length || id === "extra" && modifiers ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
-            <section class="sf-editor-group sf-editor-fields" aria-labelledby=${`sf-editor-h-${id}`}>
+            <section class="sf-editor-group sf-editor-fields" data-sf-density="compact" aria-labelledby=${`sf-editor-h-${id}`}>
                 <h3 class="sf-editor-heading" id=${`sf-editor-h-${id}`}>${w(`section-${id}`)}</h3>
                 ${bySection[id].map(field => fieldRow(component, field, w))}
                 ${id === "extra" && modifiers ? modifiersRow(component, view, w) : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
             </section>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing)}
-        ${view.form.some(field => field.responsive) ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<p class="sf-editor-card"><sf-icon icon="devices" size="1/3" aria-hidden="true"></sf-icon><span>${w("screens-note", {
+        ${view.form.some(field => field.responsive) ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<p class="sf-editor-card"><sf-icon icon="devices" size="1/2" aria-hidden="true"></sf-icon><span>${w("screens-note", {
     screen: w(`screen-${component.screenName}`)
   })}</span></p>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
         <p class="sf-editor-card sf-editor-origins" aria-label=${w("origins-label")}>${w("origins-note")}</p>
@@ -4261,7 +5422,7 @@ function modifiersRow(component, view, w) {
   return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
         <div class="sf-editor-modifiers-row">
             <div class="sf-editor-field-head"><span class="sf-editor-field-label">${w("modifiers-label")}</span></div>
-            <sf-input class="sf-editor-modifiers" size="1/2" aria-label=${w("modifiers-label")} placeholder=${w("modifiers-placeholder")} .value=${view.modifiers}
+            <sf-input class="sf-editor-modifiers" aria-label=${w("modifiers-label")} placeholder=${w("modifiers-placeholder")} .value=${view.modifiers}
                       @change=${event => component.onModifiers(event)}></sf-input>
             <span class="sf-editor-hint">${w("modifiers-hint")}</span>
             ${component.dropped?.id === view.selected.id ? component.dropped.groups.map(group => (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<p class="sf-editor-error" role="alert">${w(REFUSED[group.reason] ?? "modifiers-dropped", {
@@ -4293,7 +5454,7 @@ const ALIGN_ICONS = {
 
 const segmentedSwitch = (field, items, value, component, extra = lit__WEBPACK_IMPORTED_MODULE_0__.nothing) => (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
     <div class="sf-editor-control sf-editor-switch-row">
-        <sf-segmented class="sf-editor-segmented" size="1/2" appearance="track" plate="raised" full-width aria-label=${field.label}
+        <sf-segmented class="sf-editor-segmented" appearance="track" plate="raised" full-width aria-label=${field.label}
                          .items=${items} .value=${String(value)}
                          @change=${event => component.onField(event, field)}></sf-segmented>
         ${extra}
@@ -4319,16 +5480,19 @@ function fieldRow(component, field, w) {
     const all = steps(field);
     const shown = all.slice(0, 3);
     const rest = all.slice(3);
-    const inRest = rest.some(item => item.value === String(value));
-    control = segmentedSwitch(field, shown, inRest ? "" : value, component, rest.length ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
-            <sf-dropdown class="sf-editor-more-steps" size="1/2" aria-label=${w("more-steps", {
+    const inRest = rest.some(item => item.value === String(value)); // «More» is a compact button with the editor's menu, not a field: a field's
+    // label and chevron took the room the track needs to stay a track (it folds
+    // into a dropdown when its labels do not fit, sf-segmented 1.6.0). The chosen
+    // deeper step is the button's text, so the level stays in sight.
+
+    const chosen = rest.find(item => item.value === String(value));
+    const label = w("more-steps", {
       name: field.label
-    })} placeholder=${w("more")}
-                         .options=${rest.map(item => ({
-      value: item.value,
-      text: item.label
-    }))} .value=${inRest ? String(value) : ""}
-                         @change=${event => component.onField(event, field)}></sf-dropdown>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing);
+    });
+
+    const open = event => component.openStepsMenu(field, rest, event.currentTarget);
+
+    control = segmentedSwitch(field, shown, inRest ? "" : value, component, !rest.length ? lit__WEBPACK_IMPORTED_MODULE_0__.nothing : chosen ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button class="sf-editor-more-steps" appearance="tonal" text=${chosen.label} aria-label=${`${label}: ${chosen.label}`} title=${label} aria-haspopup="menu" @click=${open}></sf-button>` : (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button-icon class="sf-editor-more-steps" appearance="ghost" scheme="on-surface-variant" icon="more_horiz" aria-label=${label} title=${w("more")} aria-haspopup="menu" @click=${open}></sf-button-icon>`);
   } else if (field.choiceLabels.length && segmented(field)) {
     // Alignment draws as the prototype's three icons; the words stay their names.
     const icon = field.target === "align" ? ALIGN_ICONS : null;
@@ -4342,11 +5506,11 @@ function fieldRow(component, field, w) {
       label: choice.text
     }), value, component);
   } else if (field.choiceLabels.length) {
-    control = (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-dropdown class="sf-editor-control" size="1/2" aria-label=${field.label} .options=${field.choiceLabels} .value=${String(value)}
+    control = (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-dropdown class="sf-editor-control" aria-label=${field.label} .options=${field.choiceLabels} .value=${String(value)}
                                     @change=${event => component.onField(event, field)}></sf-dropdown>`;
   } else {
     const numeric = field.kind === "number" || field.kind === "integer";
-    control = (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-input class="sf-editor-control" size="1/2" aria-label=${field.label} inputmode=${numeric ? "numeric" : ""} .value=${String(value)}
+    control = (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-input class="sf-editor-control" aria-label=${field.label} inputmode=${numeric ? "numeric" : ""} .value=${String(value)}
                                  @change=${event => component.onField(event, field)}></sf-input>`;
   }
 
@@ -4355,9 +5519,9 @@ function fieldRow(component, field, w) {
         <div class="sf-editor-field" id=${id} data-key=${field.key} data-origin=${field.origin}>
             <div class="sf-editor-field-head">
                 <span class="sf-editor-field-label">${field.label}</span>
-                ${field.responsive ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-icon class="sf-editor-field-screen" icon=${SCREEN_ICON[component.screenName]} size="1/3" title=${w("per-screen")} aria-label=${w("per-screen")}></sf-icon>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
+                ${field.responsive ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-icon class="sf-editor-field-screen" icon=${SCREEN_ICON[component.screenName]} size="1/2" title=${w("per-screen")} aria-label=${w("per-screen")}></sf-icon>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
                 <span class="sf-editor-origin" data-origin=${field.origin} data-own=${own ? "true" : "false"} title=${w(`origin-${field.origin}-help`)}><span class="sf-editor-origin-dot" aria-hidden="true"></span>${field.originLabel}</span>
-                ${field.set ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button class="sf-editor-reset" size="1/3" appearance="ghost" scheme="on-surface-variant" text=${w("reset")}
+                ${field.set ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button class="sf-editor-reset" size="1/2" appearance="ghost" scheme="on-surface-variant" text=${w("reset")}
                         aria-label=${w("reset-field", {
     name: field.label
   })} @click=${() => component.onReset(field)}></sf-button>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
@@ -4373,7 +5537,7 @@ function fieldRow(component, field, w) {
             ${field.utility ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<code class="sf-editor-utility" title=${w("utility-help")}>${w("binding", {
     classes: field.utility
   })}</code>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
-            ${builder ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-switch size="1/2" class="sf-editor-expose" label=${w("expose")} .checked=${Boolean(exposed)}
+            ${builder ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-switch class="sf-editor-expose" label=${w("expose")} .checked=${Boolean(exposed)}
                     @change=${event => {
     event.stopPropagation();
     component.toggleExposed(component.model.selected, field, Boolean(event.currentTarget.checked));
@@ -4401,11 +5565,11 @@ function dataPanel(component, view, w) {
     const fields = ref ? component.answer(`fields:${ref}`, p => p.fields(ref)) ?? [] : [];
     const shapeFields = component.shapeFields(entry.shape);
     return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
-                <section class="sf-editor-group" aria-label=${entry.target}>
+                <section class="sf-editor-group sf-editor-data-group" data-sf-density="compact" aria-label=${entry.target}>
                     <h3>${w("data-binding", {
       target: component.word(entry.target)
     })}</h3>
-                    <sf-dropdown size="1/2" label=${w("data-source")} placeholder=${w("data-none")} ?disabled=${!port}
+                    <sf-dropdown label=${w("data-source")} placeholder=${w("data-none")} ?disabled=${!port}
                                  .options=${[{
       value: "",
       text: w("data-none")
@@ -4414,7 +5578,7 @@ function dataPanel(component, view, w) {
       text: item.label
     }))]} .value=${ref}
                                  @change=${event => component.onSource(event, entry)}></sf-dropdown>
-                    ${source?.presets?.length ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-dropdown size="1/2" label=${w("data-preset")}
+                    ${source?.presets?.length ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-dropdown label=${w("data-preset")}
                                  .options=${[{
       value: "",
       text: w("data-own-mapping")
@@ -4426,7 +5590,7 @@ function dataPanel(component, view, w) {
                                  @change=${event => component.onSetting(event, entry, "preset")}></sf-dropdown>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
                     ${ref && !entry.settings.preset ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<div class="sf-editor-mapping">
                         <h4>${w("data-mapping")}</h4>
-                        ${shapeFields.map(field => (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-dropdown size="1/2" label=${field}
+                        ${shapeFields.map(field => (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-dropdown label=${field}
                                  .options=${[{
       value: "",
       text: w("data-none")
@@ -4437,18 +5601,18 @@ function dataPanel(component, view, w) {
                                  .value=${entry.settings.mapping?.[field] ?? ""}
                                  @change=${event => component.onMapping(event, entry, field)}></sf-dropdown>`)}
                     </div>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
-                    ${ref && component.listShape(entry.shape) ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-input size="1/2" label=${w("data-limit")} inputmode="numeric" .value=${String(entry.settings.limit ?? "")}
+                    ${ref && component.listShape(entry.shape) ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-input label=${w("data-limit")} inputmode="numeric" .value=${String(entry.settings.limit ?? "")}
                             @change=${event => component.onSetting(event, entry, "limit", value => value === "" ? undefined : Math.max(1, Math.min(500, Number.parseInt(value, 10) || 1)))}></sf-input>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
-                    <sf-input size="1/2" label=${w("data-empty-text")} placeholder=${entry.empty_key ? component.word(entry.empty_key) : ""} .value=${entry.settings.empty_text ?? ""}
+                    <sf-input label=${w("data-empty-text")} placeholder=${entry.empty_key ? component.word(entry.empty_key) : ""} .value=${entry.settings.empty_text ?? ""}
                               @change=${event => component.onSetting(event, entry, "empty_text", value => String(value ?? "").slice(0, 500))}></sf-input>
                 </section>`;
   })}
         ${view.data.runtime.map(entry => (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
-            <section class="sf-editor-group">
+            <section class="sf-editor-group sf-editor-data-group" data-sf-density="compact">
                 <h3>${w("data-runtime", {
     target: component.word(entry.target)
   })}</h3>
-                <sf-dropdown size="1/2" label=${w("data-follows")}
+                <sf-dropdown label=${w("data-follows")}
                              .options=${[{
     value: "",
     text: w("data-none")
@@ -4461,9 +5625,9 @@ function dataPanel(component, view, w) {
                 ${entry.publishers.length ? lit__WEBPACK_IMPORTED_MODULE_0__.nothing : (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<p class="sf-editor-quiet">${w("data-no-publishers")}</p>`}
             </section>`)}
         ${view.data.bindings.length ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
-            <section class="sf-editor-group">
+            <section class="sf-editor-group sf-editor-data-group" data-sf-density="compact">
                 <h3>${w("data-states")}</h3>
-                <sf-segmented size="1/3" appearance="track" plate="raised" .items=${view.states} .value=${state}
+                <sf-segmented size="1/2" appearance="track" plate="raised" .items=${view.states} .value=${state}
                                  aria-label=${w("data-states")} @change=${event => component.onState(event)}></sf-segmented>
                 <p class="sf-editor-quiet">${w("data-states-help")}</p>
             </section>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
@@ -4642,6 +5806,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CONTENT_ALERT_APPEARANCES: () => (/* binding */ CONTENT_ALERT_APPEARANCES),
 /* harmony export */   CONTENT_ALERT_STATUSES: () => (/* binding */ CONTENT_ALERT_STATUSES),
 /* harmony export */   CONTENT_FILE_MIME: () => (/* binding */ CONTENT_FILE_MIME),
+/* harmony export */   CONTENT_FOREIGN_SOURCES: () => (/* binding */ CONTENT_FOREIGN_SOURCES),
 /* harmony export */   CONTENT_ITEM_PARENTS: () => (/* binding */ CONTENT_ITEM_PARENTS),
 /* harmony export */   CONTENT_RATIOS: () => (/* binding */ CONTENT_RATIOS),
 /* harmony export */   CONTENT_TABLE_HEADERS: () => (/* binding */ CONTENT_TABLE_HEADERS),
@@ -4675,53 +5840,74 @@ const SECTION_DEFAULTS = Object.freeze({ width: 'normal', padding_y: 8 });
 const GRID_DEFAULTS = Object.freeze({ columns: 3, gap: 5 });
 const CONTAINER_DEFAULTS = Object.freeze({ width: 'narrow' });
 const catalogueWord = (type) => `sf.composition.catalogue.type.${type.replace('.', '_').replaceAll('-', '_')}`;
+// The catalogue's search words (owner decision C282): English here; Russian
+// is the words the ru language file registered for sf-composition (its editor
+// part, sf.composition.catalogue.keywords.<type>, the words joined by commas),
+// read when they are asked, so a catalogue built after the file arrived
+// finds «сетка». Empty until then.
+const catalogueKeywords = (type, en) => {
+  const key = `sf.composition.catalogue.keywords.${type.replace('.', '_').replaceAll('-', '_')}`;
+  return Object.freeze(Object.defineProperty({ en: Object.freeze([...en]) }, 'ru', {
+    enumerable: true,
+    get: () => {
+      const word = globalThis.__sfPageLanguage?.registered?.get?.('sf-composition')?.get?.('ru')?.[key];
+      return typeof word === 'string' ? word.split(',').map((one) => one.trim()).filter(Boolean) : [];
+    },
+  }));
+};
 const variantWord = (type, id) => `sf.composition.catalogue.variant.${type.replace('.', '_').replaceAll('-', '_')}.${id.replaceAll('-', '_')}`;
 
 // Text runs, links of text runs, and since content.heading and
 // content.paragraph 1.1.0 the inline component atoms: one shape per declared
 // name, never inside a link and without marks.
+// Inline model 1.2.0 (2026-11-10): a soft line break {type: 'break', marks?}
+// in every inline field and inside a link, and the mark strike.
+const CONTENT_FOREIGN_SOURCES = Object.freeze(['markdown', 'editorjs', 'html']);
+const inlineMarksSchema = {
+  type: 'array',
+  uniqueItems: true,
+  items: { enum: ['strong', 'em', 'code', 'strike'] },
+};
+const inlineTextSchema = {
+  type: 'object',
+  required: ['type', 'value'],
+  additionalProperties: false,
+  // Extension keys (a newer producer's lang, title, ...): kept by the inline model.
+  patternProperties: { [_inline_model_mjs__WEBPACK_IMPORTED_MODULE_0__.INLINE_EXTENSION_KEY]: {} },
+  properties: {
+    type: { const: 'text' },
+    value: { type: 'string', maxLength: 100000 },
+    marks: inlineMarksSchema,
+  },
+};
+const inlineBreakSchema = {
+  type: 'object',
+  required: ['type'],
+  additionalProperties: false,
+  patternProperties: { [_inline_model_mjs__WEBPACK_IMPORTED_MODULE_0__.INLINE_EXTENSION_KEY]: {} },
+  properties: {
+    type: { const: 'break' },
+    marks: inlineMarksSchema,
+  },
+};
 const inlineContentSchema = {
   type: 'array',
   items: {
     oneOf: [
-      {
-        type: 'object',
-        required: ['type', 'value'],
-        additionalProperties: false,
-        properties: {
-          type: { const: 'text' },
-          value: { type: 'string', maxLength: 100000 },
-          marks: {
-            type: 'array',
-            uniqueItems: true,
-            items: { enum: ['strong', 'em', 'code'] },
-          },
-        },
-      },
+      inlineTextSchema,
+      inlineBreakSchema,
       {
         type: 'object',
         required: ['type', 'href', 'children'],
         additionalProperties: false,
+        patternProperties: { [_inline_model_mjs__WEBPACK_IMPORTED_MODULE_0__.INLINE_EXTENSION_KEY]: {} },
         properties: {
           type: { const: 'link' },
           href: { type: 'string', minLength: 1, maxLength: 2048 },
           children: {
             type: 'array',
             minItems: 1,
-            items: {
-              type: 'object',
-              required: ['type', 'value'],
-              additionalProperties: false,
-              properties: {
-                type: { const: 'text' },
-                value: { type: 'string', maxLength: 100000 },
-                marks: {
-                  type: 'array',
-                  uniqueItems: true,
-                  items: { enum: ['strong', 'em', 'code'] },
-                },
-              },
-            },
+            items: { oneOf: [inlineTextSchema, inlineBreakSchema] },
           },
         },
       },
@@ -4792,7 +5978,10 @@ const imageData = {
   width: { type: 'integer', minimum: 1, maximum: 100000 },
   height: { type: 'integer', minimum: 1, maximum: 100000 },
 };
-const CONTENT_RATIOS = Object.freeze(['1/1', '4/3', '3/2', '16/9', '21/9']);
+// One list for the figure, the media block and a card's picture (owner
+// decision C188 (6)); 3/4, the one vertical ratio, since content.figure and
+// content.media 1.2.0 (owner decision C230, 2026-11-16).
+const CONTENT_RATIOS = Object.freeze(['1/1', '4/3', '3/2', '16/9', '21/9', '3/4']);
 const CONTENT_ALERT_STATUSES = Object.freeze(['neutral', 'info', 'success', 'warning', 'error']);
 const CONTENT_ALERT_APPEARANCES = Object.freeze(['default', 'outlined', 'flat']);
 // A media type in its lowercase form: type/subtype, no parameters.
@@ -4871,7 +6060,11 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     // 1.3.0 (2026-11-04): the accent variant is the primary role's own fill
     // with on-primary text (background accent), as the prototype draws it,
     // not the primary container's light tint.
-    version: '1.3.0',
+    // 1.4.0 (2026-11-16, owner decision C212 (4)): the content part's blocks
+    // stand in a flex column one gap apart (flex flex-col gap-y-3, a gap the
+    // Document sets as gap-*), no longer space-y-*, a retired class. The page
+    // draws the same; the printed HTML differs.
+    version: '1.4.0',
     category: 'layout',
     mode: 'composite',
     profiles: ['ui-layout'],
@@ -4930,7 +6123,9 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     type: 'content.heading',
     // 1.2.0 (2026-11-04, visual parity): alignment and visibility per screen,
     // the SIMAI Framework sets a section takes (text-*, hidden/block).
-    version: '1.2.0',
+    // 1.3.0 (2026-11-10): inline model 1.2.0, the break and the mark strike.
+    // 1.4.0 (2026-11-16): inline model 1.3.0, the badge atom's icon-only (C134; compact its alias).
+    version: '1.4.0',
     category: 'content',
     mode: 'leaf',
     profiles: ['ui-layout', 'structured-content'],
@@ -4955,7 +6150,9 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     ...(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_2__.schemaFields)('simai.composition.type-manifest', 1),
     type: 'content.paragraph',
     // 1.3.0 (2026-11-04): alignment and visibility per screen, as the heading.
-    version: '1.3.0',
+    // 1.4.0 (2026-11-10): inline model 1.2.0, the break and the mark strike.
+    // 1.5.0 (2026-11-16): inline model 1.3.0, the badge atom's icon-only (C134; compact its alias).
+    version: '1.5.0',
     category: 'content',
     mode: 'leaf',
     profiles: ['ui-layout', 'structured-content'],
@@ -4970,7 +6167,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     // G-39 (1.2.0): the prototype's lead is 19/30 px in the variant ink; the
     // SIMAI Framework's large body text role (20/28 px, 16/24 on the phone) in
     // on-surface-variant. Muted is the variant ink alone.
-    presentation: { views: ['default'], presets: [], modifiers: ['lead', 'muted'], modifier_utilities: { lead: ['text-large', 'color-on-surface-variant'], muted: ['color-on-surface-variant'] } },
+    presentation: { views: ['default'], presets: [], modifiers: ['lead', 'muted'], modifier_utilities: { lead: ['text-2', 'color-on-surface-variant'], muted: ['color-on-surface-variant'] } },
     slots: {},
     renderer: { kind: 'builtin', name: 'content.paragraph' },
     assets: [],
@@ -5095,10 +6292,13 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
   // equal cells, and an empty space. Each prints SIMAI Framework utilities
   // only, through its parameter sets and props.
   layoutManifest('layout.container', {
+    // 1.1.0 (2026-11-16, owner decision C212 (4)): the content part is a flex
+    // column, its blocks gap-y-3 apart, no longer space-y-3 (retired).
+    version: '1.1.0',
     parameter_sets: ['width', 'spacing', 'background', 'visibility'],
     parameter_defaults: CONTAINER_DEFAULTS,
     slots: { default: { min: 0, max: 500, categories: ['layout', 'content', 'smart'] } },
-    catalogue: { group: 'layout', icon: 'width_normal', label_key: catalogueWord('layout.container'), keywords: { en: ['container', 'width', 'wrapper'], ru: ['контейнер', 'ширина', 'обёртка'] }, order: 140 },
+    catalogue: { group: 'layout', icon: 'width_normal', label_key: catalogueWord('layout.container'), keywords: catalogueKeywords('layout.container', ['container', 'width', 'wrapper']), order: 140 },
     variants: [
       { id: 'narrow', label_key: variantWord('layout.container', 'narrow') },
       { id: 'normal', label_key: variantWord('layout.container', 'normal'), props: { width: 'normal' } },
@@ -5112,7 +6312,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     parameter_sets: ['grid', 'visibility'],
     parameter_defaults: GRID_DEFAULTS,
     slots: { default: { min: 0, max: 48, categories: ['layout', 'content', 'smart'] } },
-    catalogue: { group: 'layout', icon: 'grid_on', label_key: catalogueWord('layout.grid'), keywords: { en: ['grid', 'tiles', 'gallery', 'cells'], ru: ['сетка', 'плитка', 'галерея', 'ячейки'] }, order: 150 },
+    catalogue: { group: 'layout', icon: 'grid_on', label_key: catalogueWord('layout.grid'), keywords: catalogueKeywords('layout.grid', ['grid', 'tiles', 'gallery', 'cells']), order: 150 },
     variants: [2, 3, 4].map((count) => ({
       id: `cards-${count}`,
       label_key: variantWord('layout.grid', `cards-${count}`),
@@ -5128,7 +6328,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     parameter_sets: ['visibility'],
     parameter_defaults: { size: 6 },
     slots: {},
-    catalogue: { group: 'layout', icon: 'height', label_key: catalogueWord('layout.spacer'), keywords: { en: ['spacer', 'space', 'gap'], ru: ['пустое место', 'отступ', 'промежуток'] }, order: 160 },
+    catalogue: { group: 'layout', icon: 'height', label_key: catalogueWord('layout.spacer'), keywords: catalogueKeywords('layout.spacer', ['spacer', 'space', 'gap']), order: 160 },
   }),
   // Elements (visual parity, 2026-11-04; G-20): the smart elements a block
   // prints, each a type of its own so an author places it anywhere a block
@@ -5146,7 +6346,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
       icon: iconName,
       icon_position: { enum: ['start', 'end'], default: 'start' },
     }),
-    catalogue: { group: 'elements', icon: 'smart_button', label_key: catalogueWord('element.button'), keywords: { en: ['button', 'link', 'call to action', 'cta'], ru: ['кнопка', 'ссылка', 'призыв'] }, order: 100 },
+    catalogue: { group: 'elements', icon: 'smart_button', label_key: catalogueWord('element.button'), keywords: catalogueKeywords('element.button', ['button', 'link', 'call to action', 'cta']), order: 100 },
     variants: [
       { id: 'plain', label_key: variantWord('element.button', 'plain') },
       { id: 'icon', label_key: variantWord('element.button', 'icon'), props: { icon: 'arrow_forward', icon_position: 'end' } },
@@ -5163,7 +6363,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
       scheme: { enum: ['primary', 'secondary', 'on-surface', 'on-surface-variant'], default: 'primary' },
       size: { enum: ['1/2', '1', '2'], default: '1' },
     }),
-    catalogue: { group: 'elements', icon: 'add_circle', label_key: catalogueWord('element.button-icon'), keywords: { en: ['icon button', 'icon', 'button'], ru: ['кнопка-значок', 'значок', 'иконка', 'кнопка'] }, order: 110 },
+    catalogue: { group: 'elements', icon: 'add_circle', label_key: catalogueWord('element.button-icon'), keywords: catalogueKeywords('element.button-icon', ['icon button', 'icon', 'button']), order: 110 },
   }),
   elementManifest('element.badge', 'smart/badge', {
     data_schema: closed({ text: plainText(120) }),
@@ -5173,7 +6373,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
       size: { enum: ['1/3', '1/2', '1'], default: '1/2' },
       icon: iconName,
     }),
-    catalogue: { group: 'elements', icon: 'label', label_key: catalogueWord('element.badge'), keywords: { en: ['badge', 'tag', 'status', 'label'], ru: ['метка', 'бейдж', 'тег', 'статус'] }, order: 120 },
+    catalogue: { group: 'elements', icon: 'label', label_key: catalogueWord('element.badge'), keywords: catalogueKeywords('element.badge', ['badge', 'tag', 'status', 'label']), order: 120 },
   }),
   elementManifest('element.icon', 'smart/icon', {
     // The label names the icon for a screen reader; without it the icon only decorates.
@@ -5182,7 +6382,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
       icon: { ...iconName, default: 'star' },
       size: { enum: ['1', '2', '3', '4', '5'], default: '2' },
     }),
-    catalogue: { group: 'elements', icon: 'star', label_key: catalogueWord('element.icon'), keywords: { en: ['icon', 'symbol', 'pictogram'], ru: ['значок', 'иконка', 'пиктограмма'] }, order: 130 },
+    catalogue: { group: 'elements', icon: 'star', label_key: catalogueWord('element.icon'), keywords: catalogueKeywords('element.icon', ['icon', 'symbol', 'pictogram']), order: 130 },
   }),
   // Forms (2026-11-04; the ui-editor host's G-20): a form and its fields,
   // each field one SIMAI Framework Smart element printed from its inputs
@@ -5207,7 +6407,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     renderer: { kind: 'builtin', name: 'form.form' },
     assets: [],
     capabilities: ['html'],
-    catalogue: { group: 'forms', icon: 'contact_mail', label_key: catalogueWord('form.form'), keywords: { en: ['form', 'request', 'contact', 'feedback'], ru: ['форма', 'заявка', 'обратная связь', 'контакты'] }, order: 100 },
+    catalogue: { group: 'forms', icon: 'contact_mail', label_key: catalogueWord('form.form'), keywords: catalogueKeywords('form.form', ['form', 'request', 'contact', 'feedback']), order: 100 },
     variants: [
       {
         id: 'request',
@@ -5237,7 +6437,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
       required: { type: 'boolean', default: false },
       size: { enum: ['1/2', '1', '2'], default: '1' },
     }),
-    catalogue: { group: 'forms', icon: 'input', label_key: catalogueWord('form.input'), keywords: { en: ['field', 'input', 'text field', 'email', 'phone'], ru: ['поле', 'ввод', 'текстовое поле', 'почта', 'телефон'] }, order: 110 },
+    catalogue: { group: 'forms', icon: 'input', label_key: catalogueWord('form.input'), keywords: catalogueKeywords('form.input', ['field', 'input', 'text field', 'email', 'phone']), order: 110 },
   }),
   elementManifest('form.textarea', 'smart/input-textarea', {
     data_schema: closed({ label: plainText(200), placeholder: plainText(200), hint: plainText(300), name: fieldName }),
@@ -5246,7 +6446,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
       required: { type: 'boolean', default: false },
       size: { enum: ['1/2', '1', '2'], default: '1' },
     }),
-    catalogue: { group: 'forms', icon: 'notes', label_key: catalogueWord('form.textarea'), keywords: { en: ['text area', 'message', 'comment', 'multiline'], ru: ['многострочное поле', 'сообщение', 'комментарий'] }, order: 120 },
+    catalogue: { group: 'forms', icon: 'notes', label_key: catalogueWord('form.textarea'), keywords: catalogueKeywords('form.textarea', ['text area', 'message', 'comment', 'multiline']), order: 120 },
   }),
   elementManifest('form.checkbox', 'smart/checkbox', {
     data_schema: closed({ label: plainText(300), hint: plainText(300), name: fieldName }),
@@ -5254,7 +6454,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
       checked: { type: 'boolean', default: false },
       size: { enum: ['1/2', '1', '2'], default: '1' },
     }),
-    catalogue: { group: 'forms', icon: 'check_box', label_key: catalogueWord('form.checkbox'), keywords: { en: ['checkbox', 'agree', 'consent', 'tick'], ru: ['флажок', 'галочка', 'согласие'] }, order: 130 },
+    catalogue: { group: 'forms', icon: 'check_box', label_key: catalogueWord('form.checkbox'), keywords: catalogueKeywords('form.checkbox', ['checkbox', 'agree', 'consent', 'tick']), order: 130 },
   }),
   elementManifest('form.switch', 'smart/switch', {
     data_schema: closed({ label: plainText(300), hint: plainText(300), name: fieldName }),
@@ -5262,7 +6462,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
       checked: { type: 'boolean', default: false },
       size: { enum: ['1/2', '1', '2'], default: '1' },
     }),
-    catalogue: { group: 'forms', icon: 'toggle_on', label_key: catalogueWord('form.switch'), keywords: { en: ['switch', 'toggle', 'on off'], ru: ['переключатель', 'вкл выкл'] }, order: 140 },
+    catalogue: { group: 'forms', icon: 'toggle_on', label_key: catalogueWord('form.switch'), keywords: catalogueKeywords('form.switch', ['switch', 'toggle', 'on off']), order: 140 },
   }),
   elementManifest('form.select', 'smart/dropdown', {
     // The options are words, one after another, separated by commas: what an
@@ -5272,7 +6472,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
       required: { type: 'boolean', default: false },
       size: { enum: ['1/2', '1', '2'], default: '1' },
     }),
-    catalogue: { group: 'forms', icon: 'arrow_drop_down_circle', label_key: catalogueWord('form.select'), keywords: { en: ['select', 'dropdown', 'choice', 'list'], ru: ['список', 'выбор', 'выпадающий список'] }, order: 150 },
+    catalogue: { group: 'forms', icon: 'arrow_drop_down_circle', label_key: catalogueWord('form.select'), keywords: catalogueKeywords('form.select', ['select', 'dropdown', 'choice', 'list']), order: 150 },
   }),
   elementManifest('form.button-submit', 'smart/button', {
     // Unset, it reads «Send» in the Document's language.
@@ -5281,7 +6481,7 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
       appearance: { enum: ['default', 'tonal', 'outline'], default: 'default' },
       size: { enum: ['1/2', '1', '2'], default: '1' },
     }),
-    catalogue: { group: 'forms', icon: 'send', label_key: catalogueWord('form.button-submit'), keywords: { en: ['submit', 'send', 'button'], ru: ['отправить', 'кнопка отправки', 'кнопка'] }, order: 160 },
+    catalogue: { group: 'forms', icon: 'send', label_key: catalogueWord('form.button-submit'), keywords: catalogueKeywords('form.button-submit', ['submit', 'send', 'button']), order: 160 },
   }),
   // The root of a structured-content Document: the page's blocks in order,
   // under the page's title (the accepted content editor prototype writes
@@ -5300,7 +6500,10 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     }),
     slots: { items: { min: 1, max: 500, types: ['content.list-item'] } },
   }),
+  // 1.1.0 (2026-11-10): inline model 1.2.0, the break and the mark strike.
   contentManifest('content.list-item', {
+    // 1.2.0 (2026-11-16): inline model 1.3.0, the badge atom's icon-only (C134; compact its alias).
+    version: '1.2.0',
     mode: 'composite',
     data_schema: closed({ content: inlineContentSchema }, ['content']),
     // A nested list, or more paragraphs and code under the item's own line.
@@ -5325,7 +6528,12 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     mode: 'leaf',
     assets: ['component/contentDivider'],
   }),
+  // 1.0.1 (2026-11-10): a column's alignment is the text-align utility class on
+  // its cells, not a style attribute; it looks the same. 1.1.0: inline model
+  // 1.2.0 in its caption and cells (the break, the mark strike).
   contentManifest('content.table', {
+    // 1.2.0 (2026-11-16): inline model 1.3.0, the badge atom's icon-only (C134; compact its alias).
+    version: '1.2.0',
     mode: 'leaf',
     data_schema: closed({
       caption: inlineContentSchema,
@@ -5343,7 +6551,11 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     assets: ['utility/table-frame'],
     capabilities: ['html', 'rich-text'],
   }),
+  // 1.1.0 (2026-11-10): inline model 1.2.0, the break and the mark strike.
+  // 1.2.0 (2026-11-16, owner decision C230): ratio takes 3/4.
   contentManifest('content.figure', {
+    // 1.3.0 (2026-11-16): inline model 1.3.0, the badge atom's icon-only (C134; compact its alias).
+    version: '1.3.0',
     mode: 'leaf',
     data_schema: closed({ ...imageData, caption: inlineContentSchema }, ['src', 'alt']),
     props_schema: closed({
@@ -5353,7 +6565,10 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     assets: ['component/figure'],
     capabilities: ['html', 'rich-text'],
   }),
+  // 1.1.0 (2026-11-10): inline model 1.2.0, the break and the mark strike.
   contentManifest('content.alert', {
+    // 1.2.0 (2026-11-16): inline model 1.3.0, the badge atom's icon-only (C134; compact its alias).
+    version: '1.2.0',
     mode: 'composite',
     data_schema: closed({ title: inlineContentSchema }),
     props_schema: closed({
@@ -5364,7 +6579,10 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     assets: ['component/alerts'],
     capabilities: ['html', 'rich-text'],
   }),
+  // 1.1.0 (2026-11-10): inline model 1.2.0, the break and the mark strike.
   contentManifest('content.details', {
+    // 1.2.0 (2026-11-16): inline model 1.3.0, the badge atom's icon-only (C134; compact its alias).
+    version: '1.2.0',
     mode: 'composite',
     data_schema: closed({ summary: inlineContentSchema }, ['summary']),
     props_schema: closed({
@@ -5395,7 +6613,10 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     slots: { steps: { min: 1, max: 100, types: ['content.step'] } },
     assets: ['component/procedure'],
   }),
+  // 1.1.0 (2026-11-10): inline model 1.2.0, the break and the mark strike.
   contentManifest('content.step', {
+    // 1.2.0 (2026-11-16): inline model 1.3.0, the badge atom's icon-only (C134; compact its alias).
+    version: '1.2.0',
     mode: 'composite',
     data_schema: closed({ title: inlineContentSchema }),
     slots: { default: contentSlot(0, 100) },
@@ -5409,13 +6630,29 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
     }),
     slots: { default: contentSlot(1, 48) },
   }),
+  // 1.1.0 (2026-11-16, owner decision C231, fulfils C188 (1)): the card's
+  // header, sf-card-header -- the title (inline, drawn as the card's title)
+  // and one action at its end, an icon link of size 1/2: action_icon, its
+  // name for a screen reader action_label and action_href by the Document's
+  // URL rule; it is drawn when all three are given. All optional; a card
+  // without them is drawn as in 1.0.0.
   contentManifest('content.card', {
+    version: '1.1.0',
     mode: 'composite',
+    data_schema: closed({
+      title: inlineContentSchema,
+      action_icon: iconName,
+      action_label: plainText(120),
+      action_href: urlSchema,
+    }),
     props_schema: closed({ variant: { enum: ['default', 'plain'] } }),
     slots: { default: contentSlot(0, 100) },
-    assets: ['component/card'],
+    assets: ['component/card', 'component/icon-buttons'],
+    capabilities: ['html', 'rich-text'],
   }),
+  // 1.1.0 (2026-11-16, owner decision C230): ratio takes 3/4.
   contentManifest('content.media', {
+    version: '1.1.0',
     mode: 'composite',
     data_schema: closed({ ...imageData }, ['src', 'alt']),
     props_schema: closed({
@@ -5448,6 +6685,20 @@ const BUILTIN_TYPE_MANIFESTS = Object.freeze([
   contentManifest('content.html', {
     mode: 'leaf',
     data_schema: closed({ markup: sourceText }, ['markup']),
+  }),
+  // A block from another source kept as it came (2026-11-10, F2.2): the source
+  // format and its text, never parsed into markup and never drawn on a public
+  // page; an editor draws an inert placeholder naming the source. hash is
+  // sha256:<hex> of raw as UTF-8: validate checks its form, normalize
+  // recomputes it, and a mismatch keeps the block and draws nothing
+  // (foreign_hash_mismatch). It goes back only to its own source format.
+  contentManifest('content.foreign', {
+    mode: 'leaf',
+    data_schema: closed({
+      source: { enum: [...CONTENT_FOREIGN_SOURCES] },
+      raw: { type: 'string', maxLength: 200000 },
+      hash: { type: 'string', pattern: '^sha256:[0-9a-f]{64}$' },
+    }, ['source', 'raw']),
   }),
   // Diagram and math draw with a runtime the SIMAI Framework does not carry
   // (a diagram engine, a TeX typesetter). They are registered types whose
@@ -5584,7 +6835,7 @@ const BUILTIN_EDITOR_MANIFESTS = Object.freeze([
   {
     ...(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_2__.schemaFields)('simai.composition.editor-manifest', 1),
     type: 'layout.section',
-    type_version: '1.3.0',
+    type_version: '1.4.0',
     fields: [
       {
         key: 'surface',
@@ -5647,7 +6898,7 @@ const BUILTIN_EDITOR_MANIFESTS = Object.freeze([
   {
     ...(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_2__.schemaFields)('simai.composition.editor-manifest', 1),
     type: 'content.heading',
-    type_version: '1.2.0',
+    type_version: '1.4.0',
     fields: [
       {
         key: 'level',
@@ -5738,8 +6989,8 @@ const BUILTIN_EDITOR_MANIFESTS = Object.freeze([
     contentField('layout.area', 'hidden', 'props', 'toggle', { default: false }),
   ]),
   // The layout and element types of the one block editor (2026-11-04).
-  { ...contentEditor('content.paragraph', (0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_3__.parameterSetFields)({ parameter_sets: TEXT_SETS })), type_version: '1.3.0' },
-  contentEditor('layout.container', (0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_3__.parameterSetFields)({ parameter_sets: ['width', 'spacing', 'background', 'visibility'], parameter_defaults: CONTAINER_DEFAULTS })),
+  { ...contentEditor('content.paragraph', (0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_3__.parameterSetFields)({ parameter_sets: TEXT_SETS })), type_version: '1.5.0' },
+  { ...contentEditor('layout.container', (0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_3__.parameterSetFields)({ parameter_sets: ['width', 'spacing', 'background', 'visibility'], parameter_defaults: CONTAINER_DEFAULTS })), type_version: '1.1.0' },
   { ...contentEditor('layout.grid', (0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_3__.parameterSetFields)({ parameter_sets: ['grid', 'visibility'], parameter_defaults: GRID_DEFAULTS })), type_version: '1.1.0' },
   contentEditor('layout.spacer', [
     contentField('layout.spacer', 'size', 'props', 'integer', { constraints: { min: 1, max: 8 }, default: 6 }),
@@ -5832,26 +7083,26 @@ const BUILTIN_EDITOR_MANIFESTS = Object.freeze([
     contentField('content.code', 'title', 'props', 'text', { constraints: { min_length: 1, max_length: 200 } }),
     contentField('content.code', 'numbers', 'props', 'toggle', { ...advanced, default: false }),
   ]),
-  contentEditor('content.table', [
+  { ...contentEditor('content.table', [
     contentField('content.table', 'header', 'props', 'choice', { choices: ['row', 'column', 'both', 'none'], default: 'row' }),
-  ]),
+  ]), type_version: '1.2.0' },
   // src is the one field the type requires besides alt: a host draws a
   // complete form from the manifest alone (simai/ui-source#64). The address
   // is a text field; validate applies the Document's URL rule on top.
-  contentEditor('content.figure', [
+  { ...contentEditor('content.figure', [
     contentField('content.figure', 'src', 'data', 'text', { constraints: { min_length: 1, max_length: 2048 } }),
     contentField('content.figure', 'alt', 'data', 'text', { constraints: { min_length: 1, max_length: 1000 } }),
-    contentField('content.figure', 'ratio', 'props', 'choice', { choices: ['auto', '1/1', '4/3', '3/2', '16/9', '21/9'], default: 'auto' }),
+    contentField('content.figure', 'ratio', 'props', 'choice', { choices: ['auto', ...CONTENT_RATIOS], default: 'auto' }),
     contentField('content.figure', 'fit', 'props', 'choice', { choices: ['cover', 'contain'], default: 'cover' }),
-  ]),
-  contentEditor('content.alert', [
+  ]), type_version: '1.3.0' },
+  { ...contentEditor('content.alert', [
     contentField('content.alert', 'status', 'props', 'choice', { choices: ['neutral', 'info', 'success', 'warning', 'error'], default: 'neutral' }),
     contentField('content.alert', 'appearance', 'props', 'choice', { choices: ['default', 'outlined', 'flat'], default: 'default' }),
-  ]),
-  contentEditor('content.details', [
+  ]), type_version: '1.2.0' },
+  { ...contentEditor('content.details', [
     contentField('content.details', 'open', 'props', 'toggle', { default: false }),
     contentField('content.details', 'layout', 'props', 'choice', { choices: ['surface', 'lines'], default: 'surface' }),
-  ]),
+  ]), type_version: '1.2.0' },
   contentEditor('content.tabs', [
     contentField('content.tabs', 'label', 'data', 'text', { ...advanced, constraints: { min_length: 1, max_length: 120 } }),
   ]),
@@ -5866,15 +7117,18 @@ const BUILTIN_EDITOR_MANIFESTS = Object.freeze([
     contentField('content.grid', 'columns', 'props', 'integer', { constraints: { min: 1, max: 4 }, default: 3 }),
     contentField('content.grid', 'gap', 'props', 'integer', { ...advanced, constraints: { min: 0, max: 4 }, default: 2 }),
   ]),
-  contentEditor('content.card', [
+  { ...contentEditor('content.card', [
     contentField('content.card', 'variant', 'props', 'choice', { choices: ['default', 'plain'], default: 'default' }),
-  ]),
-  contentEditor('content.media', [
+    contentField('content.card', 'action_icon', 'data', 'text', { ...advanced, constraints: { min_length: 1, max_length: 64 } }),
+    contentField('content.card', 'action_label', 'data', 'text', { ...advanced, constraints: { min_length: 1, max_length: 120 } }),
+    contentField('content.card', 'action_href', 'data', 'text', { ...advanced, constraints: { min_length: 1, max_length: 2048 } }),
+  ]), type_version: '1.1.0' },
+  { ...contentEditor('content.media', [
     contentField('content.media', 'src', 'data', 'text', { constraints: { min_length: 1, max_length: 2048 } }),
     contentField('content.media', 'alt', 'data', 'text', { constraints: { min_length: 1, max_length: 1000 } }),
     contentField('content.media', 'side', 'props', 'choice', { choices: ['left', 'right'], default: 'right' }),
-    contentField('content.media', 'ratio', 'props', 'choice', { choices: ['1/1', '4/3', '3/2', '16/9', '21/9'], default: '16/9' }),
-  ]),
+    contentField('content.media', 'ratio', 'props', 'choice', { choices: [...CONTENT_RATIOS], default: '16/9' }),
+  ]), type_version: '1.1.0' },
   contentEditor('content.file', [
     contentField('content.file', 'label', 'data', 'text', { constraints: { min_length: 1, max_length: 300 } }),
     contentField('content.file', 'href', 'data', 'text', { constraints: { min_length: 1, max_length: 2048 } }),
@@ -6027,6 +7281,8 @@ const BUILTIN_CATALOGUE = Object.freeze({
   'content.media': 'media',
   'content.file': 'media',
   'content.html': 'media',
+  // Made by converters from another source, never offered (F2.2).
+  'content.foreign': null,
   'content.diagram': 'media',
   'content.details': 'text',
   'content.tabs': 'text',
@@ -7177,18 +8433,22 @@ function checkSourceAnswer(request, answer, options = {}) {
 
 /***/ },
 
-/***/ "fe90f998a31d"
+/***/ "bd04957f6bb9"
 (__webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   EDITOR_FIELD_WORDS: () => (/* binding */ EDITOR_FIELD_WORDS),
+/* harmony export */   EDITOR_FIELD_WORDS_LIVE: () => (/* binding */ EDITOR_FIELD_WORDS_LIVE),
 /* harmony export */   EDITOR_WORDS_OWNER: () => (/* binding */ EDITOR_WORDS_OWNER),
 /* harmony export */   catalogueWordKeys: () => (/* binding */ catalogueWordKeys),
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
 /* harmony export */   editorFieldKeys: () => (/* binding */ editorFieldKeys),
-/* harmony export */   editorFieldMessages: () => (/* binding */ editorFieldMessages)
+/* harmony export */   editorFieldMessages: () => (/* binding */ editorFieldMessages),
+/* harmony export */   editorWords: () => (/* binding */ editorWords),
+/* harmony export */   editorWordsReady: () => (/* binding */ editorWordsReady),
+/* harmony export */   installEditorWords: () => (/* binding */ installEditorWords),
+/* harmony export */   loadEditorWords: () => (/* binding */ loadEditorWords),
+/* harmony export */   setEditorWordsLoader: () => (/* binding */ setEditorWordsLoader)
 /* harmony export */ });
 /* harmony import */ var _page_language_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("43090d1c8307");
 /* harmony import */ var _builtins_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("08e5033c490a");
@@ -7200,872 +8460,101 @@ _page_language_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_async_dependencies_re
 
 
 
-// The words of the built-in editor manifests (simai/ui-source#65): every
-// label_key, help_key and `<label_key>.<choice>` of a choice that is a stable
-// segment, in English and Russian. A choice that is not a stable segment
-// (`16/9`) is shown as it is, by the field kinds' localization rule.
+// The editor words without the words (localization study LC-1, 2026-11-14).
 //
-// The words belong to the registry owner `sf-composition`, so a product adds a
-// language or corrects one word the way it does for any component:
+// The words of the built-in editor manifests (editor-words.mjs, then ru + en,
+// 8.7 KB gzip; English only since C282, Russian is a language file) were part of core.min.js, so every page paid for them though
+// only a page that draws a parameters form reads them. Core now carries this
+// module only: the keys a field reads, the lookup and a shared slot the words
+// are installed into. The words themselves are a chunk of their own
+// (core-editor-words), loaded by SF.Composition.loadEditorWords(), which the
+// editors (sf-editor-inline, sf-editor-overlay) call when they are defined;
+// a bundle that imports editor-words.mjs from source (the Pro editor) carries
+// them inside itself.
 //
-//   SF.language.register('sf-composition', 'de', {'sf.composition.content_figure.src': 'Bildadresse'});
-//
-// src/core/contracts/composition-editor-words.v1.json is generated from this
-// file (scripts/generate-composition-contracts.mjs) for a host without
-// JavaScript, which reads the same keys.
+// The slot is on the shared global: core, each smart component and each
+// package are separate bundles, and each carries its own copy of this module.
 
 const EDITOR_WORDS_OWNER = 'sf-composition';
 
-const words = (prefix, entries) => Object.fromEntries(Object.entries(entries).map(([key, value]) => [`sf.composition.${prefix}.${key}`, value]));
+const EMPTY = Object.freeze({ en: Object.freeze({}), ru: Object.freeze({}) });
 
-const EN = {
-  ...words('layout_section', {
-    surface: 'Background',
-    surface_help: 'How the section stands out from the page',
-    'surface.surface': 'Regular',
-    'surface.contrast': 'Contrasting',
-  }),
-  ...words('layout_columns', {
-    columns: 'Columns',
-    columns_help: 'How many columns the content is split into',
-    gap: 'Gap',
-    gap_help: 'Space between the columns, from 0 to 8 steps',
-  }),
-  // Parameter sets (parameter-sets.mjs), shared by every type that takes them.
-  ...words('set_background', {
-    background: 'Background',
-    background_help: 'The fill behind the block',
-    'background.surface': 'Page',
-    'background.container': 'Container',
-    'background.primary': 'Primary',
-    'background.secondary': 'Secondary',
-    'background.tertiary': 'Tertiary',
-    'background.accent': 'Accent',
-  }),
-  ...words('set_spacing', {
-    padding_y: 'Space above and below',
-    padding_y_help: 'From 0 to 8 steps, per screen',
-    padding_x: 'Space at the sides',
-    padding_x_help: 'From 0 to 8 steps, per screen',
-  }),
-  ...words('set_width', {
-    width: 'Width',
-    width_help: 'How wide the content stands on the page',
-    'width.narrow': 'Narrow',
-    'width.normal': 'Normal',
-    'width.wide': 'Wide',
-    'width.full': 'Full width',
-  }),
-  ...words('set_grid', {
-    columns: 'Columns',
-    columns_help: 'How many columns the content is split into, per screen',
-    gap: 'Gap',
-    gap_help: 'Space between the columns, from 0 to 8 steps',
-  }),
-  ...words('set_alignment', {
-    align: 'Alignment',
-    align_help: 'How the text lines up, per screen',
-    'align.start': 'Start',
-    'align.center': 'Centre',
-    'align.end': 'End',
-  }),
-  ...words('set_breakout', {
-    breakout: 'Edge to edge',
-    breakout_help: 'The block spans the whole page width',
-  }),
-  ...words('set_visibility', {
-    hidden: 'Hidden',
-    hidden_help: 'The block is not shown on this screen',
-  }),
-  ...words('layout_area', {
-    content: 'Text',
-    empty: 'Start writing or press / for a block',
-    padding: 'Padding',
-    padding_help: 'Space inside the area, from 0 to 8 steps',
-    hidden: 'Hidden',
-    hidden_help: 'The area is not shown on this screen',
-  }),
-  ...words('content_heading', {
-    level: 'Heading level',
-    level_help: 'From 1, the page title, to 6',
-  }),
-  ...words('layout_region', {
-    placement: 'Placement',
-    placement_help: 'Where the area stands in the layout',
-    'placement.block': 'Full width',
-    'placement.start': 'At the start',
-    'placement.center': 'In the centre',
-    'placement.end': 'At the end',
-    label: 'Name',
-    label_help: 'The area\'s name for screen readers',
-    landmark: 'Landmark',
-    landmark_help: 'The area\'s role in the page structure for assistive technology',
-    'landmark.banner': 'Header',
-    'landmark.navigation': 'Navigation',
-    'landmark.main': 'Main content',
-    'landmark.complementary': 'Sidebar',
-    'landmark.contentinfo': 'Footer',
-    'landmark.region': 'Region',
-    'landmark.none': 'None',
-    sticky: 'Sticky',
-    sticky_help: 'The area stays in view while the page scrolls',
-  }),
-  ...words('content_list', {
-    ordered: 'Numbered',
-    ordered_help: 'Numbers instead of bullets',
-    start: 'Start at',
-    start_help: 'The number of the first item',
-  }),
-  ...words('content_code', {
-    lang: 'Language',
-    lang_help: 'The programming language, for highlighting',
-    title: 'Caption',
-    title_help: 'A file name or a short caption above the code',
-    numbers: 'Line numbers',
-    numbers_help: 'Number every line',
-  }),
-  ...words('content_table', {
-    header: 'Table headers',
-    header_help: 'Which cells are headers',
-    'header.row': 'First row',
-    'header.column': 'First column',
-    'header.both': 'Row and column',
-    'header.none': 'None',
-  }),
-  ...words('content_figure', {
-    src: 'Picture address',
-    src_help: 'A link to the image: http(s) or a path on the site',
-    alt: 'Picture description',
-    alt_help: 'What the picture shows, for those who cannot see it',
-    ratio: 'Ratio',
-    ratio_help: 'The picture\'s width to its height',
-    'ratio.auto': 'As it is',
-    fit: 'Fit',
-    fit_help: 'How the picture fills its frame',
-    'fit.cover': 'Fill',
-    'fit.contain': 'Whole',
-  }),
-  ...words('content_alert', {
-    status: 'Kind',
-    status_help: 'What the message is about',
-    'status.neutral': 'Plain',
-    'status.info': 'Information',
-    'status.success': 'Success',
-    'status.warning': 'Warning',
-    'status.error': 'Error',
-    appearance: 'Look',
-    appearance_help: 'Filled, outlined or flat',
-    'appearance.default': 'Filled',
-    'appearance.outlined': 'Outlined',
-    'appearance.flat': 'Flat',
-  }),
-  ...words('content_details', {
-    open: 'Open at first',
-    open_help: 'The block is shown open when the page loads',
-    layout: 'Look',
-    layout_help: 'A filled box or lines between blocks',
-    'layout.surface': 'Filled',
-    'layout.lines': 'Lines',
-  }),
-  ...words('content_tabs', {
-    label: 'Name',
-    label_help: 'The name of the row of tabs for screen readers',
-  }),
-  ...words('content_tab', {
-    label: 'Tab name',
-    label_help: 'The text on the tab',
-  }),
-  ...words('content_steps', {
-    current: 'Current step',
-    current_help: 'The number of the step in progress',
-    layout: 'Look',
-    layout_help: 'A timeline or a numbered list',
-    'layout.timeline': 'Timeline',
-    'layout.list': 'List',
-  }),
-  ...words('content_grid', {
-    columns: 'Columns',
-    columns_help: 'How many columns on a wide screen; a narrow one shows fewer',
-    gap: 'Gap',
-    gap_help: 'The space between the cells, from 0 to 4',
-  }),
-  ...words('content_card', {
-    variant: 'Look',
-    variant_help: 'A card with a background or without one',
-    'variant.default': 'Card',
-    'variant.plain': 'No background',
-  }),
-  ...words('content_media', {
-    src: 'Picture address',
-    src_help: 'A link to the image: http(s) or a path on the site',
-    alt: 'Picture description',
-    alt_help: 'What the picture shows, for those who cannot see it',
-    side: 'Picture',
-    side_help: 'Which side the picture stands on',
-    'side.left': 'Left',
-    'side.right': 'Right',
-    ratio: 'Ratio',
-    ratio_help: 'The picture\'s width to its height',
-  }),
-  ...words('content_file', {
-    label: 'File name',
-    label_help: 'The name shown; when empty, the last part of the address',
-    href: 'File address',
-    href_help: 'A link to the file to download',
-  }),
-  ...words('content_diagram', {
-    title: 'Caption',
-    title_help: 'The diagram\'s name, also for screen readers',
-    engine: 'Engine',
-    engine_help: 'What draws the diagram',
-    'engine.mermaid': 'Mermaid',
-  }),
-  ...words('content_math', {
-    label: 'Caption',
-    label_help: 'The formula\'s name for screen readers',
-  }),
-  // The layout and element types of the one block editor (2026-11-04).
-  ...words('layout_spacer', {
-    size: 'Height',
-    size_help: 'From 1 to 8 steps, per screen',
-  }),
-  ...words('element_button', {
-    text: 'Text',
-    text_help: 'The words on the button',
-    href: 'Link',
-    href_help: 'Where the button leads; empty, it is a button',
-    appearance: 'Look',
-    appearance_help: 'How the button stands out',
-    'appearance.default': 'Filled',
-    'appearance.tonal': 'Tonal',
-    'appearance.outline': 'Outlined',
-    'appearance.link': 'Link',
-    'appearance.surface': 'On the surface',
-    size: 'Size',
-    size_help: 'Small, regular or large',
-    icon: 'Icon',
-    icon_help: 'A SIMAI Framework icon name, such as arrow_forward',
-    icon_position: 'Icon side',
-    icon_position_help: 'Before or after the words',
-    'icon_position.start': 'Before',
-    'icon_position.end': 'After',
-    scheme: 'Colour',
-    scheme_help: 'The colour role of the button',
-    'scheme.primary': 'Primary',
-    'scheme.secondary': 'Secondary',
-  }),
-  ...words('element_button_icon', {
-    icon: 'Icon',
-    icon_help: 'A SIMAI Framework icon name, such as favorite',
-    label: 'Label for screen readers',
-    label_help: 'What the button does, said aloud',
-    appearance: 'Look',
-    appearance_help: 'How the button stands out',
-    'appearance.default': 'Filled',
-    'appearance.tonal': 'Tonal',
-    'appearance.outline': 'Outlined',
-    'appearance.surface': 'On the surface',
-    'appearance.ghost': 'No background',
-    size: 'Size',
-    size_help: 'Small, regular or large',
-    scheme: 'Colour',
-    scheme_help: 'The colour role of the button',
-    'scheme.primary': 'Primary',
-    'scheme.secondary': 'Secondary',
-  }),
-  ...words('element_badge', {
-    text: 'Text',
-    text_help: 'The words on the badge',
-    appearance: 'Look',
-    appearance_help: 'How the badge stands out',
-    'appearance.main': 'Filled',
-    'appearance.tonal': 'Tonal',
-    'appearance.outline': 'Outlined',
-    scheme: 'Colour',
-    scheme_help: 'The colour role of the badge',
-    'scheme.neutral': 'Neutral',
-    'scheme.primary': 'Primary',
-    'scheme.secondary': 'Secondary',
-    'scheme.tertiary': 'Tertiary',
-    size: 'Size',
-    size_help: 'From small to regular',
-    icon: 'Icon',
-    icon_help: 'A SIMAI Framework icon name before the words',
-  }),
-  ...words('element_icon', {
-    icon: 'Icon',
-    icon_help: 'A SIMAI Framework icon name, such as star',
-    size: 'Size',
-    size_help: 'A step of the size ladder',
-    label: 'Label for screen readers',
-    label_help: 'Leave empty when the icon only decorates',
-  }),
-  // Forms (2026-11-04).
-  ...words('form_form', {
-    action: 'Where to send',
-    action_help: "The address the form is sent to; the host's",
-    method: 'Method',
-    method_help: 'How the form is sent',
-    'method.post': 'In the body (POST)',
-    'method.get': 'In the address (GET)',
-  }),
-  ...words('form_input', {
-    label: 'Label',
-    label_help: 'The words above the field',
-    placeholder: 'Placeholder',
-    placeholder_help: 'A hint inside the empty field',
-    input_type: 'Kind',
-    input_type_help: 'What the field takes',
-    'input_type.text': 'Text',
-    'input_type.email': 'Email',
-    'input_type.tel': 'Phone',
-    'input_type.url': 'Address',
-    required: 'Required',
-    required_help: 'The form is not sent without it',
-    hint: 'Hint',
-    hint_help: 'A line under the field',
-    name: 'Field name',
-    name_help: 'What the form sends the value under',
-    size: 'Size',
-    size_help: 'Small, regular or large',
-  }),
-  ...words('form_textarea', {
-    label: 'Label',
-    label_help: 'The words above the field',
-    placeholder: 'Placeholder',
-    placeholder_help: 'A hint inside the empty field',
-    rows: 'Rows',
-    rows_help: 'How many lines the field shows, from 2 to 12',
-    required: 'Required',
-    required_help: 'The form is not sent without it',
-    hint: 'Hint',
-    hint_help: 'A line under the field',
-    name: 'Field name',
-    name_help: 'What the form sends the value under',
-    size: 'Size',
-    size_help: 'Small, regular or large',
-  }),
-  ...words('form_checkbox', {
-    label: 'Label',
-    label_help: 'The words beside the box',
-    hint: 'Hint',
-    hint_help: 'A line under the label',
-    checked: 'On at first',
-    checked_help: 'Whether it starts ticked',
-    name: 'Field name',
-    name_help: 'What the form sends the value under',
-    size: 'Size',
-    size_help: 'Small, regular or large',
-  }),
-  ...words('form_switch', {
-    label: 'Label',
-    label_help: 'The words beside the box',
-    hint: 'Hint',
-    hint_help: 'A line under the label',
-    checked: 'On at first',
-    checked_help: 'Whether it starts ticked',
-    name: 'Field name',
-    name_help: 'What the form sends the value under',
-    size: 'Size',
-    size_help: 'Small, regular or large',
-  }),
-  ...words('form_select', {
-    label: 'Label',
-    label_help: 'The words above the field',
-    options: 'Options',
-    options_help: 'The choices, separated by commas',
-    placeholder: 'Placeholder',
-    placeholder_help: 'A hint inside the empty field',
-    required: 'Required',
-    required_help: 'The form is not sent without it',
-    name: 'Field name',
-    name_help: 'What the form sends the value under',
-    size: 'Size',
-    size_help: 'Small, regular or large',
-  }),
-  ...words('form_button_submit', {
-    text: 'Text',
-    text_help: 'The words on the button',
-    appearance: 'Look',
-    appearance_help: 'How the button stands out',
-    'appearance.default': 'Filled',
-    'appearance.tonal': 'Tonal',
-    'appearance.outline': 'Outlined',
-    size: 'Size',
-    size_help: 'Small, regular or large',
-  }),
-  // The catalogue: groups, the built-in types that name themselves, variants.
-  ...words('catalogue.group', {
-    text: 'Text',
-    media: 'Media',
-    elements: 'Elements',
-    layout: 'Layout',
-    page_parts: 'Page parts',
-    marketing: 'Marketing',
-    data: 'Data',
-    forms: 'Forms',
-  }),
-  ...words('catalogue.type', {
-    layout_container: 'Container',
-    layout_grid: 'Grid',
-    layout_spacer: 'Empty space',
-    element_button: 'Button',
-    element_button_icon: 'Icon button',
-    element_badge: 'Badge',
-    element_icon: 'Icon',
-    form_form: 'Form',
-    form_input: 'Field',
-    form_textarea: 'Text area',
-    form_checkbox: 'Checkbox',
-    form_switch: 'Switch',
-    form_select: 'List',
-    form_button_submit: 'Send button',
-  }),
-  ...words('catalogue.variant', {
-    'layout_section.plain': 'Empty',
-    'layout_section.soft': 'On a soft background',
-    'layout_section.accent': 'On an accent background',
-    'layout_section.text': 'With a text area',
-    'layout_section.two_columns': 'Two columns',
-    'layout_container.narrow': 'Narrow, for text',
-    'layout_container.normal': 'Page width',
-    'layout_container.soft': 'On a soft background',
-    'layout_grid.cards_2': 'Two cards',
-    'layout_grid.cards_3': 'Three cards',
-    'layout_grid.cards_4': 'Four cards',
-    'element_button.plain': 'Button',
-    'element_button.icon': 'With an icon',
-    'element_button.outline': 'Outlined',
-    'form_form.request': 'Request: name and phone',
-    'form_form.message': 'Message: name, email and text',
-  }),
+const STORE = (() => {
+  const root = typeof globalThis !== 'undefined' ? globalThis : {};
+  const key = '__sfCompositionEditorWords';
+  if (!root[key]) root[key] = { words: null, loader: null, loading: null };
+  return root[key];
+})();
+
+/** The words now installed, or empty tables while none are. */
+function editorWords() {
+  return STORE.words || EMPTY;
+}
+
+/** Whether the editor words are on the page. */
+function editorWordsReady() {
+  return Boolean(STORE.words);
+}
+
+/**
+ * Install the words `{en: {...}, ...}` (English is built in, owner decision
+ * C282; a bundle built before it brings `ru` too); the first install wins,
+ * and the page's components are told, as for a registered language, so a
+ * form drawn before the words arrived draws again.
+ */
+function installEditorWords(words) {
+  if (!STORE.words && words && typeof words.en === 'object') {
+    STORE.words = words;
+    (0,_page_language_js__WEBPACK_IMPORTED_MODULE_0__.refreshLanguage)();
+  }
+  return editorWords();
+}
+
+/** Core names how the words chunk is fetched (core/js/index.js). */
+function setEditorWordsLoader(load) {
+  if (typeof load === 'function' && !STORE.loader) STORE.loader = load;
+}
+
+/**
+ * The words, once they are on the page: resolves at once when they already
+ * are, else fetches the core-editor-words chunk once. Resolves to the empty
+ * tables when there is nothing to fetch them with (core not on the page).
+ */
+function loadEditorWords() {
+  if (STORE.words) return Promise.resolve(STORE.words);
+  if (!STORE.loader) return Promise.resolve(EMPTY);
+  if (!STORE.loading) {
+    STORE.loading = Promise.resolve()
+      .then(STORE.loader)
+      .then((module) => installEditorWords(module?.EDITOR_FIELD_WORDS ?? module?.default?.EDITOR_FIELD_WORDS))
+      .catch((error) => {
+        STORE.loading = null;
+        globalThis.console?.warn?.('[SIMAI Framework] sf-composition: the editor words did not load', error);
+        return EMPTY;
+      });
+  }
+  return STORE.loading;
+}
+
+/**
+ * `{en, ru}` that reads whatever is installed: SF.Composition.EDITOR_FIELD_WORDS
+ * as it was. Empty until the words are on the page; the first read starts
+ * loading them, and the page's components are told when they arrive.
+ */
+// A language not built in (C282): the words its language file registered for
+// sf-composition.
+const registeredWords = (locale) => globalThis.__sfPageLanguage?.registered?.get?.(EDITOR_WORDS_OWNER)?.get?.(locale) ?? {};
+const readWords = (locale) => {
+  if (!STORE.words) loadEditorWords();
+  return editorWords()[locale] ?? registeredWords(locale);
 };
-
-const RU = {
-  ...words('layout_section', {
-    surface: 'Фон',
-    surface_help: 'Как раздел выделяется на странице',
-    'surface.surface': 'Обычный',
-    'surface.contrast': 'Контрастный',
-  }),
-  ...words('layout_columns', {
-    columns: 'Колонки',
-    columns_help: 'На сколько колонок делится содержимое',
-    gap: 'Промежуток',
-    gap_help: 'Расстояние между колонками, от 0 до 8 шагов',
-  }),
-  ...words('set_background', {
-    background: 'Фон',
-    background_help: 'Заливка под блоком',
-    'background.surface': 'Страница',
-    'background.container': 'Контейнер',
-    'background.primary': 'Основной',
-    'background.secondary': 'Дополнительный',
-    'background.tertiary': 'Третий',
-    'background.accent': 'Акцент',
-  }),
-  ...words('set_spacing', {
-    padding_y: 'Отступ сверху и снизу',
-    padding_y_help: 'От 0 до 8 шагов, для каждого экрана',
-    padding_x: 'Отступ по бокам',
-    padding_x_help: 'От 0 до 8 шагов, для каждого экрана',
-  }),
-  ...words('set_width', {
-    width: 'Ширина',
-    width_help: 'Насколько широко стоит содержимое на странице',
-    'width.narrow': 'Узкая',
-    'width.normal': 'Обычная',
-    'width.wide': 'Широкая',
-    'width.full': 'Во всю ширину',
-  }),
-  ...words('set_grid', {
-    columns: 'Колонки',
-    columns_help: 'На сколько колонок делится содержимое, для каждого экрана',
-    gap: 'Промежуток',
-    gap_help: 'Расстояние между колонками, от 0 до 8 шагов',
-  }),
-  ...words('set_alignment', {
-    align: 'Выравнивание',
-    align_help: 'Как выравнивается текст, для каждого экрана',
-    'align.start': 'К началу',
-    'align.center': 'По центру',
-    'align.end': 'К концу',
-  }),
-  ...words('set_breakout', {
-    breakout: 'От края до края',
-    breakout_help: 'Блок занимает всю ширину страницы',
-  }),
-  ...words('set_visibility', {
-    hidden: 'Скрыт',
-    hidden_help: 'Блок не показывается на этом экране',
-  }),
-  ...words('layout_area', {
-    content: 'Текст',
-    empty: 'Начните писать или нажмите / для блока',
-    padding: 'Отступ',
-    padding_help: 'Пространство внутри области, от 0 до 8 шагов',
-    hidden: 'Скрыть',
-    hidden_help: 'Область не показывается на этом экране',
-  }),
-  ...words('content_heading', {
-    level: 'Уровень заголовка',
-    level_help: 'От 1 (заголовок страницы) до 6',
-  }),
-  ...words('layout_region', {
-    placement: 'Расположение',
-    placement_help: 'Где область стоит в макете',
-    'placement.block': 'Во всю ширину',
-    'placement.start': 'В начале',
-    'placement.center': 'По центру',
-    'placement.end': 'В конце',
-    label: 'Название',
-    label_help: 'Название области для программ чтения с экрана',
-    landmark: 'Ориентир',
-    landmark_help: 'Роль области в структуре страницы для вспомогательных технологий',
-    'landmark.banner': 'Шапка',
-    'landmark.navigation': 'Навигация',
-    'landmark.main': 'Основное содержимое',
-    'landmark.complementary': 'Боковая колонка',
-    'landmark.contentinfo': 'Подвал',
-    'landmark.region': 'Область',
-    'landmark.none': 'Нет',
-    sticky: 'Закрепить',
-    sticky_help: 'Область остаётся на виду при прокрутке страницы',
-  }),
-  ...words('content_list', {
-    ordered: 'Нумерованный',
-    ordered_help: 'Номера вместо маркеров',
-    start: 'Начать с',
-    start_help: 'Номер первого пункта',
-  }),
-  ...words('content_code', {
-    lang: 'Язык',
-    lang_help: 'Язык программирования для подсветки',
-    title: 'Подпись',
-    title_help: 'Имя файла или короткая подпись над кодом',
-    numbers: 'Номера строк',
-    numbers_help: 'Нумеровать каждую строку',
-  }),
-  ...words('content_table', {
-    header: 'Заголовки таблицы',
-    header_help: 'Какие ячейки — заголовки',
-    'header.row': 'Первая строка',
-    'header.column': 'Первый столбец',
-    'header.both': 'Строка и столбец',
-    'header.none': 'Нет',
-  }),
-  ...words('content_figure', {
-    src: 'Адрес картинки',
-    src_help: 'Ссылка на изображение: http(s) или путь на сайте',
-    alt: 'Описание картинки',
-    alt_help: 'Что на картинке — для тех, кто её не видит',
-    ratio: 'Пропорции',
-    ratio_help: 'Соотношение ширины и высоты картинки',
-    'ratio.auto': 'Как есть',
-    fit: 'Вписать',
-    fit_help: 'Как картинка заполняет рамку',
-    'fit.cover': 'Заполнить',
-    'fit.contain': 'Целиком',
-  }),
-  ...words('content_alert', {
-    status: 'Вид',
-    status_help: 'О чём сообщение',
-    'status.neutral': 'Обычная',
-    'status.info': 'Сведения',
-    'status.success': 'Успех',
-    'status.warning': 'Внимание',
-    'status.error': 'Ошибка',
-    appearance: 'Оформление',
-    appearance_help: 'Заливка, рамка или без фона',
-    'appearance.default': 'Заливка',
-    'appearance.outlined': 'Рамка',
-    'appearance.flat': 'Плоско',
-  }),
-  ...words('content_details', {
-    open: 'Открыт сразу',
-    open_help: 'Блок показан раскрытым при загрузке страницы',
-    layout: 'Оформление',
-    layout_help: 'Заливка или линии между блоками',
-    'layout.surface': 'Заливка',
-    'layout.lines': 'Линии',
-  }),
-  ...words('content_tabs', {
-    label: 'Название',
-    label_help: 'Название ряда вкладок для программ чтения с экрана',
-  }),
-  ...words('content_tab', {
-    label: 'Название вкладки',
-    label_help: 'Текст на вкладке',
-  }),
-  ...words('content_steps', {
-    current: 'Текущий шаг',
-    current_help: 'Номер шага, который выполняется сейчас',
-    layout: 'Оформление',
-    layout_help: 'Линия или нумерованный список',
-    'layout.timeline': 'Линия',
-    'layout.list': 'Список',
-  }),
-  ...words('content_grid', {
-    columns: 'Колонки',
-    columns_help: 'Сколько колонок на широком экране; на узком их меньше',
-    gap: 'Промежуток',
-    gap_help: 'Расстояние между ячейками, от 0 до 4',
-  }),
-  ...words('content_card', {
-    variant: 'Оформление',
-    variant_help: 'Карточка с фоном или без него',
-    'variant.default': 'Карточка',
-    'variant.plain': 'Без фона',
-  }),
-  ...words('content_media', {
-    src: 'Адрес картинки',
-    src_help: 'Ссылка на изображение: http(s) или путь на сайте',
-    alt: 'Описание картинки',
-    alt_help: 'Что на картинке — для тех, кто её не видит',
-    side: 'Картинка',
-    side_help: 'С какой стороны стоит картинка',
-    'side.left': 'Слева',
-    'side.right': 'Справа',
-    ratio: 'Пропорции',
-    ratio_help: 'Соотношение ширины и высоты картинки',
-  }),
-  ...words('content_file', {
-    label: 'Название файла',
-    label_help: 'Показываемое название; если пусто — последняя часть адреса',
-    href: 'Адрес файла',
-    href_help: 'Ссылка на файл для скачивания',
-  }),
-  ...words('content_diagram', {
-    title: 'Подпись',
-    title_help: 'Название схемы, в том числе для программ чтения с экрана',
-    engine: 'Движок',
-    engine_help: 'Чем рисуется схема',
-    'engine.mermaid': 'Mermaid',
-  }),
-  ...words('content_math', {
-    label: 'Подпись',
-    label_help: 'Название формулы для программ чтения с экрана',
-  }),
-  ...words('layout_spacer', {
-    size: 'Высота',
-    size_help: 'От 1 до 8 шагов, для каждого экрана',
-  }),
-  ...words('element_button', {
-    text: 'Текст',
-    text_help: 'Слова на кнопке',
-    href: 'Ссылка',
-    href_help: 'Куда ведёт кнопка; пусто — это просто кнопка',
-    appearance: 'Вид',
-    appearance_help: 'Насколько кнопка заметна',
-    'appearance.default': 'Заливка',
-    'appearance.tonal': 'Тональная',
-    'appearance.outline': 'Контур',
-    'appearance.link': 'Ссылка',
-    'appearance.surface': 'На поверхности',
-    size: 'Размер',
-    size_help: 'Маленькая, обычная или крупная',
-    icon: 'Значок',
-    icon_help: 'Имя значка SIMAI Framework, например arrow_forward',
-    icon_position: 'Где значок',
-    icon_position_help: 'До или после слов',
-    'icon_position.start': 'Слева',
-    'icon_position.end': 'Справа',
-    scheme: 'Цвет',
-    scheme_help: 'Цветовая роль кнопки',
-    'scheme.primary': 'Основной',
-    'scheme.secondary': 'Дополнительный',
-  }),
-  ...words('element_button_icon', {
-    icon: 'Значок',
-    icon_help: 'Имя значка SIMAI Framework, например favorite',
-    label: 'Подпись для экранного диктора',
-    label_help: 'Что делает кнопка, вслух',
-    appearance: 'Вид',
-    appearance_help: 'Насколько кнопка заметна',
-    'appearance.default': 'Заливка',
-    'appearance.tonal': 'Тональная',
-    'appearance.outline': 'Контур',
-    'appearance.surface': 'На поверхности',
-    'appearance.ghost': 'Без фона',
-    size: 'Размер',
-    size_help: 'Маленькая, обычная или крупная',
-    scheme: 'Цвет',
-    scheme_help: 'Цветовая роль кнопки',
-    'scheme.primary': 'Основной',
-    'scheme.secondary': 'Дополнительный',
-  }),
-  ...words('element_badge', {
-    text: 'Текст',
-    text_help: 'Слова на метке',
-    appearance: 'Вид',
-    appearance_help: 'Насколько метка заметна',
-    'appearance.main': 'Заливка',
-    'appearance.tonal': 'Тональная',
-    'appearance.outline': 'Контур',
-    scheme: 'Цвет',
-    scheme_help: 'Цветовая роль метки',
-    'scheme.neutral': 'Нейтральный',
-    'scheme.primary': 'Основной',
-    'scheme.secondary': 'Дополнительный',
-    'scheme.tertiary': 'Третий',
-    size: 'Размер',
-    size_help: 'От маленькой до обычной',
-    icon: 'Значок',
-    icon_help: 'Имя значка SIMAI Framework перед словами',
-  }),
-  ...words('element_icon', {
-    icon: 'Значок',
-    icon_help: 'Имя значка SIMAI Framework, например star',
-    size: 'Размер',
-    size_help: 'Шаг шкалы размеров',
-    label: 'Подпись для экранного диктора',
-    label_help: 'Оставьте пустой, если значок только украшает',
-  }),
-  // Формы (2026-11-04).
-  ...words('form_form', {
-    action: 'Куда отправить',
-    action_help: 'Адрес, на который уходит форма; его даёт сайт',
-    method: 'Способ',
-    method_help: 'Как отправляется форма',
-    'method.post': 'В теле запроса (POST)',
-    'method.get': 'В адресе (GET)',
-  }),
-  ...words('form_input', {
-    label: 'Подпись',
-    label_help: 'Слова над полем',
-    placeholder: 'Подсказка в поле',
-    placeholder_help: 'Текст внутри пустого поля',
-    input_type: 'Вид',
-    input_type_help: 'Что поле принимает',
-    'input_type.text': 'Текст',
-    'input_type.email': 'Почта',
-    'input_type.tel': 'Телефон',
-    'input_type.url': 'Адрес',
-    required: 'Обязательное',
-    required_help: 'Без него форма не отправится',
-    hint: 'Пояснение',
-    hint_help: 'Строка под полем',
-    name: 'Имя поля',
-    name_help: 'Под каким именем форма отправит значение',
-    size: 'Размер',
-    size_help: 'Маленький, обычный или большой',
-  }),
-  ...words('form_textarea', {
-    label: 'Подпись',
-    label_help: 'Слова над полем',
-    placeholder: 'Подсказка в поле',
-    placeholder_help: 'Текст внутри пустого поля',
-    rows: 'Строк',
-    rows_help: 'Сколько строк видно, от 2 до 12',
-    required: 'Обязательное',
-    required_help: 'Без него форма не отправится',
-    hint: 'Пояснение',
-    hint_help: 'Строка под полем',
-    name: 'Имя поля',
-    name_help: 'Под каким именем форма отправит значение',
-    size: 'Размер',
-    size_help: 'Маленький, обычный или большой',
-  }),
-  ...words('form_checkbox', {
-    label: 'Подпись',
-    label_help: 'Слова рядом с флажком',
-    hint: 'Подсказка',
-    hint_help: 'Строка под подписью',
-    checked: 'Включено сразу',
-    checked_help: 'Отмечено ли с самого начала',
-    name: 'Имя поля',
-    name_help: 'Под каким именем форма отправит значение',
-    size: 'Размер',
-    size_help: 'Маленький, обычный или большой',
-  }),
-  ...words('form_switch', {
-    label: 'Подпись',
-    label_help: 'Слова рядом с флажком',
-    hint: 'Подсказка',
-    hint_help: 'Строка под подписью',
-    checked: 'Включено сразу',
-    checked_help: 'Отмечено ли с самого начала',
-    name: 'Имя поля',
-    name_help: 'Под каким именем форма отправит значение',
-    size: 'Размер',
-    size_help: 'Маленький, обычный или большой',
-  }),
-  ...words('form_select', {
-    label: 'Подпись',
-    label_help: 'Слова над полем',
-    options: 'Варианты',
-    options_help: 'Варианты через запятую',
-    placeholder: 'Подсказка в поле',
-    placeholder_help: 'Текст внутри пустого поля',
-    required: 'Обязательное',
-    required_help: 'Без него форма не отправится',
-    name: 'Имя поля',
-    name_help: 'Под каким именем форма отправит значение',
-    size: 'Размер',
-    size_help: 'Маленький, обычный или большой',
-  }),
-  ...words('form_button_submit', {
-    text: 'Текст',
-    text_help: 'Слова на кнопке',
-    appearance: 'Вид',
-    appearance_help: 'Как выделяется кнопка',
-    'appearance.default': 'Залитая',
-    'appearance.tonal': 'Тоновая',
-    'appearance.outline': 'Контурная',
-    size: 'Размер',
-    size_help: 'Маленький, обычный или большой',
-  }),
-  ...words('catalogue.group', {
-    text: 'Текст',
-    media: 'Медиа',
-    elements: 'Элементы',
-    layout: 'Макет',
-    page_parts: 'Части страницы',
-    marketing: 'Маркетинг',
-    data: 'Данные',
-    forms: 'Формы',
-  }),
-  ...words('catalogue.type', {
-    layout_container: 'Контейнер',
-    layout_grid: 'Сетка',
-    layout_spacer: 'Пустое место',
-    element_button: 'Кнопка',
-    element_button_icon: 'Кнопка-значок',
-    element_badge: 'Метка',
-    element_icon: 'Значок',
-    form_form: 'Форма',
-    form_input: 'Поле',
-    form_textarea: 'Многострочное поле',
-    form_checkbox: 'Флажок',
-    form_switch: 'Переключатель',
-    form_select: 'Список',
-    form_button_submit: 'Кнопка отправки',
-  }),
-  ...words('catalogue.variant', {
-    'layout_section.plain': 'Пустая',
-    'layout_section.soft': 'На мягком фоне',
-    'layout_section.accent': 'На акцентном фоне',
-    'layout_section.text': 'С областью текста',
-    'layout_section.two_columns': 'Две колонки',
-    'layout_container.narrow': 'Узкий, для текста',
-    'layout_container.normal': 'Шириной страницы',
-    'layout_container.soft': 'На мягком фоне',
-    'layout_grid.cards_2': 'Две карточки',
-    'layout_grid.cards_3': 'Три карточки',
-    'layout_grid.cards_4': 'Четыре карточки',
-    'element_button.plain': 'Кнопка',
-    'element_button.icon': 'Со значком',
-    'element_button.outline': 'Контурная',
-    'form_form.request': 'Заявка: имя и телефон',
-    'form_form.message': 'Сообщение: имя, почта и текст',
-  }),
-};
-
-const EDITOR_FIELD_WORDS = Object.freeze({ en: Object.freeze(EN), ru: Object.freeze(RU) });
+const EDITOR_FIELD_WORDS_LIVE = Object.freeze({
+  get en() { return readWords('en'); },
+  get ru() { return readWords('ru'); },
+});
 
 const STABLE_SEGMENT = /^[a-z][a-z0-9_]*$/u;
 
-/** Every word key a field reads: its label, its help and its stable choices. */
 /** The keys of the catalogue's words: the fixed groups, and the built-in types and variants that name one. */
 function catalogueWordKeys() {
   const keys = Object.values(_catalogue_mjs__WEBPACK_IMPORTED_MODULE_2__.CATALOGUE_GROUP_TABLE).map(({ label_key: key }) => key);
@@ -8076,6 +8565,7 @@ function catalogueWordKeys() {
   return [...new Set(keys)];
 }
 
+/** Every word key a field reads: its label, its help and its stable choices. */
 function editorFieldKeys(field) {
   if (!field || typeof field.label_key !== 'string') return [];
   const keys = [field.label_key];
@@ -8093,33 +8583,39 @@ function editorFieldKeys(field) {
  * nearest [lang], SF.language.use(), <html lang>), else English. A word
  * registered for `sf-composition` wins over the shipped one; a key with no
  * word in any language is left out, so the host's own words or the key show.
+ *
+ * `words` are the tables to read; by default the installed ones. While none
+ * are installed the call starts loading them (SF.Composition.loadEditorWords)
+ * and answers with the registered words only; the components are told when
+ * the words arrive, as for a registered language.
  */
-function editorFieldMessages(manifests, { node = null, locale } = {}) {
+function editorFieldMessages(manifests, { node = null, locale, words } = {}) {
+  const table = words || editorWords();
+  if (!words && !STORE.words) loadEditorWords();
   const list = manifests === undefined ? _builtins_mjs__WEBPACK_IMPORTED_MODULE_1__.BUILTIN_EDITOR_MANIFESTS : Array.isArray(manifests) ? manifests : [manifests];
   const language = locale || (0,_page_language_js__WEBPACK_IMPORTED_MODULE_0__.pageLocale)(node);
   const messages = {};
+  const read = (key) => (0,_page_language_js__WEBPACK_IMPORTED_MODULE_0__.localeText)(table, key, language, EDITOR_WORDS_OWNER);
   // Without a manifest, the words of the built-in types' named places too
   // (a slot's label_key and empty_key; one block editor, 2026-11-03).
   // And the catalogue's words (2026-11-04): each group's name, and the name
   // of each built-in type and variant that gives a label_key.
   if (manifests === undefined) {
     for (const slot of _builtins_mjs__WEBPACK_IMPORTED_MODULE_1__.BUILTIN_TYPE_MANIFESTS.flatMap((manifest) => Object.values(manifest.slots || {}))) {
-      for (const key of [slot.label_key, slot.empty_key].filter(Boolean)) messages[key] = (0,_page_language_js__WEBPACK_IMPORTED_MODULE_0__.localeText)(EDITOR_FIELD_WORDS, key, language, EDITOR_WORDS_OWNER);
+      for (const key of [slot.label_key, slot.empty_key].filter(Boolean)) messages[key] = read(key);
     }
-    for (const key of catalogueWordKeys()) messages[key] = (0,_page_language_js__WEBPACK_IMPORTED_MODULE_0__.localeText)(EDITOR_FIELD_WORDS, key, language, EDITOR_WORDS_OWNER);
+    for (const key of catalogueWordKeys()) messages[key] = read(key);
   }
   for (const manifest of list) {
     for (const field of manifest?.fields || []) {
       for (const key of editorFieldKeys(field)) {
-        const word = (0,_page_language_js__WEBPACK_IMPORTED_MODULE_0__.localeText)(EDITOR_FIELD_WORDS, key, language, EDITOR_WORDS_OWNER);
+        const word = read(key);
         if (word !== key) messages[key] = word;
       }
     }
   }
   return messages;
 }
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({ EDITOR_FIELD_WORDS, EDITOR_WORDS_OWNER, catalogueWordKeys, editorFieldKeys, editorFieldMessages });
 
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
@@ -8407,12 +8903,14 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "waiting",
             "done",
             "stopped",
-            "failed"
+            "failed",
+            "paused",
+            "queued"
           ],
           "type": "string"
         },
         "appearance": {
-          "default": "main",
+          "default": "tonal",
           "enum": [
             "main",
             "tonal",
@@ -8424,10 +8922,6 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
-        "compact": {
-          "default": false,
-          "type": "boolean"
-        },
         "icon": {
           "default": "",
           "type": "string"
@@ -8435,6 +8929,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "icon-end": {
           "default": "",
           "type": "string"
+        },
+        "icon-only": {
+          "default": false,
+          "type": "boolean"
         },
         "icon-position": {
           "default": "start",
@@ -8454,7 +8952,8 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "",
             "1/2",
             "1",
-            "2"
+            "2",
+            "text"
           ],
           "type": "string"
         },
@@ -8502,7 +9001,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.badge",
-    "version": "1.3.1"
+    "version": "1.6.3"
   },
   "sf-button": {
     "inputs": {
@@ -8514,8 +9013,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "default",
             "tonal",
             "outline",
-            "ghost",
-            "surface"
+            "ghost"
           ],
           "type": "string"
         },
@@ -8534,6 +9032,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "form": {
           "default": "",
           "type": "string"
+        },
+        "full-width": {
+          "default": false,
+          "type": "boolean"
         },
         "height": {
           "default": "default",
@@ -8608,7 +9110,6 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "primary",
           "enum": [
             "primary",
-            "secondary",
             "on-surface",
             "on-surface-variant"
           ],
@@ -8653,6 +9154,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           ],
           "type": "string"
         },
+        "split": {
+          "default": false,
+          "type": "boolean"
+        },
         "status": {
           "default": "",
           "enum": [
@@ -8696,7 +9201,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.button",
-    "version": "1.10.0"
+    "version": "1.16.8"
   },
   "sf-button-icon": {
     "inputs": {
@@ -8708,7 +9213,8 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "default",
             "tonal",
             "outline",
-            "ghost"
+            "ghost",
+            "plain"
           ],
           "type": "string"
         },
@@ -8737,9 +9243,27 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": false,
           "type": "boolean"
         },
+        "download": {
+          "default": "",
+          "type": "string"
+        },
         "filled": {
           "default": false,
           "type": "boolean"
+        },
+        "height": {
+          "default": "default",
+          "enum": [
+            "low",
+            "default",
+            "high",
+            "highest"
+          ],
+          "type": "string"
+        },
+        "href": {
+          "default": "",
+          "type": "string"
         },
         "icon": {
           "default": "add",
@@ -8782,6 +9306,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "square",
             "rounded"
           ],
+          "type": "string"
+        },
+        "rel": {
+          "default": "",
           "type": "string"
         },
         "scheme": {
@@ -8832,7 +9360,15 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           ],
           "type": "string"
         },
+        "target": {
+          "default": "",
+          "type": "string"
+        },
         "theme-cycle": {
+          "default": "",
+          "type": "string"
+        },
+        "tooltip": {
           "default": "",
           "type": "string"
         },
@@ -8845,7 +9381,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.button-icon",
-    "version": "1.7.1"
+    "version": "1.13.8"
   },
   "sf-checkbox": {
     "inputs": {
@@ -8858,6 +9394,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "checked": {
           "default": false,
           "type": "boolean"
+        },
+        "controls": {
+          "default": "",
+          "type": "string"
         },
         "description": {
           "default": "",
@@ -8913,7 +9453,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.checkbox",
-    "version": "1.1.6"
+    "version": "1.5.5"
   },
   "sf-divider": {
     "component": "component.content-divider",
@@ -8937,14 +9477,6 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     "inputs": {
       "additionalProperties": false,
       "properties": {
-        "appearance": {
-          "default": "outlined",
-          "enum": [
-            "filled",
-            "outlined"
-          ],
-          "type": "string"
-        },
         "aria-label": {
           "default": "",
           "type": "string"
@@ -8957,6 +9489,18 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": false,
           "type": "boolean"
         },
+        "error-message": {
+          "default": "",
+          "type": "string"
+        },
+        "help": {
+          "default": "",
+          "type": "string"
+        },
+        "hint": {
+          "default": "",
+          "type": "string"
+        },
         "inherited-text": {
           "default": "",
           "type": "string"
@@ -8964,6 +9508,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "inherited-value": {
           "default": "",
           "type": "string"
+        },
+        "invalid": {
+          "default": false,
+          "type": "boolean"
         },
         "label": {
           "default": "",
@@ -9021,9 +9569,11 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "size": {
           "default": "1",
           "enum": [
+            "1/3",
             "1/2",
             "1",
-            "2"
+            "2",
+            "3"
           ],
           "type": "string"
         },
@@ -9036,7 +9586,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.dropdown",
-    "version": "1.7.4"
+    "version": "1.20.4"
   },
   "sf-icon": {
     "inputs": {
@@ -9077,6 +9627,15 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "mirror": {
+          "default": "auto",
+          "enum": [
+            "auto",
+            "on",
+            "off"
+          ],
+          "type": "string"
+        },
         "optical-size": {
           "default": 24,
           "maximum": 48,
@@ -9104,9 +9663,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "enum": [
             "",
-            "outlined",
-            "rounded",
-            "sharp"
+            "outlined"
           ],
           "type": "string"
         },
@@ -9121,7 +9678,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.icon",
-    "version": "1.1.6"
+    "version": "1.4.2"
   },
   "sf-input": {
     "inputs": {
@@ -9144,6 +9701,14 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "clearable": {
+          "default": false,
+          "type": "boolean"
+        },
+        "counter": {
+          "default": false,
+          "type": "boolean"
+        },
         "default-value": {
           "default": "",
           "type": "string"
@@ -9153,6 +9718,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "type": "boolean"
         },
         "error-message": {
+          "default": "",
+          "type": "string"
+        },
+        "help": {
           "default": "",
           "type": "string"
         },
@@ -9282,6 +9851,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "shortcut": {
+          "default": "",
+          "type": "string"
+        },
         "size": {
           "default": "1",
           "enum": [
@@ -9301,6 +9874,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "text-start": {
+          "default": "",
+          "type": "string"
+        },
         "value": {
           "default": "",
           "type": "string"
@@ -9310,7 +9887,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.input",
-    "version": "1.6.1"
+    "version": "1.15.2"
   },
   "sf-input-textarea": {
     "inputs": {
@@ -9334,18 +9911,26 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "type": "string"
         },
         "auto-grow": {
-          "default": false,
+          "default": true,
           "type": "boolean"
         },
         "autocomplete": {
           "default": "",
           "type": "string"
         },
+        "counter": {
+          "default": false,
+          "type": "boolean"
+        },
         "disabled": {
           "default": false,
           "type": "boolean"
         },
         "error-message": {
+          "default": "",
+          "type": "string"
+        },
+        "help": {
           "default": "",
           "type": "string"
         },
@@ -9397,13 +9982,14 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "type": "string"
         },
         "max-rows": {
+          "default": 10,
           "type": "number"
         },
         "maxlength": {
           "type": "number"
         },
         "min-rows": {
-          "default": 1,
+          "default": 3,
           "type": "number"
         },
         "minlength": {
@@ -9429,6 +10015,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "resize": {
+          "default": false,
+          "type": "boolean"
+        },
         "rows": {
           "default": 3,
           "type": "number"
@@ -9436,15 +10026,25 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "size": {
           "default": "1",
           "enum": [
+            "1/3",
             "1/2",
             "1",
-            "2"
+            "2",
+            "3"
           ],
           "type": "string"
         },
         "spell-check": {
           "default": true,
           "type": "boolean"
+        },
+        "text": {
+          "default": "plain",
+          "enum": [
+            "plain",
+            "code"
+          ],
+          "type": "string"
         },
         "value": {
           "default": "",
@@ -9463,7 +10063,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.input-textarea",
-    "version": "1.7.4"
+    "version": "1.13.2"
   },
   "sf-switch": {
     "inputs": {
@@ -9489,6 +10089,14 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "icon": {
+          "default": "",
+          "type": "string"
+        },
+        "icon-on": {
+          "default": "",
+          "type": "string"
+        },
         "inherited-text": {
           "default": "",
           "type": "string"
@@ -9505,9 +10113,21 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "position": {
+          "default": "start",
+          "enum": [
+            "start",
+            "end"
+          ],
+          "type": "string"
+        },
         "reset-label": {
           "default": "",
           "type": "string"
+        },
+        "short": {
+          "default": false,
+          "type": "boolean"
         },
         "size": {
           "default": "1",
@@ -9527,7 +10147,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.switch",
-    "version": "1.3.4"
+    "version": "1.9.3"
   }
 });
 
@@ -9987,8 +10607,12 @@ _format_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_async_dependencies_result__[
 
 
 // The last part of an address, decoded, without its query and fragment: the
-// name a file is shown under when it has no label.
+// name a file is shown under when it has no label. A data: or blob: address
+// has no name in it -- the last «/» of `data:image/svg+xml,<svg …>` falls
+// inside the content, and the name read «>» (image field study IF-14) -- so it
+// gives none, and the caller says what the file is instead.
 function fileNameFromAddress(href) {
+  if (/^\s*(?:data|blob):/iu.test(String(href ?? ''))) return '';
   const tail = String(href).split(/[?#]/u)[0].split('/').pop() || '';
   try {
     return decodeURIComponent(tail);
@@ -10025,8 +10649,9 @@ __webpack_async_result__();
 /***/ },
 
 /***/ "c2e3ed8498dc"
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+(__webpack_module__, __webpack_exports__, __webpack_require__) {
 
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   FRAGMENT_DESCRIPTOR_SCHEMA: () => (/* binding */ FRAGMENT_DESCRIPTOR_SCHEMA),
@@ -10036,8 +10661,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   publishEffects: () => (/* binding */ publishEffects)
 /* harmony export */ });
 /* harmony import */ var _canonical_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("6f489cc65b77");
-/* harmony import */ var _schema_name_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("ac24888e7d3e");
-/* harmony import */ var _routing_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("4aea5d6d49c7");
+/* harmony import */ var _page_language_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("43090d1c8307");
+/* harmony import */ var _lang_fragment_index_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("15b764c9972d");
+/* harmony import */ var _schema_name_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("ac24888e7d3e");
+/* harmony import */ var _routing_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("4aea5d6d49c7");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_page_language_js__WEBPACK_IMPORTED_MODULE_1__]);
+var __webpack_async_dependencies_result__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+_page_language_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_async_dependencies_result__[0];
+
+
+// English built in; the other languages from a language file (C282).
 
 
 
@@ -10068,7 +10701,7 @@ function portProblems(ports, where) {
     const port = ports[name];
     if (!NAME.test(name)) problems.push(`${where}.${name}: name`);
     if (!closed(port, ['value', 'summary'])) { problems.push(`${where}.${name}: undeclared keys`); continue; }
-    if ((0,_routing_mjs__WEBPACK_IMPORTED_MODULE_2__.valueTypeName)(port.value) === null) problems.push(`${where}.${name}: unknown value type ${port.value}`);
+    if ((0,_routing_mjs__WEBPACK_IMPORTED_MODULE_4__.valueTypeName)(port.value) === null) problems.push(`${where}.${name}: unknown value type ${port.value}`);
     if (typeof port.summary !== 'string' || !port.summary.trim() || port.summary.length > 1000) problems.push(`${where}.${name}: summary`);
   }
   return problems;
@@ -10082,7 +10715,7 @@ function checkFragmentDescriptor(descriptor) {
   for (const key of keys) if (!FIELDS.includes(key) && key !== 'schema_version') problems.push(`${key}: undeclared`);
   // Either form of the format name: simai.interface-fragment.v1, or
   // simai.interface-fragment with schema_version 1 (schema-name.mjs).
-  if (!(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_1__.isSchema)(descriptor, 'simai.interface-fragment', 1)) problems.push('schema: not simai.interface-fragment, schema_version 1');
+  if (!(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_3__.isSchema)(descriptor, 'simai.interface-fragment', 1)) problems.push('schema: not simai.interface-fragment, schema_version 1');
   if (typeof descriptor.id !== 'string' || !ID.test(descriptor.id)) problems.push('id: a dotted identity');
   if (typeof descriptor.element !== 'string' || !ELEMENT.test(descriptor.element)) problems.push('element: a custom element name');
   if (!uniqueList(descriptor.regions, 8, (region) => typeof region === 'string' && NAME.test(region)) || !descriptor.regions.length) problems.push('regions: one to eight region names');
@@ -10117,7 +10750,7 @@ function checkFragmentDescriptor(descriptor) {
 //     ...
 //   </sf-composition-scope>
 const PAGE_EFFECT_TYPES = ['record-changed.v1', 'record-removed.v1', 'collection-changed.v1', 'files-moved.v1', 'counter.v1', 'navigation.v1', 'preference-changed.v1'];
-const effectPort = (type) => (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_2__.valueTypeName)(type);
+const effectPort = (type) => (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_4__.valueTypeName)(type);
 const PAGE_EFFECT_PORTS = PAGE_EFFECT_TYPES.map(effectPort);
 
 function definePageHost(registry = globalThis.customElements) {
@@ -10147,13 +10780,13 @@ function definePageHost(registry = globalThis.customElements) {
       const refused = [];
       for (const effect of Array.isArray(effects) ? effects : []) {
         const type = effect?.type;
-        if (!PAGE_EFFECT_PORTS.includes((0,_routing_mjs__WEBPACK_IMPORTED_MODULE_2__.valueTypeName)(type))) {
+        if (!PAGE_EFFECT_PORTS.includes((0,_routing_mjs__WEBPACK_IMPORTED_MODULE_4__.valueTypeName)(type))) {
           refused.push({type: type ?? null, reason: 'type_not_published'});
           continue;
         }
         let value;
         try {
-          value = (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_2__.valueTypeEntry)(type).check(effect.value);
+          value = (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_4__.valueTypeEntry)(type).check(effect.value);
         } catch (error) {
           refused.push({type, reason: 'value_invalid', message: String(error?.message ?? error)});
           continue;
@@ -10192,10 +10825,6 @@ function publishEffects(effects, {origin = null} = {}) {
 //   <sf-fragment data-sf-fragment="larena.file-manager" load-timeout="10000">
 //     <sf-file-manager ...></sf-file-manager>
 //   </sf-fragment>
-const FRAGMENT_TEXT = {
-  ru: {heading: 'Не удалось показать этот блок'},
-  en: {heading: 'This block could not be shown'},
-};
 
 function defineFragmentBoundary(registry = globalThis.customElements) {
   if (!registry || typeof globalThis.HTMLElement !== 'function') return null;
@@ -10248,8 +10877,8 @@ function defineFragmentBoundary(registry = globalThis.customElements) {
     }
 
     text(key) {
-      const lang = (this.closest('[lang]')?.getAttribute('lang') || 'en').slice(0, 2);
-      return (FRAGMENT_TEXT[lang] ?? FRAGMENT_TEXT.en)[key];
+      const lang = this.closest('[lang]')?.getAttribute('lang') || 'en';
+      return (0,_page_language_js__WEBPACK_IMPORTED_MODULE_1__.localeText)(_lang_fragment_index_mjs__WEBPACK_IMPORTED_MODULE_2__["default"], key, lang, 'sf-fragment');
     }
 
     fail(phase, message) {
@@ -10260,7 +10889,7 @@ function defineFragmentBoundary(registry = globalThis.customElements) {
       // listeners go with it, and what stands in its place is the error state.
       const state = globalThis.document.createElement('sf-empty-state');
       state.setAttribute('kind', 'error');
-      state.setAttribute('title', this.text('heading'));
+      state.setAttribute('heading', this.text('heading'));
       this.replaceChildren(state);
       this.dispatchEvent(new globalThis.CustomEvent('sf-fragment-error', {
         bubbles: true, composed: true,
@@ -10280,6 +10909,8 @@ function defineFragmentBoundary(registry = globalThis.customElements) {
   return SfFragment;
 }
 
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ },
 
@@ -10923,7 +11554,24 @@ const sameFormat = (a, b) => a.strong === b.strong && a.em === b.em && a.href ==
 // Inline leaves made canonical: adjacent text of one format joined, runs of
 // spaces made one, spaces at the edges and around a line break removed, a link
 // with nothing but spaces made text.
+//
+// The steps run again until a pass changes nothing (2026-11-11 acceptance,
+// M2): dropping a space or an empty run makes new neighbours, so one pass left
+// "<p>a <em><br>n</em></p>" for the next load-and-save to make
+// "<p>a<em><br>n</em></p>". The stored value is the fixed point at once.
 function tidyLeaves(leaves, mode) {
+  let current = leaves;
+  let key = null;
+  for (let pass = 0; pass < 64; pass += 1) {
+    current = tidyLeavesOnce(current, mode);
+    const next = JSON.stringify(current);
+    if (next === key) break;
+    key = next;
+  }
+  return current;
+}
+
+function tidyLeavesOnce(leaves, mode) {
   const out = [];
   for (const item of leaves) {
     if (item.kind === 'text' && !item.value) continue;
@@ -10948,12 +11596,21 @@ function tidyLeaves(leaves, mode) {
   }
   let kept = out.filter((item) => item.kind === 'br' || item.value);
   if (mode === 'value') {
-    while (kept[0]?.kind === 'br') kept.shift();
-    while (kept.at(-1)?.kind === 'br') kept.pop();
-    if (kept[0]?.kind === 'text') kept[0].value = kept[0].value.replace(/^[\s\u00a0]+/u, '');
-    const end = kept.at(-1);
-    if (end?.kind === 'text') end.value = end.value.replace(/[\s\u00a0]+$/u, '');
-    kept = kept.filter((item) => item.kind === 'br' || item.value);
+    // Edge breaks and edge white space go together, until neither is left: a
+    // run of only white space (&nbsp;) at an edge hid the break behind it, so
+    // the first pass kept "<p>&nbsp;<br>a</p>" as "<p><br>a</p>" and only the
+    // next load-and-save gave "<p>a</p>" (2026-11-10 review, Q6). The value is
+    // now what that second pass gave, at once, and cleaning it again keeps it.
+    let length = -1;
+    while (length !== kept.length) {
+      length = kept.length;
+      while (kept[0]?.kind === 'br') kept.shift();
+      while (kept.at(-1)?.kind === 'br') kept.pop();
+      if (kept[0]?.kind === 'text') kept[0].value = kept[0].value.replace(/^[\s\u00a0]+/u, '');
+      const end = kept.at(-1);
+      if (end?.kind === 'text') end.value = end.value.replace(/[\s\u00a0]+$/u, '');
+      kept = kept.filter((item) => item.kind === 'br' || item.value);
+    }
   }
   // A link of nothing but spaces is not a link.
   const groups = new Map();
@@ -11175,129 +11832,138 @@ function richTextFromPlainText(text, {mode = 'value'} = {}) {
 __webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BINDING_STATES: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_18__.BINDING_STATES),
-/* harmony export */   BUILTIN_CATALOGUE: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.BUILTIN_CATALOGUE),
-/* harmony export */   BUILTIN_CATALOGUE_ALSO_IN: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.BUILTIN_CATALOGUE_ALSO_IN),
-/* harmony export */   BUILTIN_CATALOGUE_ICONS: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.BUILTIN_CATALOGUE_ICONS),
+/* harmony export */   BINDING_STATES: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_20__.BINDING_STATES),
+/* harmony export */   BUILTIN_CATALOGUE: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.BUILTIN_CATALOGUE),
+/* harmony export */   BUILTIN_CATALOGUE_ALSO_IN: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.BUILTIN_CATALOGUE_ALSO_IN),
+/* harmony export */   BUILTIN_CATALOGUE_ICONS: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.BUILTIN_CATALOGUE_ICONS),
 /* harmony export */   BUILTIN_EDITOR_MANIFESTS: () => (/* reexport safe */ _builtins_mjs__WEBPACK_IMPORTED_MODULE_0__.BUILTIN_EDITOR_MANIFESTS),
-/* harmony export */   BUILTIN_FIELD_KINDS: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.BUILTIN_FIELD_KINDS),
+/* harmony export */   BUILTIN_FIELD_KINDS: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.BUILTIN_FIELD_KINDS),
 /* harmony export */   BUILTIN_PORT_MANIFESTS: () => (/* reexport safe */ _builtins_mjs__WEBPACK_IMPORTED_MODULE_0__.BUILTIN_PORT_MANIFESTS),
 /* harmony export */   BUILTIN_TYPE_MANIFESTS: () => (/* reexport safe */ _builtins_mjs__WEBPACK_IMPORTED_MODULE_0__.BUILTIN_TYPE_MANIFESTS),
-/* harmony export */   CATALOGUE_GROUPS: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.CATALOGUE_GROUPS),
-/* harmony export */   CATALOGUE_GROUP_ALIASES: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.CATALOGUE_GROUP_ALIASES),
-/* harmony export */   CATALOGUE_GROUP_TABLE: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.CATALOGUE_GROUP_TABLE),
-/* harmony export */   CATALOGUE_TABS: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.CATALOGUE_TABS),
-/* harmony export */   COMPOSED_EXTENSION: () => (/* reexport safe */ _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.COMPOSED_EXTENSION),
+/* harmony export */   CATALOGUE_GROUPS: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.CATALOGUE_GROUPS),
+/* harmony export */   CATALOGUE_GROUP_ALIASES: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.CATALOGUE_GROUP_ALIASES),
+/* harmony export */   CATALOGUE_GROUP_TABLE: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.CATALOGUE_GROUP_TABLE),
+/* harmony export */   CATALOGUE_TABS: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.CATALOGUE_TABS),
+/* harmony export */   COMPOSED_EXTENSION: () => (/* reexport safe */ _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.COMPOSED_EXTENSION),
 /* harmony export */   Composition: () => (/* binding */ Composition),
-/* harmony export */   DATA_EXTENSION: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_18__.DATA_EXTENSION),
-/* harmony export */   DATA_SHAPES: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_18__.DATA_SHAPES),
-/* harmony export */   EDITOR_FIELD_WORDS: () => (/* reexport safe */ _editor_words_mjs__WEBPACK_IMPORTED_MODULE_1__.EDITOR_FIELD_WORDS),
-/* harmony export */   EDITOR_WORDS_OWNER: () => (/* reexport safe */ _editor_words_mjs__WEBPACK_IMPORTED_MODULE_1__.EDITOR_WORDS_OWNER),
-/* harmony export */   FRAGMENT_DESCRIPTOR_SCHEMA: () => (/* reexport safe */ _fragments_mjs__WEBPACK_IMPORTED_MODULE_12__.FRAGMENT_DESCRIPTOR_SCHEMA),
-/* harmony export */   INLINE_MARKS: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_10__.INLINE_MARKS),
-/* harmony export */   MODIFIERS_EXTENSION: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.MODIFIERS_EXTENSION),
-/* harmony export */   PARAMETER_SETS: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.PARAMETER_SETS),
-/* harmony export */   PARAMETER_SET_NAMES: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.PARAMETER_SET_NAMES),
-/* harmony export */   PRINTED_ELEMENTS: () => (/* reexport safe */ _elements_mjs__WEBPACK_IMPORTED_MODULE_15__.PRINTED_ELEMENTS),
-/* harmony export */   RUNTIME_OWNER: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_18__.RUNTIME_OWNER),
-/* harmony export */   Recipe: () => (/* reexport safe */ _recipe_mjs__WEBPACK_IMPORTED_MODULE_8__.Recipe),
-/* harmony export */   SOURCE_PORT: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_18__.SOURCE_PORT),
-/* harmony export */   UTILITY_BREAKPOINTS: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.UTILITY_BREAKPOINTS),
-/* harmony export */   VALUE_TYPES: () => (/* reexport safe */ _routing_mjs__WEBPACK_IMPORTED_MODULE_11__.VALUE_TYPES),
-/* harmony export */   applyFieldValue: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.applyFieldValue),
-/* harmony export */   bindingSettings: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_18__.bindingSettings),
-/* harmony export */   catalogue: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.catalogue),
-/* harmony export */   catalogueEntry: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.catalogueEntry),
-/* harmony export */   checkFragmentDescriptor: () => (/* reexport safe */ _fragments_mjs__WEBPACK_IMPORTED_MODULE_12__.checkFragmentDescriptor),
-/* harmony export */   checkModifiers: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.checkModifiers),
-/* harmony export */   checkPortValue: () => (/* reexport safe */ _routing_mjs__WEBPACK_IMPORTED_MODULE_11__.checkPortValue),
+/* harmony export */   DATA_EXTENSION: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_20__.DATA_EXTENSION),
+/* harmony export */   DATA_SHAPES: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_20__.DATA_SHAPES),
+/* harmony export */   EDITOR_FIELD_WORDS: () => (/* reexport safe */ _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__.EDITOR_FIELD_WORDS_LIVE),
+/* harmony export */   EDITOR_WORDS_OWNER: () => (/* reexport safe */ _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__.EDITOR_WORDS_OWNER),
+/* harmony export */   FRAGMENT_DESCRIPTOR_SCHEMA: () => (/* reexport safe */ _fragments_mjs__WEBPACK_IMPORTED_MODULE_14__.FRAGMENT_DESCRIPTOR_SCHEMA),
+/* harmony export */   INLINE_MARKS: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.INLINE_MARKS),
+/* harmony export */   MODIFIERS_EXTENSION: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.MODIFIERS_EXTENSION),
+/* harmony export */   PARAMETER_SETS: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.PARAMETER_SETS),
+/* harmony export */   PARAMETER_SET_NAMES: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.PARAMETER_SET_NAMES),
+/* harmony export */   PRINTED_ELEMENTS: () => (/* reexport safe */ _elements_mjs__WEBPACK_IMPORTED_MODULE_17__.PRINTED_ELEMENTS),
+/* harmony export */   RUNTIME_OWNER: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_20__.RUNTIME_OWNER),
+/* harmony export */   Recipe: () => (/* reexport safe */ _recipe_mjs__WEBPACK_IMPORTED_MODULE_10__.Recipe),
+/* harmony export */   SOURCE_PORT: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_20__.SOURCE_PORT),
+/* harmony export */   UTILITY_BREAKPOINTS: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.UTILITY_BREAKPOINTS),
+/* harmony export */   VALUE_TYPES: () => (/* reexport safe */ _routing_mjs__WEBPACK_IMPORTED_MODULE_13__.VALUE_TYPES),
+/* harmony export */   applyFieldValue: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.applyFieldValue),
+/* harmony export */   bindingSettings: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_20__.bindingSettings),
+/* harmony export */   catalogue: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.catalogue),
+/* harmony export */   catalogueEntry: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.catalogueEntry),
+/* harmony export */   checkFragmentDescriptor: () => (/* reexport safe */ _fragments_mjs__WEBPACK_IMPORTED_MODULE_14__.checkFragmentDescriptor),
+/* harmony export */   checkModifiers: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.checkModifiers),
+/* harmony export */   checkPortValue: () => (/* reexport safe */ _routing_mjs__WEBPACK_IMPORTED_MODULE_13__.checkPortValue),
 /* harmony export */   checkPrintedElements: () => (/* binding */ checkPrintedElements),
 /* harmony export */   checkSourceAnswer: () => (/* binding */ checkSourceAnswer),
 /* harmony export */   composedEditorFields: () => (/* binding */ composedEditorFields),
-/* harmony export */   composedInstance: () => (/* reexport safe */ _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.composedInstance),
-/* harmony export */   composedPart: () => (/* reexport safe */ _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.composedPart),
-/* harmony export */   composedTextPaths: () => (/* reexport safe */ _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.composedTextPaths),
+/* harmony export */   composedInstance: () => (/* reexport safe */ _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.composedInstance),
+/* harmony export */   composedPart: () => (/* reexport safe */ _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.composedPart),
+/* harmony export */   composedTextPaths: () => (/* reexport safe */ _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.composedTextPaths),
 /* harmony export */   compositionTypeFromSmartManifest: () => (/* binding */ compositionTypeFromSmartManifest),
-/* harmony export */   createPortRegistry: () => (/* reexport safe */ _routing_mjs__WEBPACK_IMPORTED_MODULE_11__.createPortRegistry),
+/* harmony export */   createPortRegistry: () => (/* reexport safe */ _routing_mjs__WEBPACK_IMPORTED_MODULE_13__.createPortRegistry),
 /* harmony export */   createRegistry: () => (/* binding */ createRegistry),
-/* harmony export */   createShapeRegistry: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_18__.createShapeRegistry),
+/* harmony export */   createShapeRegistry: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_20__.createShapeRegistry),
 /* harmony export */   createSourcePort: () => (/* binding */ createSourcePort),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
 /* harmony export */   defineComposedType: () => (/* binding */ defineComposedType),
-/* harmony export */   defineCompositionScope: () => (/* reexport safe */ _routing_mjs__WEBPACK_IMPORTED_MODULE_11__.defineCompositionScope),
-/* harmony export */   defineFragmentBoundary: () => (/* reexport safe */ _fragments_mjs__WEBPACK_IMPORTED_MODULE_12__.defineFragmentBoundary),
-/* harmony export */   definePageHost: () => (/* reexport safe */ _fragments_mjs__WEBPACK_IMPORTED_MODULE_12__.definePageHost),
-/* harmony export */   demoData: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_18__.demoData),
-/* harmony export */   describeRegions: () => (/* reexport safe */ _regions_mjs__WEBPACK_IMPORTED_MODULE_9__.describeRegions),
-/* harmony export */   editorFieldMessages: () => (/* reexport safe */ _editor_words_mjs__WEBPACK_IMPORTED_MODULE_1__.editorFieldMessages),
-/* harmony export */   effectiveProps: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.effectiveProps),
-/* harmony export */   elementInputs: () => (/* reexport safe */ _elements_mjs__WEBPACK_IMPORTED_MODULE_15__.elementInputs),
-/* harmony export */   entryGroups: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.entryGroups),
-/* harmony export */   expandComposed: () => (/* reexport safe */ _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.expandComposed),
-/* harmony export */   expandParameterSets: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.expandParameterSets),
+/* harmony export */   defineCompositionScope: () => (/* reexport safe */ _routing_mjs__WEBPACK_IMPORTED_MODULE_13__.defineCompositionScope),
+/* harmony export */   defineFragmentBoundary: () => (/* reexport safe */ _fragments_mjs__WEBPACK_IMPORTED_MODULE_14__.defineFragmentBoundary),
+/* harmony export */   definePageHost: () => (/* reexport safe */ _fragments_mjs__WEBPACK_IMPORTED_MODULE_14__.definePageHost),
+/* harmony export */   demoData: () => (/* reexport safe */ _data_mjs__WEBPACK_IMPORTED_MODULE_20__.demoData),
+/* harmony export */   describeRegions: () => (/* reexport safe */ _regions_mjs__WEBPACK_IMPORTED_MODULE_11__.describeRegions),
+/* harmony export */   editorFieldMessages: () => (/* reexport safe */ _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__.editorFieldMessages),
+/* harmony export */   effectiveProps: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.effectiveProps),
+/* harmony export */   elementInputs: () => (/* reexport safe */ _elements_mjs__WEBPACK_IMPORTED_MODULE_17__.elementInputs),
+/* harmony export */   entryGroups: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.entryGroups),
+/* harmony export */   expandComposed: () => (/* reexport safe */ _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.expandComposed),
+/* harmony export */   expandParameterSets: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.expandParameterSets),
 /* harmony export */   extendRegistry: () => (/* binding */ extendRegistry),
-/* harmony export */   inlineText: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_10__.inlineText),
-/* harmony export */   instantiateVariant: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.instantiateVariant),
-/* harmony export */   marksIn: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_10__.marksIn),
+/* harmony export */   inlineText: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.inlineText),
+/* harmony export */   instantiateVariant: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.instantiateVariant),
+/* harmony export */   loadEditorWords: () => (/* reexport safe */ _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__.loadEditorWords),
+/* harmony export */   marksIn: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.marksIn),
 /* harmony export */   normalize: () => (/* binding */ normalize),
-/* harmony export */   normalizeInline: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_10__.normalizeInline),
-/* harmony export */   ownModifiers: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.ownModifiers),
-/* harmony export */   parameterSetFields: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.parameterSetFields),
-/* harmony export */   parameterSetParts: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.parameterSetParts),
-/* harmony export */   parseFieldSubmission: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.parseFieldSubmission),
-/* harmony export */   parseRecipeJson: () => (/* reexport safe */ _recipe_mjs__WEBPACK_IMPORTED_MODULE_8__.parseRecipeJson),
+/* harmony export */   normalizeInline: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.normalizeInline),
+/* harmony export */   ownModifiers: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.ownModifiers),
+/* harmony export */   parameterSetFields: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.parameterSetFields),
+/* harmony export */   parameterSetParts: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.parameterSetParts),
+/* harmony export */   parseFieldSubmission: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.parseFieldSubmission),
+/* harmony export */   parseRecipeJson: () => (/* reexport safe */ _recipe_mjs__WEBPACK_IMPORTED_MODULE_10__.parseRecipeJson),
 /* harmony export */   printElement: () => (/* binding */ printElement),
-/* harmony export */   projectDocumentEditorFields: () => (/* reexport safe */ _editor_mjs__WEBPACK_IMPORTED_MODULE_6__.projectDocumentEditorFields),
-/* harmony export */   projectEditorFields: () => (/* reexport safe */ _editor_mjs__WEBPACK_IMPORTED_MODULE_6__.projectEditorFields),
-/* harmony export */   publishEffects: () => (/* reexport safe */ _fragments_mjs__WEBPACK_IMPORTED_MODULE_12__.publishEffects),
-/* harmony export */   recipeDigest: () => (/* reexport safe */ _recipe_mjs__WEBPACK_IMPORTED_MODULE_8__.recipeDigest),
-/* harmony export */   recipeNodeId: () => (/* reexport safe */ _recipe_mjs__WEBPACK_IMPORTED_MODULE_8__.recipeNodeId),
+/* harmony export */   projectDocumentEditorFields: () => (/* reexport safe */ _editor_mjs__WEBPACK_IMPORTED_MODULE_8__.projectDocumentEditorFields),
+/* harmony export */   projectEditorFields: () => (/* reexport safe */ _editor_mjs__WEBPACK_IMPORTED_MODULE_8__.projectEditorFields),
+/* harmony export */   publishEffects: () => (/* reexport safe */ _fragments_mjs__WEBPACK_IMPORTED_MODULE_14__.publishEffects),
+/* harmony export */   recipeDigest: () => (/* reexport safe */ _recipe_mjs__WEBPACK_IMPORTED_MODULE_10__.recipeDigest),
+/* harmony export */   recipeNodeId: () => (/* reexport safe */ _recipe_mjs__WEBPACK_IMPORTED_MODULE_10__.recipeNodeId),
 /* harmony export */   render: () => (/* binding */ render),
-/* harmony export */   renderFieldFallback: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.renderFieldFallback),
-/* harmony export */   replaceRange: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_10__.replaceRange),
-/* harmony export */   resolveFieldKind: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.resolveFieldKind),
-/* harmony export */   resolveRecipe: () => (/* reexport safe */ _recipe_mjs__WEBPACK_IMPORTED_MODULE_8__.resolveRecipe),
-/* harmony export */   setLink: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_10__.setLink),
-/* harmony export */   slotAccepts: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.slotAccepts),
-/* harmony export */   slotPlaces: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.slotPlaces),
-/* harmony export */   stableStringify: () => (/* reexport safe */ _canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.stableStringify),
+/* harmony export */   renderFieldFallback: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.renderFieldFallback),
+/* harmony export */   replaceRange: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.replaceRange),
+/* harmony export */   resolveFieldKind: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.resolveFieldKind),
+/* harmony export */   resolveRecipe: () => (/* reexport safe */ _recipe_mjs__WEBPACK_IMPORTED_MODULE_10__.resolveRecipe),
+/* harmony export */   setLink: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.setLink),
+/* harmony export */   slotAccepts: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.slotAccepts),
+/* harmony export */   slotPlaces: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.slotPlaces),
+/* harmony export */   stableStringify: () => (/* reexport safe */ _canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.stableStringify),
 /* harmony export */   startInlineEdit: () => (/* binding */ startInlineEdit),
-/* harmony export */   toggleMark: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_10__.toggleMark),
+/* harmony export */   toggleMark: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.toggleMark),
 /* harmony export */   upgradeComposed: () => (/* binding */ upgradeComposed),
-/* harmony export */   utilityClassSpace: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.utilityClassSpace),
-/* harmony export */   utilityClasses: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.utilityClasses),
-/* harmony export */   utilityPartClasses: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.utilityPartClasses),
+/* harmony export */   utilityClassSpace: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.utilityClassSpace),
+/* harmony export */   utilityClasses: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.utilityClasses),
+/* harmony export */   utilityPartClasses: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.utilityPartClasses),
 /* harmony export */   validate: () => (/* binding */ validate),
-/* harmony export */   validateEditorManifest: () => (/* reexport safe */ _editor_mjs__WEBPACK_IMPORTED_MODULE_6__.validateEditorManifest),
-/* harmony export */   validateFieldKinds: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.validateFieldKinds),
-/* harmony export */   validateFieldValue: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.validateFieldValue),
-/* harmony export */   validateParameterSets: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.validateParameterSets),
+/* harmony export */   validateEditorManifest: () => (/* reexport safe */ _editor_mjs__WEBPACK_IMPORTED_MODULE_8__.validateEditorManifest),
+/* harmony export */   validateFieldKinds: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.validateFieldKinds),
+/* harmony export */   validateFieldValue: () => (/* reexport safe */ _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.validateFieldValue),
+/* harmony export */   validateParameterSets: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.validateParameterSets),
 /* harmony export */   validateTypeManifest: () => (/* binding */ validateTypeManifest),
-/* harmony export */   valuesByBreakpoint: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.valuesByBreakpoint),
-/* harmony export */   withParameterSetFields: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.withParameterSetFields)
+/* harmony export */   valuesByBreakpoint: () => (/* reexport safe */ _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.valuesByBreakpoint),
+/* harmony export */   withParameterSetFields: () => (/* reexport safe */ _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.withParameterSetFields)
 /* harmony export */ });
 /* harmony import */ var _builtins_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("08e5033c490a");
-/* harmony import */ var _editor_words_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("fe90f998a31d");
-/* harmony import */ var _html_subset_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("e19611ff78cb");
-/* harmony import */ var _file_size_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("fb0bdf7719f0");
-/* harmony import */ var _canonical_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("6f489cc65b77");
-/* harmony import */ var _schema_name_mjs__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("ac24888e7d3e");
-/* harmony import */ var _editor_mjs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__("3765e2c966fd");
-/* harmony import */ var _fields_mjs__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__("4e6fc63bed81");
-/* harmony import */ var _recipe_mjs__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__("6770fb69bd04");
-/* harmony import */ var _regions_mjs__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__("68efac8c1b57");
-/* harmony import */ var _inline_model_mjs__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__("e66d878fb4f8");
-/* harmony import */ var _routing_mjs__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__("4aea5d6d49c7");
-/* harmony import */ var _fragments_mjs__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__("c2e3ed8498dc");
-/* harmony import */ var _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__("b88de35f4919");
-/* harmony import */ var _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__("76235de72516");
-/* harmony import */ var _elements_mjs__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__("3ad83f3699c7");
-/* harmony import */ var _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__("18b9c76994c9");
-/* harmony import */ var _composed_mjs__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__("e2cb52b018e5");
-/* harmony import */ var _data_mjs__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__("c6b53a101be9");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_editor_words_mjs__WEBPACK_IMPORTED_MODULE_1__, _file_size_mjs__WEBPACK_IMPORTED_MODULE_3__]);
-([_editor_words_mjs__WEBPACK_IMPORTED_MODULE_1__, _file_size_mjs__WEBPACK_IMPORTED_MODULE_3__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* harmony import */ var _lang_composition_index_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("f7e83b012604");
+/* harmony import */ var _page_language_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("43090d1c8307");
+/* harmony import */ var _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("bd04957f6bb9");
+/* harmony import */ var _html_subset_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("e19611ff78cb");
+/* harmony import */ var _file_size_mjs__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("fb0bdf7719f0");
+/* harmony import */ var _canonical_mjs__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__("6f489cc65b77");
+/* harmony import */ var _schema_name_mjs__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__("ac24888e7d3e");
+/* harmony import */ var _editor_mjs__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__("3765e2c966fd");
+/* harmony import */ var _fields_mjs__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__("4e6fc63bed81");
+/* harmony import */ var _recipe_mjs__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__("6770fb69bd04");
+/* harmony import */ var _regions_mjs__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__("68efac8c1b57");
+/* harmony import */ var _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__("e66d878fb4f8");
+/* harmony import */ var _routing_mjs__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__("4aea5d6d49c7");
+/* harmony import */ var _fragments_mjs__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__("c2e3ed8498dc");
+/* harmony import */ var _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__("b88de35f4919");
+/* harmony import */ var _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__("76235de72516");
+/* harmony import */ var _elements_mjs__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__("3ad83f3699c7");
+/* harmony import */ var _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__("18b9c76994c9");
+/* harmony import */ var _composed_mjs__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__("e2cb52b018e5");
+/* harmony import */ var _data_mjs__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__("c6b53a101be9");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_page_language_js__WEBPACK_IMPORTED_MODULE_2__, _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__, _file_size_mjs__WEBPACK_IMPORTED_MODULE_5__, _fragments_mjs__WEBPACK_IMPORTED_MODULE_14__]);
+([_page_language_js__WEBPACK_IMPORTED_MODULE_2__, _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__, _file_size_mjs__WEBPACK_IMPORTED_MODULE_5__, _fragments_mjs__WEBPACK_IMPORTED_MODULE_14__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 
+
+
+// The editor words are not part of core (localization study LC-1): the
+// runtime reads the installed words, SF.Composition.loadEditorWords() fetches
+// them. EDITOR_FIELD_WORDS here reads the installed words and starts loading
+// them on first read; the words module itself is editor-words.mjs.
 
 
 
@@ -11335,7 +12001,7 @@ const BINDING_FIELDS = new Set(['owner', 'ref', 'target', 'revision']);
 const FORBIDDEN_KEYS = new Set([
   'html', 'innerhtml', 'script', 'javascript', 'php', 'eval', 'function',
   'expression', 'query', 'sql', 'graphql', 'class', 'classname', 'rootclass',
-  'cssclass', 'secret', 'password', 'token', 'cookie', 'authorization', 'request',
+  'cssclass', 'style', 'secret', 'password', 'token', 'cookie', 'authorization', 'request',
 ]);
 const SAFE_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 const DEFAULT_LIMITS = Object.freeze({
@@ -11357,7 +12023,7 @@ async function sha256(value) {
 }
 
 function pushUnknownFields(value, allowed, path, diagnostics) {
-  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(value)) return;
+  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(value)) return;
   for (const key of Object.keys(value)) {
     if (!allowed.has(key)) diagnostics.push(diagnostic('unknown_field', `${path}.${key}`, `Unknown field ${key}`));
   }
@@ -11368,7 +12034,7 @@ function scanForbiddenKeys(value, path, diagnostics) {
     value.forEach((entry, index) => scanForbiddenKeys(entry, `${path}[${index}]`, diagnostics));
     return;
   }
-  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(value)) return;
+  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(value)) return;
   for (const [key, entry] of Object.entries(value)) {
     const normalized = key.toLowerCase().replaceAll('-', '');
     if (FORBIDDEN_KEYS.has(normalized)) {
@@ -11379,7 +12045,7 @@ function scanForbiddenKeys(value, path, diagnostics) {
 }
 
 function validateExtensions(value, path, diagnostics, supported = new Set()) {
-  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(value)) {
+  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(value)) {
     diagnostics.push(diagnostic('extensions_invalid', path, 'Extensions must be an object'));
     return;
   }
@@ -11387,7 +12053,7 @@ function validateExtensions(value, path, diagnostics, supported = new Set()) {
     if (!/^[a-z][a-z0-9.-]*:[a-z][a-z0-9._-]*$/u.test(key)) {
       diagnostics.push(diagnostic('extension_name_invalid', `${path}.${key}`, 'Extension keys must be namespaced'));
     }
-    if ((0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(value[key]) && value[key].required === true && !supported.has(key)) {
+    if ((0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(value[key]) && value[key].required === true && !supported.has(key)) {
       diagnostics.push(diagnostic('extension_required_unknown', `${path}.${key}`, `Required extension ${key} is not supported`));
     }
   }
@@ -11415,7 +12081,7 @@ function validateJsonSchema(value, schema, path, diagnostics) {
   const types = Array.isArray(schema.type) ? schema.type : [schema.type];
   if (schema.type) {
     const actual = value === null ? 'null' : Array.isArray(value) ? 'array' : Number.isInteger(value) ? 'integer' : typeof value === 'number' ? 'number' : typeof value;
-    if (!types.includes(actual) && !(actual === 'integer' && types.includes('number')) && !(actual === 'object' && !(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(value))) {
+    if (!types.includes(actual) && !(actual === 'integer' && types.includes('number')) && !(actual === 'object' && !(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(value))) {
       diagnostics.push(diagnostic('schema_type', path, `Expected ${types.join(' or ')}`));
       return;
     }
@@ -11432,18 +12098,24 @@ function validateJsonSchema(value, schema, path, diagnostics) {
   if (Array.isArray(value)) {
     if (schema.minItems !== undefined && value.length < schema.minItems) diagnostics.push(diagnostic('schema_min_items', path, 'Array has too few items'));
     if (schema.maxItems !== undefined && value.length > schema.maxItems) diagnostics.push(diagnostic('schema_max_items', path, 'Array has too many items'));
-    if (schema.uniqueItems && new Set(value.map(_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.stableStringify)).size !== value.length) diagnostics.push(diagnostic('schema_unique_items', path, 'Array items must be unique'));
+    if (schema.uniqueItems && new Set(value.map(_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.stableStringify)).size !== value.length) diagnostics.push(diagnostic('schema_unique_items', path, 'Array items must be unique'));
     if (schema.items) value.forEach((entry, index) => validateJsonSchema(entry, schema.items, `${path}[${index}]`, diagnostics));
   }
-  if ((0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(value)) {
+  if ((0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(value)) {
     for (const key of schema.required || []) {
       if (!(key in value)) diagnostics.push(diagnostic('schema_required', `${path}.${key}`, `Required field ${key} is missing`));
     }
+    // patternProperties: a key matching a pattern is declared by it (the
+    // inline model's extension keys, 2026-11-11).
+    const patterns = Object.entries(schema.patternProperties || {}).map(([pattern, childSchema]) => [new RegExp(pattern, 'u'), childSchema]);
     if (schema.additionalProperties === false) {
       const properties = schema.properties || {};
       for (const key of Object.keys(value)) {
-        if (!(key in properties)) diagnostics.push(diagnostic('schema_additional_property', `${path}.${key}`, `Field ${key} is not allowed`));
+        if (!(key in properties) && !patterns.some(([pattern]) => pattern.test(key))) diagnostics.push(diagnostic('schema_additional_property', `${path}.${key}`, `Field ${key} is not allowed`));
       }
+    }
+    for (const [pattern, childSchema] of patterns) {
+      for (const key of Object.keys(value)) if (!(key in (schema.properties || {})) && pattern.test(key)) validateJsonSchema(value[key], childSchema, `${path}.${key}`, diagnostics);
     }
     for (const [key, childSchema] of Object.entries(schema.properties || {})) {
       if (key in value) validateJsonSchema(value[key], childSchema, `${path}.${key}`, diagnostics);
@@ -11492,7 +12164,7 @@ function validateInlineContent(value, path, diagnostics) {
 // Every inline content of a node, with its path: the link rule applies to all
 // of them, wherever a type keeps text.
 function inlineFields(node, path) {
-  const data = (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(node.data) ? node.data : {};
+  const data = (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(node.data) ? node.data : {};
   const at = (key) => (Array.isArray(data[key]) ? [[data[key], `${path}.data.${key}`]] : []);
   switch (node.type) {
     case 'content.heading':
@@ -11523,7 +12195,7 @@ function inlineFields(node, path) {
 function validateContentRules(root, diagnostics, { hostSources = false } = {}) {
   let outlets = 0;
   const visit = (node, path, parentType) => {
-    if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(node)) return;
+    if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(node)) return;
     for (const [content, contentPath] of inlineFields(node, path)) validateInlineContent(content, contentPath, diagnostics);
     // With a host source resolver the stored name is the host's (media:<id>),
     // and the address it resolves to is checked where it is drawn.
@@ -11536,6 +12208,9 @@ function validateContentRules(root, diagnostics, { hostSources = false } = {}) {
     if (node.type === 'form.form' && typeof node.data?.action === 'string' && !validUrl(node.data.action)) {
       diagnostics.push(diagnostic('unsafe_url', `${path}.data.action`, 'Form address protocol is not allowed'));
     }
+    if (node.type === 'content.card' && typeof node.data?.action_href === 'string' && !validUrl(node.data.action_href)) {
+      diagnostics.push(diagnostic('unsafe_url', `${path}.data.action_href`, 'Link protocol is not allowed'));
+    }
     if (node.type === 'content.file' && typeof node.data?.href === 'string' && !validUrl(node.data.href)) {
       diagnostics.push(diagnostic('unsafe_url', `${path}.data.href`, 'File address protocol is not allowed'));
     }
@@ -11545,7 +12220,7 @@ function validateContentRules(root, diagnostics, { hostSources = false } = {}) {
       outlets += 1;
       if (outlets > 1) diagnostics.push(diagnostic('outlet_duplicate', path, 'A layout holds the page content in one place'));
     }
-    for (const [slotName, children] of Object.entries((0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(node.slots) ? node.slots : {})) {
+    for (const [slotName, children] of Object.entries((0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(node.slots) ? node.slots : {})) {
       if (Array.isArray(children)) children.forEach((child, index) => visit(child, `${path}.slots.${slotName}[${index}]`, node.type));
     }
   };
@@ -11556,9 +12231,9 @@ let defaultPorts = null;
 
 function normalizePorts(ports) {
   if (ports?.elements instanceof Map) return ports;
-  if (Array.isArray(ports)) return (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_11__.createPortRegistry)(ports);
-  if (ports && Array.isArray(ports.manifests)) return (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_11__.createPortRegistry)(ports.manifests, { bindings: ports.bindings });
-  defaultPorts = defaultPorts || (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_11__.createPortRegistry)(_builtins_mjs__WEBPACK_IMPORTED_MODULE_0__.BUILTIN_PORT_MANIFESTS);
+  if (Array.isArray(ports)) return (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_13__.createPortRegistry)(ports);
+  if (ports && Array.isArray(ports.manifests)) return (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_13__.createPortRegistry)(ports.manifests, { bindings: ports.bindings });
+  defaultPorts = defaultPorts || (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_13__.createPortRegistry)(_builtins_mjs__WEBPACK_IMPORTED_MODULE_0__.BUILTIN_PORT_MANIFESTS);
   return defaultPorts;
 }
 
@@ -11571,10 +12246,10 @@ function createRegistry(manifests = _builtins_mjs__WEBPACK_IMPORTED_MODULE_0__.B
   const types = new Map();
   for (const manifest of manifests) {
     // Either form of the format name (schema-name.mjs).
-    if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(manifest) || !(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_5__.isSchema)(manifest, 'simai.composition.type-manifest', 1)) throw new TypeError('composition_manifest_invalid');
+    if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(manifest) || !(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_7__.isSchema)(manifest, 'simai.composition.type-manifest', 1)) throw new TypeError('composition_manifest_invalid');
     if (types.has(manifest.type)) throw new TypeError(`composition_manifest_duplicate:${manifest.type}`);
     // A type's parameter sets join its props (parameter-sets.mjs).
-    types.set(manifest.type, (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.canonical)((0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.expandParameterSets)(manifest)));
+    types.set(manifest.type, (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.canonical)((0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.expandParameterSets)(manifest)));
   }
   return { types, renderers: new Map(Object.entries(renderers)) };
 }
@@ -11616,7 +12291,7 @@ function compositionTypeFromSmartManifest(manifest) {
     }
     : undefined;
   return {
-    ...(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_5__.schemaFields)('simai.composition.type-manifest', 1),
+    ...(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_7__.schemaFields)('simai.composition.type-manifest', 1),
     type: declaration.type,
     version: manifest.version,
     category: 'smart',
@@ -11663,7 +12338,7 @@ function validate(document, registry = undefined, options = {}) {
   const notices = [];
   const resolvedRegistry = normalizeRegistry(registry);
   const limits = { ...DEFAULT_LIMITS, ...(options.limits || {}) };
-  const supportedExtensions = new Set([_routing_mjs__WEBPACK_IMPORTED_MODULE_11__.ENDPOINT_EXTENSION, ...(options.supportedExtensions || [])]);
+  const supportedExtensions = new Set([_routing_mjs__WEBPACK_IMPORTED_MODULE_13__.ENDPOINT_EXTENSION, ...(options.supportedExtensions || [])]);
   let serialized;
   try {
     serialized = JSON.stringify(document);
@@ -11671,11 +12346,12 @@ function validate(document, registry = undefined, options = {}) {
     return { valid: false, diagnostics: [diagnostic('document_not_json', '$', 'Document must be JSON serializable')] };
   }
   if (new globalThis.TextEncoder().encode(serialized).byteLength > limits.maxDocumentBytes) diagnostics.push(diagnostic('document_too_large', '$', 'Document exceeds the byte limit'));
-  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(document)) return { valid: false, diagnostics: [diagnostic('document_invalid', '$', 'Document must be an object')] };
+  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(document)) return { valid: false, diagnostics: [diagnostic('document_invalid', '$', 'Document must be an object')] };
   pushUnknownFields(document, DOCUMENT_FIELDS, '$', diagnostics);
-  if (!(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_5__.isSchema)(document, 'simai.composition.document', 1)) diagnostics.push(diagnostic('schema_unknown', '$.schema', `Expected ${DOCUMENT_SCHEMA}, or simai.composition.document with schema_version 1`));
+  if (!(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_7__.isSchema)(document, 'simai.composition.document', 1)) diagnostics.push(diagnostic('schema_unknown', '$.schema', `Expected ${DOCUMENT_SCHEMA}, or simai.composition.document with schema_version 1`));
   if (typeof document.id !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,119}$/u.test(document.id)) diagnostics.push(diagnostic('document_id_invalid', '$.id', 'Document id is invalid'));
-  if (!PROFILES.has(document.profile)) diagnostics.push(diagnostic('profile_unknown', '$.profile', 'Profile is not supported'));
+  const knownProfile = PROFILES.has(document.profile);
+  if (!knownProfile) diagnostics.push(diagnostic('profile_unknown', '$.profile', 'Profile is not supported'));
   if (document.locale !== undefined && (typeof document.locale !== 'string' || !/^[a-zA-Z]{2,8}(?:-[a-zA-Z0-9]{1,8})*$/u.test(document.locale))) diagnostics.push(diagnostic('locale_invalid', '$.locale', 'Locale is invalid'));
   if (document.extensions !== undefined) validateExtensions(document.extensions, '$.extensions', diagnostics, supportedExtensions);
   scanForbiddenKeys(document, '$', diagnostics);
@@ -11686,7 +12362,7 @@ function validate(document, registry = undefined, options = {}) {
     nodeCount += 1;
     if (nodeCount > limits.maxNodes) return;
     if (depth > limits.maxDepth) diagnostics.push(diagnostic('depth_limit', path, 'Composition is too deeply nested'));
-    if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(node)) {
+    if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(node)) {
       diagnostics.push(diagnostic('node_invalid', path, 'Node must be an object'));
       return;
     }
@@ -11705,30 +12381,33 @@ function validate(document, registry = undefined, options = {}) {
       else diagnostics.push(unknown);
       return;
     }
-    if (!manifest.profiles.includes(document.profile)) diagnostics.push(diagnostic('type_profile_unsupported', `${path}.type`, `${node.type} does not support ${document.profile}`));
+    // An unknown profile is one diagnostic ($.profile): no type lists it, so a
+    // per-node check would repeat it once for every node of the Document.
+    if (knownProfile && !manifest.profiles.includes(document.profile)) diagnostics.push(diagnostic('type_profile_unsupported', `${path}.type`, `${node.type} does not support ${document.profile}`));
     validateJsonSchema(node.data || {}, manifest.data_schema, `${path}.data`, diagnostics);
     // A layout parameter may hold a value per breakpoint (utilities.mjs): each
     // value is checked on its own, the rest of the props as before.
-    const responsive = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.checkResponsiveProps)(node.props || {}, manifest.props_schema, `${path}.props`, validateJsonSchema);
+    const responsive = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.checkResponsiveProps)(node.props || {}, manifest.props_schema, `${path}.props`, validateJsonSchema);
     diagnostics.push(...responsive.diagnostics);
     validateJsonSchema(responsive.props, responsive.schema || manifest.props_schema, `${path}.props`, diagnostics);
     // A block's own modifiers never refuse a Document: a class no utility rule
     // knows is left out of the HTML and reported.
-    notices.push(...(0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.modifierNotices)(node, { rules: options.utilityRules }).notices);
-    if ((0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.isComposed)(manifest)) {
-      const instance = (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.validateComposedInstance)(node, manifest, resolvedRegistry, path, checkInline);
+    notices.push(...(0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.modifierNotices)(node, { rules: options.utilityRules }).notices);
+    if ((0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.isComposed)(manifest)) {
+      const instance = (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.validateComposedInstance)(node, manifest, resolvedRegistry, path, checkInline);
       diagnostics.push(...instance.diagnostics);
       notices.push(...instance.notices);
       const depth = (options.composedDepth || 0) + 1;
-      if (depth > _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.MAX_COMPOSED_DEPTH) diagnostics.push(diagnostic('composed_depth_limit', path, 'Site blocks are nested too deeply'));
+      if (depth > _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.MAX_COMPOSED_DEPTH) diagnostics.push(diagnostic('composed_depth_limit', path, 'Site blocks are nested too deeply'));
       else {
-        const expanded = validate({ ...document, root: (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.expandComposed)(node, manifest) }, resolvedRegistry, { ...options, composedDepth: depth });
-        diagnostics.push(...expanded.diagnostics.map((entry) => ({ ...entry, path: `${path}.composed${entry.path.replace(/^\$\.root/u, '').replace(/^\$/u, '')}` })));
+        const expanded = validate({ ...document, root: (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.expandComposed)(node, manifest) }, resolvedRegistry, { ...options, composedDepth: depth });
+        // The Document's own profile diagnostic is already reported once.
+        diagnostics.push(...expanded.diagnostics.filter(({ code }) => code !== 'profile_unknown').map((entry) => ({ ...entry, path: `${path}.composed${entry.path.replace(/^\$\.root/u, '').replace(/^\$/u, '')}` })));
         notices.push(...(expanded.notices || []));
       }
     }
     if (node.presentation !== undefined) {
-      if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(node.presentation)) diagnostics.push(diagnostic('presentation_invalid', `${path}.presentation`, 'Presentation must be an object'));
+      if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(node.presentation)) diagnostics.push(diagnostic('presentation_invalid', `${path}.presentation`, 'Presentation must be an object'));
       else {
         pushUnknownFields(node.presentation, PRESENTATION_FIELDS, `${path}.presentation`, diagnostics);
         const contract = manifest.presentation || {};
@@ -11745,7 +12424,7 @@ function validate(document, registry = undefined, options = {}) {
       if (!Array.isArray(node.bindings)) diagnostics.push(diagnostic('bindings_invalid', `${path}.bindings`, 'Bindings must be an array'));
       else node.bindings.forEach((binding, index) => {
         const bindingPath = `${path}.bindings[${index}]`;
-        if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(binding)) diagnostics.push(diagnostic('binding_invalid', bindingPath, 'Binding must be an object'));
+        if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(binding)) diagnostics.push(diagnostic('binding_invalid', bindingPath, 'Binding must be an object'));
         else {
           pushUnknownFields(binding, BINDING_FIELDS, bindingPath, diagnostics);
           for (const key of ['owner', 'ref', 'target']) if (typeof binding[key] !== 'string' || !binding[key]) diagnostics.push(diagnostic('binding_field_invalid', `${bindingPath}.${key}`, `${key} is required`));
@@ -11754,7 +12433,7 @@ function validate(document, registry = undefined, options = {}) {
       });
     }
     const slots = node.slots || {};
-    if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(slots)) {
+    if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(slots)) {
       diagnostics.push(diagnostic('slots_invalid', `${path}.slots`, 'Slots must be an object'));
       return;
     }
@@ -11774,7 +12453,7 @@ function validate(document, registry = undefined, options = {}) {
         const childManifest = resolvedRegistry.types.get(child?.type);
         if (childManifest && slot.types && !slot.types.includes(child.type)) diagnostics.push(diagnostic('slot_child_type_forbidden', `${path}.slots.${slotName}[${index}]`, `${child.type} is not allowed in this slot`));
         if (childManifest && slot.categories && !slot.categories.includes(childManifest.category)) diagnostics.push(diagnostic('slot_child_category_forbidden', `${path}.slots.${slotName}[${index}]`, `${childManifest.category} is not allowed in this slot`));
-        if (childManifest && slot.groups && !(0,_catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.entryGroups)((0,_catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.catalogueEntry)(childManifest)).some((group) => slot.groups.map(_catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.catalogueGroup).includes(group))) diagnostics.push(diagnostic('slot_child_group_forbidden', `${path}.slots.${slotName}[${index}]`, `${child.type} is not in a group this place accepts (${slot.groups.join(', ')})`));
+        if (childManifest && slot.groups && !(0,_catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.entryGroups)((0,_catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.catalogueEntry)(childManifest)).some((group) => slot.groups.map(_catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.catalogueGroup).includes(group))) diagnostics.push(diagnostic('slot_child_group_forbidden', `${path}.slots.${slotName}[${index}]`, `${child.type} is not in a group this place accepts (${slot.groups.join(', ')})`));
         visit(child, `${path}.slots.${slotName}[${index}]`, depth + 1);
       });
     }
@@ -11785,63 +12464,106 @@ function validate(document, registry = undefined, options = {}) {
   visit(document.root, '$.root', 1);
   if (nodeCount > limits.maxNodes) diagnostics.push(diagnostic('node_limit', '$.root', 'Composition has too many nodes'));
   else {
-    (0,_regions_mjs__WEBPACK_IMPORTED_MODULE_9__.validateRegionRules)(document.root, resolvedRegistry, diagnostics);
+    (0,_regions_mjs__WEBPACK_IMPORTED_MODULE_11__.validateRegionRules)(document.root, resolvedRegistry, diagnostics);
     validateContentRules(document.root, diagnostics, { hostSources: typeof options.resolveSource === 'function' });
-    (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_11__.resolveRoutes)(document.root, resolvedRegistry, normalizePorts(options.ports), diagnostics);
-    (0,_data_mjs__WEBPACK_IMPORTED_MODULE_18__.validateDataRules)(document.root, resolvedRegistry, options.shapes, diagnostics);
+    (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_13__.resolveRoutes)(document.root, resolvedRegistry, normalizePorts(options.ports), diagnostics);
+    (0,_data_mjs__WEBPACK_IMPORTED_MODULE_20__.validateDataRules)(document.root, resolvedRegistry, options.shapes, diagnostics);
   }
   return { valid: diagnostics.length === 0, diagnostics, ...(notices.length ? { notices } : {}) };
 }
 
 function collectDependencies(node, manifest, output) {
   for (const asset of manifest.assets || []) output.assets.add(asset);
-  for (const binding of node.bindings || []) output.bindings.set(`${binding.owner}:${binding.ref}:${binding.target}:${binding.revision || ''}`, (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.canonical)(binding));
+  for (const binding of node.bindings || []) output.bindings.set(`${binding.owner}:${binding.ref}:${binding.target}:${binding.revision || ''}`, (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.canonical)(binding));
 }
 
 async function normalize(document, registry = undefined, options = {}) {
   const resolvedRegistry = normalizeRegistry(registry);
   const result = validate(document, resolvedRegistry, options);
   if (!result.valid) return { document: null, digest: null, dependencies: { assets: [], bindings: [] }, diagnostics: result.diagnostics };
-  const normalized = (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.canonical)(JSON.parse(JSON.stringify(document)));
+  const normalized = (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.canonical)(JSON.parse(JSON.stringify(document)));
   const dependencies = { assets: new Set(), bindings: new Map() };
   const visit = (node, depth = 0) => {
     const manifest = resolvedRegistry.types.get(node.type);
     if (!manifest) return;
     collectDependencies(node, manifest, dependencies);
     // A site block needs what the blocks of its tree need.
-    if ((0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.isComposed)(manifest) && depth < _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.MAX_COMPOSED_DEPTH) visit((0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.expandComposed)(node, manifest), depth + 1);
+    if ((0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.isComposed)(manifest) && depth < _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.MAX_COMPOSED_DEPTH) visit((0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.expandComposed)(node, manifest), depth + 1);
     Object.values(node.slots || {}).flat().forEach((child) => visit(child, depth));
   };
   visit(normalized.root);
+  const notices = [...(result.notices || []), ...await settleForeignHashes(normalized.root)];
   return {
-    ...(result.notices ? { notices: result.notices } : {}),
+    ...(notices.length ? { notices } : {}),
     document: normalized,
-    digest: await sha256((0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.stableStringify)(normalized)),
+    digest: await sha256((0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.stableStringify)(normalized)),
     dependencies: {
       assets: [...dependencies.assets].sort(),
-      bindings: [...dependencies.bindings.values()].sort((left, right) => (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.stableStringify)(left).localeCompare((0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.stableStringify)(right))),
+      bindings: [...dependencies.bindings.values()].sort((left, right) => (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.stableStringify)(left).localeCompare((0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.stableStringify)(right))),
     },
     diagnostics: [],
   };
+}
+
+// content.foreign (F2.2): the hash of raw is written where it is missing and
+// checked where it is present. A mismatch keeps the block as it is, is
+// reported, and the block is not drawn.
+async function settleForeignHashes(root) {
+  const notices = [];
+  const visit = async (node, path) => {
+    if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(node)) return;
+    if (node.type === 'content.foreign' && (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(node.data) && typeof node.data.raw === 'string') {
+      const hash = `sha256:${await sha256(node.data.raw)}`;
+      if (node.data.hash === undefined) node.data.hash = hash;
+      else if (node.data.hash !== hash) notices.push(diagnostic('foreign_hash_mismatch', `${path}.data.hash`, 'The hash does not match raw; the block is kept and not drawn', { id: node.id }));
+    }
+    for (const [name, children] of Object.entries((0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(node.slots) ? node.slots : {})) {
+      if (Array.isArray(children)) for (const [index, child] of children.entries()) await visit(child, `${path}.slots.${name}[${index}]`);
+    }
+  };
+  await visit(root, '$.root');
+  return notices;
+}
+
+const FOREIGN_SOURCE_NAMES = Object.freeze({ markdown: 'Markdown', editorjs: 'Editor.js', html: 'HTML' });
+// The editor's view of a foreign block: inert, its source and, for an
+// Editor.js block, the tool's name, as escaped text. raw is never markup.
+function foreignPlaceholder(node) {
+  let tool = '';
+  if (node.data.source === 'editorjs') {
+    try {
+      const parsed = JSON.parse(node.data.raw);
+      if (typeof parsed?.type === 'string' && /^[A-Za-z0-9_-]{1,64}$/u.test(parsed.type)) tool = parsed.type;
+    } catch { /* not a block: the source alone */ }
+  }
+  const label = `${FOREIGN_SOURCE_NAMES[node.data.source] || node.data.source}${tool ? ` · ${tool}` : ''}`;
+  return `<div class="sf-composition-unknown" role="note" data-sf-composition-type="content.foreign" data-sf-composition-id="${escapeHtml(node.id)}">${escapeHtml(label)}</div>`;
 }
 
 function escapeHtml(value) {
   return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
 
+const MARK_ELEMENTS = Object.freeze({ strong: 'strong', em: 'em', code: 'code', strike: 's' });
 function renderInline(content) {
   return (content || []).map((inline) => {
     if (inline.type === 'link') return `<a href="${escapeHtml(inline.href)}">${renderInline(inline.children)}</a>`;
+    // A soft line break (inline model 1.2.0) inside the marks it carries.
+    // Its extension keys (inline model) draw nothing.
+    if (inline.type === 'break' && (inline.marks === undefined || Array.isArray(inline.marks))) {
+      return (inline.marks || []).reduce((output, mark) => (MARK_ELEMENTS[mark] ? `<${MARK_ELEMENTS[mark]}>${output}</${MARK_ELEMENTS[mark]}>` : output), '<br>');
+    }
     if (inline.type !== 'text') {
       // An atom draws its own element, its props escaped as text; anything
       // else (validation refuses it) draws nothing rather than "undefined".
-      const view = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_10__.inlineComponentView)(inline);
+      const view = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.inlineComponentView)(inline);
       if (!view) return '';
       const attributes = view.attributes.map(([name, value]) => (value === '' ? ` ${name}` : ` ${name}="${escapeHtml(value)}"`)).join('');
       return `<${view.tag}${attributes}>${escapeHtml(view.text)}</${view.tag}>`;
     }
     let output = escapeHtml(inline.value);
-    for (const mark of inline.marks || []) output = mark === 'strong' ? `<strong>${output}</strong>` : mark === 'em' ? `<em>${output}</em>` : `<code>${output}</code>`;
+    // A mark outside the closed list (validation refuses it) draws no element.
+    for (const mark of inline.marks || []) output = MARK_ELEMENTS[mark] ? `<${MARK_ELEMENTS[mark]}>${output}</${MARK_ELEMENTS[mark]}>` : output;
     return output;
   }).join('');
 }
@@ -11865,13 +12587,27 @@ function renderImage(data) {
 // sf-download-file's row, drawn as a plain link: it downloads with no script,
 // the name falls back to the address's last part, and the size reads in the
 // Document's language.
+// The card's header (content.card 1.1.0, owner decision C231): the title as
+// the card's title -- an h3, which the card draws at its title step whatever
+// the level -- and one action at its end, an icon link of size 1/2 in the
+// quiet on-surface look (component.card .sf-card-header). Nothing when the
+// card has neither.
+function renderCardHeader(node) {
+  const data = node.data || {};
+  const title = Array.isArray(data.title) && data.title.length ? `<h3>${renderInline(data.title)}</h3>` : '';
+  const action = typeof data.action_icon === 'string' && typeof data.action_label === 'string' && typeof data.action_href === 'string' && validUrl(data.action_href)
+    ? `<a class="sf-icon-button sf-icon-button--icon sf-icon-button--ghost sf-icon-button--on-surface sf-icon-button--size-1/2" href="${escapeHtml(data.action_href)}" aria-label="${escapeHtml(data.action_label)}"><i class="sf-icon" aria-hidden="true">${escapeHtml(data.action_icon)}</i></a>`
+    : '';
+  return title || action ? `<div class="sf-card-header">${title}${action}</div>` : '';
+}
+
 function renderFile(node, locale) {
   const { href, label, mime, size } = node.data;
-  const name = label || (0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_3__.fileNameFromAddress)(href) || href;
+  const name = label || (0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_5__.fileNameFromAddress)(href) || href;
   const type = mime ? ` type="${escapeHtml(mime)}"` : '';
-  const sizeText = Number.isInteger(size) ? (0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_3__.formatFileSize)(size, (0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_3__.fileSizeUnits)(locale), locale) : '';
+  const sizeText = Number.isInteger(size) ? (0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_5__.formatFileSize)(size, (0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_5__.fileSizeUnits)(locale), locale) : '';
   const sizePart = sizeText ? `<span class="sf-download-file__size sf-download-file-file-size">${escapeHtml(sizeText)}</span>` : '';
-  return `<a class="sf-download-file" href="${escapeHtml(href)}" download${type}${id(node)}><span class="sf-download-file__body sf-download-file-wrap"><span class="sf-download-file__main sf-download-file-container"><i class="sf-download-file__icon sf-icon" aria-hidden="true">${(0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_3__.fileIcon)(mime)}</i><span class="sf-download-file__name sf-download-file-file-name">${escapeHtml(name)}</span></span>${sizePart}</span></a>`;
+  return `<a class="sf-download-file" href="${escapeHtml(href)}" download${type}${id(node)}><span class="sf-download-file__body sf-download-file-wrap"><span class="sf-download-file__main sf-download-file-container"><i class="sf-download-file__icon sf-icon" aria-hidden="true">${(0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_5__.fileIcon)(mime)}</i><span class="sf-download-file__name sf-download-file-file-name">${escapeHtml(name)}</span></span>${sizePart}</span></a>`;
 }
 
 function renderTable(node) {
@@ -11881,9 +12617,10 @@ function renderTable(node) {
   const headColumn = header === 'column' || header === 'both';
   const align = Array.isArray(node.props?.align) ? node.props.align : [];
   // The frame sets every cell to the start; a column set otherwise says so on
-  // its cells, with one of two fixed values.
-  const cellStyle = (index) => (align[index] === 'center' || align[index] === 'end' ? ` style="text-align: ${align[index]}"` : '');
-  const cell = (content, index, tag, scope) => `<${tag}${scope ? ` scope="${scope}"` : ''}${cellStyle(index)}>${renderInline(content)}</${tag}>`;
+  // its cells with the text-align utility class, never a style attribute, so
+  // the rendered HTML stays within a strict CSP (2026-11-10 review, P8).
+  const cellClass = (index) => (align[index] === 'center' || align[index] === 'end' ? ` class="text-${align[index]}"` : '');
+  const cell = (content, index, tag, scope) => `<${tag}${scope ? ` scope="${scope}"` : ''}${cellClass(index)}>${renderInline(content)}</${tag}>`;
   const row = (cells, inHead) => `<tr>${cells.map((content, index) => (inHead
     ? cell(content, index, 'th', 'col')
     : headColumn && index === 0 ? cell(content, index, 'th', 'row') : cell(content, index, 'td', null))).join('')}</tr>`;
@@ -11933,10 +12670,9 @@ function renderMedia(node, slots) {
 
 // The words an element prints until the author writes its own, in the
 // Document's language (English when there is none for it).
-const ELEMENT_PLACEHOLDERS = Object.freeze({
-  en: { button: 'Button', badge: 'Badge', send: 'Send', field: 'Field', option: 'Option', name: 'Name', phone: 'Phone', email: 'Email', message: 'Message' },
-  ru: { button: 'Кнопка', badge: 'Метка', send: 'Отправить', field: 'Поле', option: 'Вариант', name: 'Имя', phone: 'Телефон', email: 'Почта', message: 'Сообщение' },
-});
+// core/js/lang/composition: English built in, the other languages from a
+// language file, registered for sf-composition (C282).
+const ELEMENT_PLACEHOLDERS = _lang_composition_index_mjs__WEBPACK_IMPORTED_MODULE_1__["default"];
 // The fields whose name has a word of its own when they have no label (forms, 2026-11-04).
 const NAMED_FIELDS = new Set(['name', 'phone', 'email', 'message']);
 const fieldLabel = (node, locale) => node.data?.label || placeholder(locale, NAMED_FIELDS.has(node.data?.name) ? node.data.name : 'field');
@@ -11944,7 +12680,7 @@ const fieldLabel = (node, locale) => node.data?.label || placeholder(locale, NAM
 const fieldBlock = (node, html) => (html ? `<div${id(node)}>${html}</div>` : '');
 // The options of a select: the words an author wrote, separated by commas.
 const optionList = (text) => [...new Set(String(text ?? '').split(',').map((word) => word.trim()).filter(Boolean))];
-const placeholder = (locale, key) => (ELEMENT_PLACEHOLDERS[String(locale || 'en').toLowerCase().split('-')[0]] || ELEMENT_PLACEHOLDERS.en)[key];
+const placeholder = (locale, key) => (0,_page_language_js__WEBPACK_IMPORTED_MODULE_2__.localeText)(ELEMENT_PLACEHOLDERS, key, String(locale || 'en'), 'sf-composition');
 const defined = (inputs) => Object.fromEntries(Object.entries(inputs).filter(([, value]) => value !== undefined && value !== ''));
 // An element stands in a block of its own: the editor selects and the
 // utilities reach the block (sf-button's host is display: contents), the
@@ -11954,22 +12690,19 @@ const elementBlock = (node, html) => (html ? `<div class="flex"${id(node)}>${htm
 
 // The space between the blocks of a section or a container (visual parity,
 // 2026-11-04): the prototype's 24 px at the desktop, space-3 of the SIMAI
-// Framework ladder (16 px on the phone). Blocks in a column stand one rhythm
-// apart (space-y-*, their own margins collapse into it); a gap the Document
-// sets is the rhythm, per screen. Columns make the content a grid, whose gap
-// the grid set prints: no rhythm then.
+// Framework ladder (16 px on the phone). The content part is a flex column
+// and the blocks stand one gap apart (layout.section 1.4.0, layout.container
+// 1.1.0; owner decision C212 (4): lengths only in system steps, space-x/y
+// retired for gap-x/y on a flex or grid parent); core.styles clears the
+// blocks' own block margins there, as in a grid. A gap the Document sets is
+// the rhythm, per screen: the grid set prints it (gap-*), so the rhythm adds
+// no second one. Columns make the content a grid, whose gap the grid set
+// prints: no rhythm then.
 const BLOCK_RHYTHM = 3;
 function rhythm(props) {
   if (props.columns !== undefined) return '';
-  const values = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.valuesByBreakpoint)(props.gap ?? BLOCK_RHYTHM);
-  const classes = [];
-  let previous;
-  _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.UTILITY_BREAKPOINTS.forEach((breakpoint) => {
-    const value = values[breakpoint];
-    if (value !== previous && Number.isInteger(value)) classes.push(`${breakpoint === 'xs' ? '' : `${breakpoint}:`}space-y-${value}`);
-    previous = value;
-  });
-  return classes.length ? ` class="${classes.join(' ')}"` : '';
+  const gap = props.gap === undefined ? ` gap-y-${BLOCK_RHYTHM}` : '';
+  return ` class="flex flex-col${gap}"`;
 }
 
 const BUILTIN_RENDERERS = {
@@ -11984,7 +12717,7 @@ const BUILTIN_RENDERERS = {
     // parts its parameter sets place classes on. 1.2.0: its width defaults to
     // the page container (parameter_defaults), so a section draws them unless
     // the Document sets its width full and gives no columns.
-    const props = (0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.effectiveProps)(node, manifest);
+    const props = (0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.effectiveProps)(node, manifest);
     const framed = (props.width !== undefined && props.width !== 'full') || ['columns', 'gap'].some((key) => props[key] !== undefined);
     const inner = framed ? `<div data-sf-composition-part="frame"><div${rhythm(props)} data-sf-composition-part="content">${slots.default || ''}</div></div>` : (slots.default || '');
     return `<section data-sf-composition-id="${escapeHtml(node.id)}">${inner}</section>`;
@@ -12004,17 +12737,17 @@ const BUILTIN_RENDERERS = {
     const props = node.props;
     // Embedded, the main region is a plain element too: the host's page holds the one main.
     const embeddedMain = props.landmark === 'main' && renderEmbedded(context?.options);
-    const element = embeddedMain ? 'div' : _regions_mjs__WEBPACK_IMPORTED_MODULE_9__.REGION_ELEMENTS[props.landmark];
+    const element = embeddedMain ? 'div' : _regions_mjs__WEBPACK_IMPORTED_MODULE_11__.REGION_ELEMENTS[props.landmark];
     const landmark = embeddedMain ? ' data-sf-composition-landmark="main"' : '';
     const sticky = props.sticky === true ? ' data-sf-region-sticky=""' : '';
     const label = props.label !== undefined ? ` aria-label="${escapeHtml(props.label)}"` : '';
     return `<${element} class="sf-composition-region" data-sf-composition-id="${escapeHtml(node.id)}" data-sf-region="${escapeHtml(props.name)}" data-sf-region-placement="${escapeHtml(props.placement ?? 'block')}"${landmark}${sticky}${label}>${slots.default || ''}</${element}>`;
   },
-  'layout.scope': ({ node, slots, routes }) => `<sf-composition-scope data-sf-composition-id="${escapeHtml(node.id)}" data-sf-routes="${escapeHtml((0,_routing_mjs__WEBPACK_IMPORTED_MODULE_11__.routesAttribute)(routes || []))}">${slots.default || ''}</sf-composition-scope>`,
+  'layout.scope': ({ node, slots, routes }) => `<sf-composition-scope data-sf-composition-id="${escapeHtml(node.id)}" data-sf-routes="${escapeHtml((0,_routing_mjs__WEBPACK_IMPORTED_MODULE_13__.routesAttribute)(routes || []))}">${slots.default || ''}</sf-composition-scope>`,
   'layout.area': ({ node, slots }) => `<div data-sf-composition-area=""${id(node)}>${slots.default || ''}</div>`,
   // The layout and element types of the one block editor (2026-11-04): the
   // block's own element, its parts, and SIMAI Framework utilities only.
-  'layout.container': ({ node, slots, manifest }) => `<div${id(node)}><div data-sf-composition-part="frame"><div${rhythm((0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.effectiveProps)(node, manifest))} data-sf-composition-part="content">${slots.default || ''}</div></div></div>`,
+  'layout.container': ({ node, slots, manifest }) => `<div${id(node)}><div data-sf-composition-part="frame"><div${rhythm((0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.effectiveProps)(node, manifest))} data-sf-composition-part="content">${slots.default || ''}</div></div></div>`,
   'layout.grid': ({ node, slots }) => `<div${id(node)}><div class="grid" data-sf-composition-part="content">${(slots.defaultList || []).map((child) => `<div class="min-w-0">${child}</div>`).join('')}</div></div>`,
   'layout.spacer': ({ node }) => `<div aria-hidden="true"${id(node)}></div>`,
   'element.button': ({ node, elements, locale }) => {
@@ -12169,13 +12902,16 @@ const BUILTIN_RENDERERS = {
     const gap = Number.isInteger(node.props?.gap) ? node.props.gap : 2;
     return `<div class="grid ${columns} gap-${gap}"${id(node)}>${(slots.defaultList || []).map((child) => `<div class="min-w-0">${child}</div>`).join('')}</div>`;
   },
-  'content.card': ({ node, slots }) => `<div class="sf-card${node.props?.variant === 'plain' ? ' sf-card--plain' : ''}"${id(node)}>${slots.default || ''}</div>`,
+  'content.card': ({ node, slots }) => `<div class="sf-card${node.props?.variant === 'plain' ? ' sf-card--plain' : ''}"${id(node)}>${renderCardHeader(node)}${slots.default || ''}</div>`,
   'content.media': ({ node, slots }) => renderMedia(node, slots),
   'content.file': ({ node, locale }) => renderFile(node, locale),
   // Cleaned at render by the html@1 subset's one rule: no script, no style, no
   // attribute but a safe href survives.
-  'content.html': ({ node }) => `<div${id(node)}>${(0,_html_subset_mjs__WEBPACK_IMPORTED_MODULE_2__.sanitizeRichText)(node.data.markup)}</div>`,
+  'content.html': ({ node }) => `<div${id(node)}>${(0,_html_subset_mjs__WEBPACK_IMPORTED_MODULE_4__.sanitizeRichText)(node.data.markup)}</div>`,
   'content.outlet': ({ node, outlet }) => `<div data-sf-outlet=""${id(node)}>${outlet || ''}</div>`,
+  // Nothing on a public page; an editor (unknown: 'placeholder') draws the
+  // inert placeholder.
+  'content.foreign': ({ node, context }) => (context?.options?.unknown === 'placeholder' ? foreignPlaceholder(node) : ''),
 };
 
 // context.resolveSource(src, {node}) → address: a host that keeps pictures
@@ -12192,11 +12928,15 @@ async function render(document, context = {}) {
   const normalized = await normalize(document, registry, { ...(context.options || {}), ...(resolveSource ? { resolveSource } : {}) });
   if (!normalized.document) return { html: '', assets: [], hydration: [], diagnostics: normalized.diagnostics, digest: null };
   const diagnostics = [];
-  const notices = [...(normalized.notices || [])].filter((entry) => !entry.code.startsWith('modifier'));
+  // A foreign block whose hash does not match is kept and not drawn: what
+  // drawing found, so a diagnostic of the render (F2.2).
+  const mismatched = new Set((normalized.notices || []).filter(({ code }) => code === 'foreign_hash_mismatch').map((entry) => entry.id));
+  diagnostics.push(...(normalized.notices || []).filter(({ code }) => code === 'foreign_hash_mismatch').map(({ id: _id, ...entry }) => entry));
+  const notices = [...(normalized.notices || [])].filter((entry) => !entry.code.startsWith('modifier') && entry.code !== 'foreign_hash_mismatch');
   const hydration = [];
-  const routes = (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_11__.resolveRoutes)(normalized.document.root, registry, normalizePorts(context.options?.ports), []);
+  const routes = (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_13__.resolveRoutes)(normalized.document.root, registry, normalizePorts(context.options?.ports), []);
   // The data of the blocks that declare it, resolved before drawing (data.mjs).
-  const data = await (0,_data_mjs__WEBPACK_IMPORTED_MODULE_18__.resolveData)(normalized.document.root, registry, context, validateJsonSchema);
+  const data = await (0,_data_mjs__WEBPACK_IMPORTED_MODULE_20__.resolveData)(normalized.document.root, registry, context, validateJsonSchema);
   diagnostics.push(...data.diagnostics);
   // The page's content for a layout's content.outlet: a structured-content
   // Document, rendered with the same registry; its assets and diagnostics
@@ -12233,18 +12973,23 @@ async function render(document, context = {}) {
     // Only reached under unknown: 'placeholder' (validate's notice says
     // which node); normalize refused the Document otherwise.
     if (!manifest) return unknownPlaceholder(node);
+    if (node.type === 'content.foreign' && mismatched.has(node.id)) return '';
+    // C75 (owner 2026-11-11): a preserved block is kept, never dropped. An
+    // editor (unknown: 'placeholder') shows its plate; a public page draws
+    // nothing and the build is told, one notice per block.
+    if (node.type === 'content.foreign' && context.options?.unknown !== 'placeholder') notices.push(diagnostic('preserved_not_shown', `node:${node.id}`, `A preserved ${node.data.source} block is kept in the Document and not drawn on the page`, { source: node.data.source }));
     // A site block draws its type's current tree with the instance's values
     // and texts (composed.mjs); the instance stays one node of the Document.
-    if ((0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.isComposed)(manifest)) {
-      if (depth >= _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.MAX_COMPOSED_DEPTH) return '';
-      const expanded = (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.expandComposed)(node, manifest);
-      const inner = await (0,_data_mjs__WEBPACK_IMPORTED_MODULE_18__.resolveData)(expanded, registry, context, validateJsonSchema);
+    if ((0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.isComposed)(manifest)) {
+      if (depth >= _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.MAX_COMPOSED_DEPTH) return '';
+      const expanded = (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.expandComposed)(node, manifest);
+      const inner = await (0,_data_mjs__WEBPACK_IMPORTED_MODULE_20__.resolveData)(expanded, registry, context, validateJsonSchema);
       for (const [id, entry] of inner.byNode) data.byNode.set(id, entry);
       data.links.push(...inner.links);
       diagnostics.push(...inner.diagnostics);
       return renderNode(expanded, depth + 1, inside);
     }
-    const byPart = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.utilityPartClasses)(node, manifest);
+    const byPart = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.utilityPartClasses)(node, manifest);
     const ownFrame = (byPart.frame || []).includes('container');
     const outer = inside && !(byPart[''] || []).includes('container-breakout');
     if (outer && ownFrame) byPart.frame.push('container-flush');
@@ -12257,7 +13002,7 @@ async function render(document, context = {}) {
     }
     const resolvedBindings = {};
     let bindingStates;
-    if ((0,_data_mjs__WEBPACK_IMPORTED_MODULE_18__.takesData)(manifest)) {
+    if ((0,_data_mjs__WEBPACK_IMPORTED_MODULE_20__.takesData)(manifest)) {
       const entry = data.byNode.get(node.id) || { values: {}, states: {} };
       Object.assign(resolvedBindings, entry.values);
       bindingStates = entry.states;
@@ -12268,7 +13013,7 @@ async function render(document, context = {}) {
     }
     // Layout parameters and the block's own modifiers become SIMAI Framework
     // utilities on the block's element (utilities.mjs).
-    const own = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.modifierNotices)(node, { rules: context.options?.utilityRules });
+    const own = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.modifierNotices)(node, { rules: context.options?.utilityRules });
     notices.push(...own.notices);
     const utilities = [...new Set([...(byPart[''] || []), ...modifierUtilities(node, manifest), ...own.kept])];
     let renderer = registry.renderers.get(manifest.renderer.name) || BUILTIN_RENDERERS[manifest.renderer.name];
@@ -12288,19 +13033,19 @@ async function render(document, context = {}) {
     // The smart elements a block may print, held to their manifests (elements.mjs).
     const elements = {
       print: (name, inputs) => {
-        const printed = (0,_elements_mjs__WEBPACK_IMPORTED_MODULE_15__.printElement)(name, inputs, validateJsonSchema, `node:${node.id}`);
+        const printed = (0,_elements_mjs__WEBPACK_IMPORTED_MODULE_17__.printElement)(name, inputs, validateJsonSchema, `node:${node.id}`);
         diagnostics.push(...printed.diagnostics);
         return printed.html;
       },
     };
-    const html = await renderer({ node, slots, context, elements, resolvedBindings, ...(bindingStates ? { bindingStates } : {}), utilities, manifest, routes: routes.get(node.id), endpoint: (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_11__.endpointName)(node), outlet: node.type === 'content.outlet' ? outlet : undefined, locale: normalized.document.locale ?? 'en' });
-    let drawn = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.withClasses)(html, node.id, utilities);
+    const html = await renderer({ node, slots, context, elements, resolvedBindings, ...(bindingStates ? { bindingStates } : {}), utilities, manifest, routes: routes.get(node.id), endpoint: (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_13__.endpointName)(node), outlet: node.type === 'content.outlet' ? outlet : undefined, locale: normalized.document.locale ?? 'en' });
+    let drawn = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.withClasses)(html, node.id, utilities);
     // A parameter that reaches an inner element (a set's part): the renderer
     // marks it data-sf-composition-part; classes for a part it did not draw
     // are reported, never placed elsewhere.
     for (const [part, classes] of Object.entries(byPart)) {
       if (part === '' || !classes.length) continue;
-      const placed = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.withPartClasses)(drawn, node.id, part, classes);
+      const placed = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.withPartClasses)(drawn, node.id, part, classes);
       if (placed.found) drawn = placed.html;
       else notices.push(diagnostic('utility_part_missing', `node:${node.id}`, `${node.type} draws no ${part} part; ${classes.join(' ')} is left out`, { part }));
     }
@@ -12323,8 +13068,8 @@ async function render(document, context = {}) {
 
 const fits = (value, schema) => {
   const problems = [];
-  const responsive = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.isResponsive)(schema) && (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.isBreakpointValue)(value);
-  if (responsive) for (const entry of Object.values(value)) validateJsonSchema(entry, (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.valueSchema)(schema), '$', problems);
+  const responsive = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.isResponsive)(schema) && (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.isBreakpointValue)(value);
+  if (responsive) for (const entry of Object.values(value)) validateJsonSchema(entry, (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.valueSchema)(schema), '$', problems);
   else validateJsonSchema(value, schema, '$', problems);
   return problems.length === 0;
 };
@@ -12337,28 +13082,28 @@ const fits = (value, schema) => {
  */
 function validateTypeManifest(manifest, registry = undefined, options = {}) {
   const diagnostics = [];
-  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(manifest) || !(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_5__.isSchema)(manifest, 'simai.composition.type-manifest', 1)) return { valid: false, diagnostics: [diagnostic('composition_manifest_invalid', '$', 'A type manifest is simai.composition.type-manifest with schema_version 1')] };
-  diagnostics.push(...(0,_catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.validateCatalogueFields)(manifest));
-  diagnostics.push(...(0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.validateParameterSets)(manifest));
-  diagnostics.push(...(0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.validateParameterDefaults)(manifest, fits));
+  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(manifest) || !(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_7__.isSchema)(manifest, 'simai.composition.type-manifest', 1)) return { valid: false, diagnostics: [diagnostic('composition_manifest_invalid', '$', 'A type manifest is simai.composition.type-manifest with schema_version 1')] };
+  diagnostics.push(...(0,_catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.validateCatalogueFields)(manifest));
+  diagnostics.push(...(0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.validateParameterSets)(manifest));
+  diagnostics.push(...(0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.validateParameterDefaults)(manifest, fits));
   diagnostics.push(...validateModifierUtilities(manifest));
-  diagnostics.push(...(0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.validateUtilityDeclarations)((0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.expandParameterSets)(manifest)));
-  diagnostics.push(...(0,_data_mjs__WEBPACK_IMPORTED_MODULE_18__.validateDataDeclarations)(manifest, options.shapes));
+  diagnostics.push(...(0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.validateUtilityDeclarations)((0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.expandParameterSets)(manifest)));
+  diagnostics.push(...(0,_data_mjs__WEBPACK_IMPORTED_MODULE_20__.validateDataDeclarations)(manifest, options.shapes));
   let resolved = normalizeRegistry(registry);
   if (resolved.types.get(manifest.type) !== manifest) {
     const others = [...resolved.types.values()].filter((entry) => entry.type !== manifest.type);
-    resolved = { types: new Map([...others, (0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.expandParameterSets)(manifest)].map((entry) => [entry.type, entry])), renderers: resolved.renderers };
+    resolved = { types: new Map([...others, (0,_parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.expandParameterSets)(manifest)].map((entry) => [entry.type, entry])), renderers: resolved.renderers };
   }
-  if ((0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.isComposed)(manifest)) {
-    const again = (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.defineComposedType)({ ...manifest, root: manifest.composed.root }, resolved, (document, current) => validate(document, current, options));
+  if ((0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.isComposed)(manifest)) {
+    const again = (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.defineComposedType)({ ...manifest, root: manifest.composed.root }, resolved, (document, current) => validate(document, current, options));
     diagnostics.push(...again.diagnostics.map((entry) => ({ ...entry, path: entry.path.startsWith('$.root') ? `$.composed${entry.path.slice(1)}` : entry.path })));
-    if (again.manifest && (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.stableStringify)(again.manifest.props_schema) !== (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.stableStringify)(manifest.props_schema)) diagnostics.push(diagnostic('composed_schema_drift', '$.props_schema', 'The exposed parameters do not match the tree: make the manifest with defineComposedType'));
+    if (again.manifest && (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.stableStringify)(again.manifest.props_schema) !== (0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.stableStringify)(manifest.props_schema)) diagnostics.push(diagnostic('composed_schema_drift', '$.props_schema', 'The exposed parameters do not match the tree: make the manifest with defineComposedType'));
     if (manifest.renderer?.kind !== 'builtin' || manifest.renderer?.name !== 'composed') diagnostics.push(diagnostic('composed_renderer_invalid', '$.renderer', 'A site block is drawn by the builtin renderer composed'));
   } else if (manifest.exposed !== undefined) diagnostics.push(diagnostic('composed_exposed_without_tree', '$.exposed', 'Only a site block (composed) exposes parameters'));
   if (Array.isArray(manifest.variants) && !diagnostics.some((entry) => entry.code.startsWith('variant'))) {
     for (const variant of manifest.variants) {
-      const node = (0,_catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.instantiateVariant)(manifest, variant.id, { id: `variant-${variant.id}` });
-      const checked = validate({ ...(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_5__.schemaFields)('simai.composition.document', 1), id: 'variant-probe', profile: manifest.profiles[0], root: node }, resolved, options);
+      const node = (0,_catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.instantiateVariant)(manifest, variant.id, { id: `variant-${variant.id}` });
+      const checked = validate({ ...(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_7__.schemaFields)('simai.composition.document', 1), id: 'variant-probe', profile: manifest.profiles[0], root: node }, resolved, options);
       diagnostics.push(...checked.diagnostics.map((entry) => ({ ...entry, path: `$.variants.${variant.id}${entry.path.replace(/^\$\.root/u, '')}` })));
     }
   }
@@ -12371,13 +13116,13 @@ function validateTypeManifest(manifest, registry = undefined, options = {}) {
 const MODIFIER_CLASS = /^[a-z0-9][a-z0-9:/_.-]{0,99}$/u;
 function modifierUtilities(node, manifest) {
   const table = manifest?.presentation?.modifier_utilities;
-  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(table) || !Array.isArray(node?.presentation?.modifiers)) return [];
+  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(table) || !Array.isArray(node?.presentation?.modifiers)) return [];
   return node.presentation.modifiers.flatMap((modifier) => (Array.isArray(table[modifier]) ? table[modifier] : []));
 }
 function validateModifierUtilities(manifest) {
   const table = manifest?.presentation?.modifier_utilities;
   if (table === undefined) return [];
-  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(table)) return [diagnostic('modifier_utilities_invalid', '$.presentation.modifier_utilities', 'Modifier utilities are an object of class lists')];
+  if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(table)) return [diagnostic('modifier_utilities_invalid', '$.presentation.modifier_utilities', 'Modifier utilities are an object of class lists')];
   const declared = manifest.presentation.modifiers || [];
   const diagnostics = [];
   for (const [modifier, classes] of Object.entries(table)) {
@@ -12389,7 +13134,7 @@ function validateModifierUtilities(manifest) {
 
 /** A site block's type manifest from what the block builder saved (composed.mjs). */
 function defineComposedType(definition, registry = undefined, options = {}) {
-  return (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.defineComposedType)(definition, normalizeRegistry(registry), (document, current) => validate(document, current, options));
+  return (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.defineComposedType)(definition, normalizeRegistry(registry), (document, current) => validate(document, current, options));
 }
 
 /**
@@ -12401,31 +13146,31 @@ function defineComposedType(definition, registry = undefined, options = {}) {
 function composedEditorFields(manifest, instance = undefined, options = {}) {
   const registry = normalizeRegistry(options.registry);
   const editors = [..._builtins_mjs__WEBPACK_IMPORTED_MODULE_0__.BUILTIN_EDITOR_MANIFESTS, ...(options.editorManifests || [])];
-  const made = (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.composedEditorManifest)(manifest, registry, editors);
+  const made = (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.composedEditorManifest)(manifest, registry, editors);
   if (!made.manifest) return { valid: false, manifest: null, origins: {}, fields: [], diagnostics: made.diagnostics };
-  const projected = (0,_editor_mjs__WEBPACK_IMPORTED_MODULE_6__.projectEditorFields)(made.manifest, manifest, instance || { id: '', type: manifest.type }, options);
+  const projected = (0,_editor_mjs__WEBPACK_IMPORTED_MODULE_8__.projectEditorFields)(made.manifest, manifest, instance || { id: '', type: manifest.type }, options);
   const diagnostics = [...made.diagnostics, ...projected.diagnostics];
   return { valid: diagnostics.length === 0, manifest: made.manifest, origins: made.origins, fields: projected.fields, diagnostics };
 }
 
 /** Every instance of a site block moved to its type's current version; what the new version no longer has is reported. */
 function upgradeComposed(document, registry = undefined) {
-  return (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_17__.upgradeComposed)(document, normalizeRegistry(registry), fits);
+  return (0,_composed_mjs__WEBPACK_IMPORTED_MODULE_19__.upgradeComposed)(document, normalizeRegistry(registry), fits);
 }
 
 /** The markup of a smart element a block prints, from its manifest inputs: {html, diagnostics} (elements.mjs). */
 function printElement(name, inputs = {}) {
-  return (0,_elements_mjs__WEBPACK_IMPORTED_MODULE_15__.printElement)(name, inputs, validateJsonSchema);
+  return (0,_elements_mjs__WEBPACK_IMPORTED_MODULE_17__.printElement)(name, inputs, validateJsonSchema);
 }
 
 /** The problems of the smart elements in HTML a renderer wrote: attributes their manifests do not take (elements.mjs). */
 function checkPrintedElements(html) {
-  return (0,_elements_mjs__WEBPACK_IMPORTED_MODULE_15__.checkPrintedElements)(html, validateJsonSchema);
+  return (0,_elements_mjs__WEBPACK_IMPORTED_MODULE_17__.checkPrintedElements)(html, validateJsonSchema);
 }
 
 /** The problems of a host's answer to one source-port request. */
 function checkSourceAnswer(request, answer, options = {}) {
-  return (0,_data_mjs__WEBPACK_IMPORTED_MODULE_18__.checkSourceAnswer)(request, answer, { ...options, check: validateJsonSchema });
+  return (0,_data_mjs__WEBPACK_IMPORTED_MODULE_20__.checkSourceAnswer)(request, answer, { ...options, check: validateJsonSchema });
 }
 
 /**
@@ -12455,100 +13200,102 @@ function createSourcePort(host, options = {}) {
 
 const Composition = Object.freeze({
   BUILTIN_EDITOR_MANIFESTS: _builtins_mjs__WEBPACK_IMPORTED_MODULE_0__.BUILTIN_EDITOR_MANIFESTS,
-  BUILTIN_FIELD_KINDS: _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.BUILTIN_FIELD_KINDS,
+  BUILTIN_FIELD_KINDS: _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.BUILTIN_FIELD_KINDS,
   BUILTIN_PORT_MANIFESTS: _builtins_mjs__WEBPACK_IMPORTED_MODULE_0__.BUILTIN_PORT_MANIFESTS,
-  EDITOR_FIELD_WORDS: _editor_words_mjs__WEBPACK_IMPORTED_MODULE_1__.EDITOR_FIELD_WORDS,
-  EDITOR_WORDS_OWNER: _editor_words_mjs__WEBPACK_IMPORTED_MODULE_1__.EDITOR_WORDS_OWNER,
-  Recipe: _recipe_mjs__WEBPACK_IMPORTED_MODULE_8__.Recipe,
-  applyFieldValue: _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.applyFieldValue,
-  editorFieldMessages: _editor_words_mjs__WEBPACK_IMPORTED_MODULE_1__.editorFieldMessages,
-  parseFieldSubmission: _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.parseFieldSubmission,
-  renderFieldFallback: _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.renderFieldFallback,
-  resolveFieldKind: _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.resolveFieldKind,
-  validateFieldKinds: _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.validateFieldKinds,
-  validateFieldValue: _fields_mjs__WEBPACK_IMPORTED_MODULE_7__.validateFieldValue,
-  VALUE_TYPES: _routing_mjs__WEBPACK_IMPORTED_MODULE_11__.VALUE_TYPES,
-  checkPortValue: _routing_mjs__WEBPACK_IMPORTED_MODULE_11__.checkPortValue,
-  checkFragmentDescriptor: _fragments_mjs__WEBPACK_IMPORTED_MODULE_12__.checkFragmentDescriptor,
-  FRAGMENT_DESCRIPTOR_SCHEMA: _fragments_mjs__WEBPACK_IMPORTED_MODULE_12__.FRAGMENT_DESCRIPTOR_SCHEMA,
-  publishEffects: _fragments_mjs__WEBPACK_IMPORTED_MODULE_12__.publishEffects,
-  createPortRegistry: _routing_mjs__WEBPACK_IMPORTED_MODULE_11__.createPortRegistry,
-  defineCompositionScope: _routing_mjs__WEBPACK_IMPORTED_MODULE_11__.defineCompositionScope,
+  EDITOR_FIELD_WORDS: _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__.EDITOR_FIELD_WORDS_LIVE,
+  EDITOR_WORDS_OWNER: _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__.EDITOR_WORDS_OWNER,
+  Recipe: _recipe_mjs__WEBPACK_IMPORTED_MODULE_10__.Recipe,
+  applyFieldValue: _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.applyFieldValue,
+  editorFieldMessages: _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__.editorFieldMessages,
+  loadEditorWords: _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__.loadEditorWords,
+  parseFieldSubmission: _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.parseFieldSubmission,
+  renderFieldFallback: _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.renderFieldFallback,
+  resolveFieldKind: _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.resolveFieldKind,
+  validateFieldKinds: _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.validateFieldKinds,
+  validateFieldValue: _fields_mjs__WEBPACK_IMPORTED_MODULE_9__.validateFieldValue,
+  VALUE_TYPES: _routing_mjs__WEBPACK_IMPORTED_MODULE_13__.VALUE_TYPES,
+  checkPortValue: _routing_mjs__WEBPACK_IMPORTED_MODULE_13__.checkPortValue,
+  checkFragmentDescriptor: _fragments_mjs__WEBPACK_IMPORTED_MODULE_14__.checkFragmentDescriptor,
+  FRAGMENT_DESCRIPTOR_SCHEMA: _fragments_mjs__WEBPACK_IMPORTED_MODULE_14__.FRAGMENT_DESCRIPTOR_SCHEMA,
+  publishEffects: _fragments_mjs__WEBPACK_IMPORTED_MODULE_14__.publishEffects,
+  createPortRegistry: _routing_mjs__WEBPACK_IMPORTED_MODULE_13__.createPortRegistry,
+  defineCompositionScope: _routing_mjs__WEBPACK_IMPORTED_MODULE_13__.defineCompositionScope,
   startInlineEdit,
-  normalizeInline: _inline_model_mjs__WEBPACK_IMPORTED_MODULE_10__.normalizeInline,
-  inlineText: _inline_model_mjs__WEBPACK_IMPORTED_MODULE_10__.inlineText,
+  normalizeInline: _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.normalizeInline,
+  inlineText: _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.inlineText,
   BUILTIN_TYPE_MANIFESTS: _builtins_mjs__WEBPACK_IMPORTED_MODULE_0__.BUILTIN_TYPE_MANIFESTS,
   createRegistry,
   extendRegistry,
   compositionTypeFromSmartManifest,
-  describeRegions: _regions_mjs__WEBPACK_IMPORTED_MODULE_9__.describeRegions,
+  describeRegions: _regions_mjs__WEBPACK_IMPORTED_MODULE_11__.describeRegions,
   normalize,
-  projectDocumentEditorFields: _editor_mjs__WEBPACK_IMPORTED_MODULE_6__.projectDocumentEditorFields,
-  projectEditorFields: _editor_mjs__WEBPACK_IMPORTED_MODULE_6__.projectEditorFields,
+  projectDocumentEditorFields: _editor_mjs__WEBPACK_IMPORTED_MODULE_8__.projectDocumentEditorFields,
+  projectEditorFields: _editor_mjs__WEBPACK_IMPORTED_MODULE_8__.projectEditorFields,
   render,
-  resolveRecipe: _recipe_mjs__WEBPACK_IMPORTED_MODULE_8__.resolveRecipe,
-  parseRecipeJson: _recipe_mjs__WEBPACK_IMPORTED_MODULE_8__.parseRecipeJson,
-  stableStringify: _canonical_mjs__WEBPACK_IMPORTED_MODULE_4__.stableStringify,
+  resolveRecipe: _recipe_mjs__WEBPACK_IMPORTED_MODULE_10__.resolveRecipe,
+  parseRecipeJson: _recipe_mjs__WEBPACK_IMPORTED_MODULE_10__.parseRecipeJson,
+  stableStringify: _canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.stableStringify,
   validate,
-  validateEditorManifest: _editor_mjs__WEBPACK_IMPORTED_MODULE_6__.validateEditorManifest,
+  validateEditorManifest: _editor_mjs__WEBPACK_IMPORTED_MODULE_8__.validateEditorManifest,
   // One block editor (2026-11-03): catalogue, layout utilities, own
   // modifiers, site blocks, named places and data.
-  BINDING_STATES: _data_mjs__WEBPACK_IMPORTED_MODULE_18__.BINDING_STATES,
-  BUILTIN_CATALOGUE: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.BUILTIN_CATALOGUE,
-  BUILTIN_CATALOGUE_ALSO_IN: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.BUILTIN_CATALOGUE_ALSO_IN,
-  BUILTIN_CATALOGUE_ICONS: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.BUILTIN_CATALOGUE_ICONS,
-  CATALOGUE_GROUPS: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.CATALOGUE_GROUPS,
-  CATALOGUE_GROUP_ALIASES: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.CATALOGUE_GROUP_ALIASES,
-  CATALOGUE_GROUP_TABLE: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.CATALOGUE_GROUP_TABLE,
-  CATALOGUE_TABS: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.CATALOGUE_TABS,
-  DATA_SHAPES: _data_mjs__WEBPACK_IMPORTED_MODULE_18__.DATA_SHAPES,
-  SOURCE_PORT: _data_mjs__WEBPACK_IMPORTED_MODULE_18__.SOURCE_PORT,
-  UTILITY_BREAKPOINTS: _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.UTILITY_BREAKPOINTS,
-  bindingSettings: _data_mjs__WEBPACK_IMPORTED_MODULE_18__.bindingSettings,
-  catalogue: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.catalogue,
-  catalogueEntry: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.catalogueEntry,
-  entryGroups: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.entryGroups,
-  checkModifiers: _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.checkModifiers,
+  BINDING_STATES: _data_mjs__WEBPACK_IMPORTED_MODULE_20__.BINDING_STATES,
+  BUILTIN_CATALOGUE: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.BUILTIN_CATALOGUE,
+  BUILTIN_CATALOGUE_ALSO_IN: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.BUILTIN_CATALOGUE_ALSO_IN,
+  BUILTIN_CATALOGUE_ICONS: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.BUILTIN_CATALOGUE_ICONS,
+  CATALOGUE_GROUPS: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.CATALOGUE_GROUPS,
+  CATALOGUE_GROUP_ALIASES: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.CATALOGUE_GROUP_ALIASES,
+  CATALOGUE_GROUP_TABLE: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.CATALOGUE_GROUP_TABLE,
+  CATALOGUE_TABS: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.CATALOGUE_TABS,
+  DATA_SHAPES: _data_mjs__WEBPACK_IMPORTED_MODULE_20__.DATA_SHAPES,
+  SOURCE_PORT: _data_mjs__WEBPACK_IMPORTED_MODULE_20__.SOURCE_PORT,
+  UTILITY_BREAKPOINTS: _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.UTILITY_BREAKPOINTS,
+  bindingSettings: _data_mjs__WEBPACK_IMPORTED_MODULE_20__.bindingSettings,
+  catalogue: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.catalogue,
+  catalogueEntry: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.catalogueEntry,
+  entryGroups: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.entryGroups,
+  checkModifiers: _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.checkModifiers,
   checkSourceAnswer,
   composedEditorFields,
-  composedInstance: _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.composedInstance,
-  composedPart: _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.composedPart,
-  composedTextPaths: _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.composedTextPaths,
-  createShapeRegistry: _data_mjs__WEBPACK_IMPORTED_MODULE_18__.createShapeRegistry,
+  composedInstance: _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.composedInstance,
+  composedPart: _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.composedPart,
+  composedTextPaths: _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.composedTextPaths,
+  createShapeRegistry: _data_mjs__WEBPACK_IMPORTED_MODULE_20__.createShapeRegistry,
   createSourcePort,
   defineComposedType,
-  demoData: _data_mjs__WEBPACK_IMPORTED_MODULE_18__.demoData,
-  PARAMETER_SETS: _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.PARAMETER_SETS,
-  PRINTED_ELEMENTS: _elements_mjs__WEBPACK_IMPORTED_MODULE_15__.PRINTED_ELEMENTS,
+  demoData: _data_mjs__WEBPACK_IMPORTED_MODULE_20__.demoData,
+  PARAMETER_SETS: _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.PARAMETER_SETS,
+  PRINTED_ELEMENTS: _elements_mjs__WEBPACK_IMPORTED_MODULE_17__.PRINTED_ELEMENTS,
   checkPrintedElements,
-  elementInputs: _elements_mjs__WEBPACK_IMPORTED_MODULE_15__.elementInputs,
-  effectiveProps: _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.effectiveProps,
-  expandParameterSets: _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.expandParameterSets,
-  parameterSetFields: _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.parameterSetFields,
+  elementInputs: _elements_mjs__WEBPACK_IMPORTED_MODULE_17__.elementInputs,
+  effectiveProps: _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.effectiveProps,
+  expandParameterSets: _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.expandParameterSets,
+  parameterSetFields: _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.parameterSetFields,
   printElement,
-  withParameterSetFields: _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_16__.withParameterSetFields,
-  expandComposed: _composed_mjs__WEBPACK_IMPORTED_MODULE_17__.expandComposed,
-  instantiateVariant: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.instantiateVariant,
-  ownModifiers: _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.ownModifiers,
-  slotAccepts: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.slotAccepts,
-  slotPlaces: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_14__.slotPlaces,
+  withParameterSetFields: _parameter_sets_mjs__WEBPACK_IMPORTED_MODULE_18__.withParameterSetFields,
+  expandComposed: _composed_mjs__WEBPACK_IMPORTED_MODULE_19__.expandComposed,
+  instantiateVariant: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.instantiateVariant,
+  ownModifiers: _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.ownModifiers,
+  slotAccepts: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.slotAccepts,
+  slotPlaces: _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.slotPlaces,
   upgradeComposed,
-  utilityClasses: _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.utilityClasses,
-  utilityClassSpace: _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.utilityClassSpace,
-  utilityPartClasses: _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.utilityPartClasses,
+  utilityClasses: _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.utilityClasses,
+  utilityClassSpace: _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.utilityClassSpace,
+  utilityPartClasses: _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.utilityPartClasses,
   validateTypeManifest,
-  valuesByBreakpoint: _utilities_mjs__WEBPACK_IMPORTED_MODULE_13__.valuesByBreakpoint,
+  valuesByBreakpoint: _utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.valuesByBreakpoint,
 });
 
 if (typeof globalThis !== 'undefined') {
   globalThis.SF = globalThis.SF || {};
   globalThis.SF.Composition = Composition;
-  (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_11__.defineCompositionScope)();
-  (0,_fragments_mjs__WEBPACK_IMPORTED_MODULE_12__.definePageHost)();
-  (0,_fragments_mjs__WEBPACK_IMPORTED_MODULE_12__.defineFragmentBoundary)();
+  (0,_routing_mjs__WEBPACK_IMPORTED_MODULE_13__.defineCompositionScope)();
+  (0,_fragments_mjs__WEBPACK_IMPORTED_MODULE_14__.definePageHost)();
+  (0,_fragments_mjs__WEBPACK_IMPORTED_MODULE_14__.defineFragmentBoundary)();
 }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Composition);
+
 
 
 
@@ -12576,22 +13323,30 @@ __webpack_async_result__();
 __webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   INLINE_ENTER_MODES: () => (/* binding */ INLINE_ENTER_MODES),
 /* harmony export */   INLINE_EVENTS: () => (/* binding */ INLINE_EVENTS),
 /* harmony export */   INLINE_EVENTS_FORMER_TAG: () => (/* binding */ INLINE_EVENTS_FORMER_TAG),
 /* harmony export */   INLINE_EVENTS_LEGACY: () => (/* binding */ INLINE_EVENTS_LEGACY),
 /* harmony export */   INLINE_TOOLBAR_MODES: () => (/* binding */ INLINE_TOOLBAR_MODES),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
 /* harmony export */   defineInlineEditor: () => (/* binding */ defineInlineEditor),
+/* harmony export */   linkProblem: () => (/* binding */ linkProblem),
 /* harmony export */   readInlineDom: () => (/* binding */ readInlineDom),
 /* harmony export */   renderInlineDom: () => (/* binding */ renderInlineDom),
 /* harmony export */   startInlineEdit: () => (/* binding */ startInlineEdit),
-/* harmony export */   textOffset: () => (/* binding */ textOffset)
+/* harmony export */   textOffset: () => (/* binding */ textOffset),
+/* harmony export */   useInlineEditorWords: () => (/* binding */ useInlineEditorWords),
+/* harmony export */   wordAround: () => (/* binding */ wordAround)
 /* harmony export */ });
 /* harmony import */ var _page_language_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("43090d1c8307");
-/* harmony import */ var _tag_aliases_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("4a85acfb05c1");
-/* harmony import */ var _inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("e66d878fb4f8");
-var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_page_language_js__WEBPACK_IMPORTED_MODULE_0__, _tag_aliases_js__WEBPACK_IMPORTED_MODULE_1__]);
-([_page_language_js__WEBPACK_IMPORTED_MODULE_0__, _tag_aliases_js__WEBPACK_IMPORTED_MODULE_1__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* harmony import */ var _overflow_row_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("2db3a835ac11");
+/* harmony import */ var _roving_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("557c99eb8f3a");
+/* harmony import */ var _tag_aliases_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("4a85acfb05c1");
+/* harmony import */ var _inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("e66d878fb4f8");
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_page_language_js__WEBPACK_IMPORTED_MODULE_0__, _tag_aliases_js__WEBPACK_IMPORTED_MODULE_3__]);
+([_page_language_js__WEBPACK_IMPORTED_MODULE_0__, _tag_aliases_js__WEBPACK_IMPORTED_MODULE_3__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+
+
 
 
 
@@ -12627,8 +13382,10 @@ const INLINE_EVENTS_LEGACY = Object.freeze({
   cancel: 'sf-inline-edit-cancel',
 });
 
-function emitInline(element, key, id, content) {
-  const detail = content === undefined ? { id } : { id, content };
+// next: the text after the caret when Enter starts a new block (enter:
+// 'new-block', C172 (2)); the former names' details never carry it.
+function emitInline(element, key, id, content, next) {
+  const detail = content === undefined ? { id } : next === undefined ? { id, content } : { id, content, next };
   const legacy = content === undefined ? { node_id: id } : { node_id: id, content };
   const frozen = Object.freeze(detail);
   element.dispatchEvent(new globalThis.CustomEvent(INLINE_EVENTS[key], { bubbles: true, composed: true, detail: frozen }));
@@ -12637,18 +13394,54 @@ function emitInline(element, key, id, content) {
 }
 
 const MESSAGES = {
-  ru: { toolbar: 'Форматирование', strong: 'Полужирный', em: 'Курсив', code: 'Код', link: 'Ссылка', url: 'Адрес ссылки', apply: 'Применить', unlink: 'Убрать ссылку', editing: '{label}: редактирование. Enter — сохранить, Escape — отменить.', invalid: 'Недопустимый адрес ссылки' },
-  en: { toolbar: 'Formatting', strong: 'Bold', em: 'Italic', code: 'Code', link: 'Link', url: 'Link address', apply: 'Apply', unlink: 'Remove link', editing: '{label}: editing. Enter saves, Escape cancels.', invalid: 'Invalid link address' },
+  en: { toolbar: 'Formatting', strong: 'Bold', em: 'Italic', code: 'Code', strike: 'Strikethrough', link: 'Link', url: 'Link address', apply: 'Apply', unlink: 'Remove link', editing: '{label}: editing. Enter saves, Escape cancels.', invalid: 'Invalid link address' },
 };
 const SHORTCUTS = { strong: 'b', em: 'i', code: 'e' };
+// The marks the toolbar offers when the host names none: strike (inline model
+// 1.2.0) is read, kept and drawn, and has a button only where a host asks.
+const TOOLBAR_MARKS = Object.freeze(['strong', 'em', 'code']);
 const SKIP = new Set(['SCRIPT', 'STYLE', 'TEMPLATE', 'HEAD', 'TITLE', 'META', 'LINK', 'IMG', 'SVG', 'OBJECT', 'IFRAME', 'NOSCRIPT']);
 const BLOCK = new Set(['P', 'DIV', 'LI', 'UL', 'OL', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'TR', 'TABLE', 'BLOCKQUOTE', 'SECTION', 'ARTICLE']);
 // While editing, an atom or an opaque node is one element that is not
 // editable inside and carries its entry as JSON here, so reading the DOM back,
 // and pasting what the editor copied, return the entry exactly.
 const NODE_ATTRIBUTE = 'data-sf-inline-node';
-const ATOM_TAGS = new Map(Object.entries(_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.INLINE_COMPONENTS).map(([name, entry]) => [entry.tag.toUpperCase(), name]));
+const ATOM_TAGS = new Map(Object.entries(_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.INLINE_COMPONENTS).map(([name, entry]) => [entry.tag.toUpperCase(), name]));
 const isAtomElement = (node) => node?.nodeType === 1 && node.hasAttribute(NODE_ATTRIBUTE);
+// A mark the editor has no element for is drawn as a span carrying its name,
+// never as an element of that name, so it survives the DOM read-back.
+const MARK_ATTRIBUTE = 'data-sf-inline-mark';
+// Editor-copied HTML carries the page's copy token on its wrapper; pasted
+// HTML without it loses every data-sf-inline-* attribute first, so another
+// page cannot inject entries or marks (2026-11-11 acceptance, L3). The token
+// lives on the global, since every bundle carries its own module copy.
+const COPY_ATTRIBUTE = 'data-sf-inline-copy';
+const COPY_KEY = Symbol.for('simai.composition.inline-copy');
+const copyToken = () => {
+  if (!globalThis[COPY_KEY]) globalThis[COPY_KEY] = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return globalThis[COPY_KEY];
+};
+// The extension keys of a text run, a break or a link (inline model,
+// 2026-11-11) ride on a wrapper span (or the <a>) as JSON, so the DOM
+// read-back keeps them. Foreign paste loses them with the other
+// data-sf-inline-* attributes.
+const EXTRA_ATTRIBUTE = 'data-sf-inline-extra';
+const readExtra = (node) => {
+  const json = node?.nodeType === 1 ? node.getAttribute(EXTRA_ATTRIBUTE) : null;
+  if (json === null) return null;
+  try {
+    const value = JSON.parse(json);
+    return value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length ? value : null;
+  } catch {
+    return null;
+  }
+};
+const MARK_TAGS = new Map([['strong', 'strong'], ['em', 'em'], ['code', 'code'], ['strike', 's']]);
+// A break the editor drew carries this attribute; any other <br> the browser
+// or a paste brings is read as a break too, except the placeholder a browser
+// keeps as the last child of an emptied or break-ended line.
+const BREAK_ATTRIBUTE = 'data-sf-inline-break';
+const isBreakElement = (node) => node?.nodeType === 1 && node.tagName === 'BR' && node.hasAttribute(BREAK_ATTRIBUTE);
 
 /** The entry an atom element holds: its JSON, or for a drawn atom without it, its tag and declared attributes. */
 function atomEntry(element) {
@@ -12663,39 +13456,61 @@ function atomEntry(element) {
   }
   const name = ATOM_TAGS.get(element.tagName.toUpperCase());
   if (!name) return null;
-  const declared = _inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.INLINE_COMPONENTS[name].props;
+  const declared = _inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.INLINE_COMPONENTS[name].props;
   const props = {};
   if (name === 'kbd') props.text = element.textContent.replace(/\s+/gu, ' ').trim();
   else for (const [key, kind] of Object.entries(declared)) {
     if (!element.hasAttribute(key)) continue;
     props[key] = kind === 'boolean' ? true : element.getAttribute(key);
   }
-  const entry = { type: 'component', name, ...(Object.keys(props).length ? { props } : {}) };
-  return (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.isInlineComponent)(entry) ? entry : null;
+  // An element read back is written under the current names: a dated alias
+  // attribute (sf-badge compact) becomes its new prop (icon-only).
+  const current = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.currentInlineProps)(name, props);
+  const entry = { type: 'component', name, ...(Object.keys(current).length ? { props: current } : {}) };
+  return (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.isInlineComponent)(entry) ? entry : null;
 }
 
 const format = (template, values) => template.replace(/\{(\w+)\}/gu, (_, key) => String(values[key] ?? ''));
+// The words of sf-editor-inline's language files (lang/<locale>.json,
+// runtime), given by its bundle (useInlineEditorWords): the words this module
+// does not carry in MESSAGES -- the link window's hint and reasons, «Ещё»,
+// the new-block label (owner decision C172) -- live only there.
+let shippedWords = null;
+function useInlineEditorWords(lang) {
+  shippedWords = lang && typeof lang === 'object' ? lang : null;
+}
+const dictionary = () => {
+  if (!shippedWords) return MESSAGES;
+  const merged = {};
+  for (const locale of new Set([...Object.keys(MESSAGES), ...Object.keys(shippedWords)])) merged[locale] = { ...(MESSAGES[locale] || {}), ...(shippedWords[locale]?.runtime || {}) };
+  return merged;
+};
 // Words in the page's language through pageText, as every component takes
 // them: the editor read <html lang> alone and offered only English or Russian,
 // so SF.language.use() and a product's own dictionary never reached it
 // (documentation trial, 2026-10-12).
-const words = (node) => Object.fromEntries(Object.keys(MESSAGES.en).map((key) => [key, (0,_page_language_js__WEBPACK_IMPORTED_MODULE_0__.pageText)(MESSAGES, key, node, 'sf-editor-inline')]));
+const words = (node) => {
+  const all = dictionary();
+  return Object.fromEntries(Object.keys(all.en || MESSAGES.en).map((key) => [key, (0,_page_language_js__WEBPACK_IMPORTED_MODULE_0__.pageText)(all, key, node, 'sf-editor-inline')]));
+};
 
 /** Reads inline content from any DOM subtree; foreign markup and styles are dropped. */
-function readInlineDom(root, { marks = _inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.INLINE_MARKS, links = true, collapse = false } = {}) {
+function readInlineDom(root, { marks = _inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.INLINE_MARKS, links = true, collapse = false } = {}) {
   const segments = [];
-  const visit = (node, active, href) => {
+  const carry = (extra, linkExtra, href) => ({ ...(extra ? { extra } : {}), ...(href && linkExtra ? { linkExtra } : {}) });
+  const visit = (node, active, href, extra = null, linkExtra = null) => {
     if (node.nodeType === 3) {
       let text = node.nodeValue.replace(/\u00a0/gu, ' ').replace(/[\r\n\t\f\v]/gu, ' ');
       if (collapse) text = text.replace(/ {2,}/gu, ' ');
-      if (text) segments.push({ text, marks: [...active], href });
+      if (text) segments.push({ text, marks: [...active], href, ...carry(extra, linkExtra, href) });
       return;
     }
     if (node.nodeType !== 1 && node.nodeType !== 11) return;
     if (node.nodeType === 1 && node !== root) {
       const entry = atomEntry(node);
       if (entry) {
-        segments.push({ text: _inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.INLINE_OBJECT, marks: [], href, node: entry });
+        // An atom is never inside a link, even when pasted inside an <a>.
+        segments.push({ text: _inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.INLINE_OBJECT, marks: [], href: entry.type === 'component' ? null : href, node: entry, ...(entry.type === 'component' ? {} : carry(null, linkExtra, href)) });
         return;
       }
     }
@@ -12706,33 +13521,52 @@ function readInlineDom(root, { marks = _inline_model_mjs__WEBPACK_IMPORTED_MODUL
     if (tag === 'STRONG' || tag === 'B') next.add('strong');
     if (tag === 'EM' || tag === 'I') next.add('em');
     if (tag === 'CODE' || tag === 'KBD' || tag === 'SAMP') next.add('code');
+    if (tag === 'S' || tag === 'STRIKE' || tag === 'DEL') next.add('strike');
+    // A mark this editor cannot draw rides on its wrapper (renderInlineDom).
+    const carried = node.nodeType === 1 ? node.getAttribute(MARK_ATTRIBUTE) : null;
+    // Any non-empty name, the inline model's own rule (sortMarks).
+    if (carried) next.add(carried);
     if (node.nodeType === 1 && node.style) {
       const weight = node.style.fontWeight;
       if (weight === 'bold' || weight === 'bolder' || Number(weight) >= 600) next.add('strong');
       if (node.style.fontStyle === 'italic') next.add('em');
     }
+    let nextExtra = extra;
+    let nextLinkExtra = linkExtra;
     if (tag === 'A' && !href && links) {
       const candidate = node.getAttribute('href');
-      if ((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.safeHref)(candidate)) nextHref = candidate;
+      if ((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.safeHref)(candidate)) {
+        nextHref = candidate;
+        nextLinkExtra = readExtra(node);
+      }
+    } else if (node.nodeType === 1 && tag !== 'A') {
+      const own = readExtra(node);
+      if (own) nextExtra = { ...(extra || {}), ...own };
     }
     if (tag === 'BR') {
-      // The placeholder <br> a browser leaves in an emptied editor is not content.
-      if (node.parentNode === root && !node.nextSibling) return;
-      segments.push({ text: ' ', marks: [...active], href });
+      // A line break is a break (inline model 1.2.0), no longer a space. The
+      // placeholder <br> a browser leaves as the last child of the edited
+      // element (an emptied editor, or the empty line after a final break)
+      // is not content; a break the editor drew says so itself.
+      if (!node.hasAttribute(BREAK_ATTRIBUTE) && isLastLeaf(node, root)) return;
+      segments.push({ ...(0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.breakSegment)([...active], href, readExtra(node) || extra), ...carry(null, linkExtra, href) });
       return;
     }
-    for (const child of node.childNodes) visit(child, next, nextHref);
+    for (const child of node.childNodes) visit(child, next, nextHref, nextExtra, nextLinkExtra);
     // Nested blocks (pasted paragraphs) are separated by one space; the root is not.
     if (BLOCK.has(tag) && node !== root) segments.push({ text: ' ', marks: [], href: null });
   };
   visit(root, new Set(), null);
+  // The field's marks limit the known ones; a mark the model does not know is
+  // kept as it came, so an edit never drops it (validation still reports it).
   const allowed = new Set(marks);
-  let content = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.fromSegments)(segments.map((segment) => ({ ...segment, marks: segment.marks.filter((mark) => allowed.has(mark)), href: links ? segment.href : null })));
+  const keep = (mark) => allowed.has(mark) || !_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.INLINE_MARKS.includes(mark);
+  let content = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.fromSegments)(segments.map((segment) => ({ ...segment, marks: segment.marks.filter(keep), href: links ? segment.href : null })));
   if (collapse) {
-    const flat = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.toSegments)(content);
+    const flat = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.toSegments)(content);
     if (flat.length && !flat[0].node) flat[0] = { ...flat[0], text: flat[0].text.replace(/^ +/u, '') };
     if (flat.length && !flat.at(-1).node) flat[flat.length - 1] = { ...flat.at(-1), text: flat.at(-1).text.replace(/ +$/u, '') };
-    content = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.fromSegments)(flat);
+    content = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.fromSegments)(flat);
   }
   return content;
 }
@@ -12745,35 +13579,66 @@ function readInlineDom(root, { marks = _inline_model_mjs__WEBPACK_IMPORTED_MODUL
 function renderInlineDom(doc, content) {
   const fragment = doc.createDocumentFragment();
   const object = (entry) => {
-    const view = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.inlineComponentView)(entry);
+    const view = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.inlineComponentView)(entry);
     const element = doc.createElement(view ? view.tag : 'span');
     if (view) {
       for (const [name, value] of view.attributes) element.setAttribute(name, value);
       if (view.text) element.textContent = view.text;
-    } else element.textContent = _inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.INLINE_OBJECT;
+    } else element.textContent = _inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.INLINE_OBJECT;
     element.setAttribute('contenteditable', 'false');
     element.setAttribute(NODE_ATTRIBUTE, JSON.stringify(entry));
     return element;
   };
   const run = (entry) => {
-    if (entry.type !== 'text') return object(entry);
-    let node = doc.createTextNode(entry.value);
+    if (entry.type !== 'text' && entry.type !== 'break') return object(entry);
+    let node;
+    if (entry.type === 'break') {
+      node = doc.createElement('br');
+      node.setAttribute(BREAK_ATTRIBUTE, '');
+    } else node = doc.createTextNode(entry.value);
     for (const mark of entry.marks || []) {
-      const wrapper = doc.createElement(mark);
+      const wrapper = doc.createElement(MARK_TAGS.get(mark) || 'span');
+      if (!MARK_TAGS.has(mark)) wrapper.setAttribute(MARK_ATTRIBUTE, mark);
+      wrapper.append(node);
+      node = wrapper;
+    }
+    const extra = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.inlineExtensions)(entry);
+    if (extra) {
+      const wrapper = doc.createElement('span');
+      wrapper.setAttribute(EXTRA_ATTRIBUTE, JSON.stringify(extra));
       wrapper.append(node);
       node = wrapper;
     }
     return node;
   };
-  for (const entry of (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.normalizeInline)(content)) {
+  const normalized = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.normalizeInline)(content);
+  for (const entry of normalized) {
     if (entry.type === 'link') {
       const anchor = doc.createElement('a');
       anchor.setAttribute('href', entry.href);
+      const linkExtra = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.inlineExtensions)(entry);
+      if (linkExtra) anchor.setAttribute(EXTRA_ATTRIBUTE, JSON.stringify(linkExtra));
       for (const child of entry.children) anchor.append(run(child));
       fragment.append(anchor);
     } else fragment.append(run(entry));
   }
+  // A line that ends on a break needs one more <br> to show its empty last
+  // line; that one is the placeholder and is not read back.
+  const last = normalized.at(-1);
+  // It goes inside the marks of that break, so text typed on the new line
+  // keeps them, as it would after a break inside a line.
+  if (last?.type === 'break' || (last?.type === 'link' && last.children.at(-1)?.type === 'break')) {
+    let host = fragment;
+    while (host.lastChild?.nodeType === 1 && host.lastChild.tagName !== 'BR') host = host.lastChild;
+    host.append(doc.createElement('br'));
+  }
   return fragment;
+}
+
+// True when node is the last thing inside root: nothing follows it at any level.
+function isLastLeaf(node, root) {
+  for (let current = node; current && current !== root; current = current.parentNode) if (current.nextSibling) return false;
+  return true;
 }
 
 // The units of offset inside root, in document order: text nodes outside
@@ -12783,7 +13648,7 @@ function units(root) {
   const visit = (node) => {
     for (const child of node.childNodes) {
       if (child.nodeType === 3) list.push(child);
-      else if (isAtomElement(child)) list.push(child);
+      else if (isAtomElement(child) || isBreakElement(child)) list.push(child);
       else if (child.nodeType === 1) visit(child);
     }
   };
@@ -12832,25 +13697,82 @@ function setSelection(root, anchor, focus = anchor) {
   selection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
 }
 
-// When the formatting toolbar shows: for the whole edit, over the element
-// (session, the default), or only while text is selected, over the selection
-// (selection: a flow editor where every paragraph is an edit, and a bar over
-// the element would cover the line being typed; simai/ui-source#67).
-const INLINE_TOOLBAR_MODES = Object.freeze(['session', 'selection']);
+// When the formatting toolbar shows (owner decision C172 (1), 2026-11-14):
+// only while text is selected, over the selection (selection, the default
+// since sf-editor-inline 1.9.0), or for the whole edit, over the element
+// (session, the default before it, kept for a host that asks for it;
+// simai/ui-source#67). On a phone the toolbar is a strip of icons above the
+// screen keyboard for the whole edit, whatever the mode (C172 (3)).
+const INLINE_TOOLBAR_MODES = Object.freeze(['selection', 'session']);
+
+// What Enter does (owner decision C172 (2)): save, the default, commits the
+// edit; new-block -- a block editor's setting «Enter — новый блок» -- commits
+// the text before the caret and gives the text after it as next, for the
+// host to make the next block of. Shift+Enter is a line break in both, focus
+// leaving saves in both.
+const INLINE_ENTER_MODES = Object.freeze(['save', 'new-block']);
+
+const MARK_ICONS = Object.freeze({ strong: 'format_bold', em: 'format_italic', code: 'code', strike: 'strikethrough_s' });
+// The toolbar's rungs: icon buttons 1/2 over the page (C141 (4), C144); on a
+// phone the strip's buttons are 2, the touch rung.
+const BAR_SIZE = Object.freeze({ float: '1/2', dock: '2' });
+// The link window is one small form on one rung (C141 (6)): its field and
+// both buttons are 1/2.
+const LINK_SIZE = '1/2';
+// A row unit that left for «Ещё» (core/js/overflow-row.js, C155).
+const OUT = 'sf-inline-editor-out';
+// Below the md breakpoint core.css does not declare --sf-breakpoint-md: a
+// phone, as sf-input-rich reads it.
+const onPhone = (doc) => !doc.defaultView?.getComputedStyle(doc.documentElement).getPropertyValue('--sf-breakpoint-md').trim();
+const ICON_BUTTON = ['sf-icon-button', 'sf-icon-button--icon', 'sf-icon-button--ghost', 'sf-icon-button--on-surface'];
+
+// Why a link address is refused, as the link window says it under the field
+// (owner decision C172 (4)): the word of the reason, which names what to
+// change, or null when the address is accepted (safeHref).
+function linkProblem(value) {
+  const text = String(value ?? '');
+  if (!text) return 'link-empty';
+  if ((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.safeHref)(text)) return null;
+  if (text.length > _inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.INLINE_LIMITS.maxHrefLength) return 'link-long';
+  if (/\s/u.test(text)) return 'link-spaces';
+  if (text.startsWith('//') || text.includes('\\')) return 'link-slashes';
+  if (/^[a-z][a-z0-9+.-]*:/iu.test(text)) return 'link-scheme';
+  return 'link-start';
+}
+
+// The word around an offset (letters, digits, joiners inside a word), as
+// [start, end], or null in a space or beside an atom: Ctrl/⌘+K with no
+// selection links the word under the caret (C172 (4), IE-3).
+function wordAround(content, offset) {
+  const text = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.toSegments)(content).map((segment) => (segment.node || segment.break ? '\u0000' : segment.text)).join('');
+  const inWord = (at) => at >= 0 && at < text.length && /[\p{L}\p{N}\p{M}_'’-]/u.test(text[at]);
+  let start = offset;
+  let end = offset;
+  while (inWord(start - 1)) start -= 1;
+  while (inWord(end)) end += 1;
+  while (start < end && /[-'’_]/u.test(text[start])) start += 1;
+  while (end > start && /[-'’_]/u.test(text[end - 1])) end -= 1;
+  return start < end ? [start, end] : null;
+}
 
 /**
  * Starts in-place editing of a rendered heading or paragraph element.
- * options: {content, nodeId, label, marks, links, messages, toolbar}
+ * options: {content, nodeId, label, marks, links, messages, toolbar, enter}
  * Returns {commit(), cancel(), value(), element}.
  */
 function startInlineEdit(element, options = {}) {
   if (!(element instanceof globalThis.Element)) throw new TypeError('Inline editing needs an element');
   if (element.hasAttribute('data-sf-inline-editing')) throw new TypeError('inline_edit_active');
-  const toolbarMode = options.toolbar ?? 'session';
+  const toolbarMode = options.toolbar ?? 'selection';
   if (!INLINE_TOOLBAR_MODES.includes(toolbarMode)) throw new TypeError(`inline_toolbar_unknown: ${toolbarMode}`);
+  const enterMode = options.enter ?? 'save';
+  if (!INLINE_ENTER_MODES.includes(enterMode)) throw new TypeError(`inline_enter_unknown: ${enterMode}`);
   const doc = element.ownerDocument;
   const text = { ...words(element), ...(options.messages || {}) };
-  const marks = (options.marks || _inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.INLINE_MARKS).filter((mark) => _inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.INLINE_MARKS.includes(mark));
+  // options.marks: the marks the field allows and offers; without it every
+  // known mark is kept and the toolbar offers TOOLBAR_MARKS.
+  const marks = (options.marks || _inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.INLINE_MARKS).filter((mark) => _inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.INLINE_MARKS.includes(mark));
+  const offered = options.marks ? marks : TOOLBAR_MARKS.filter((mark) => marks.includes(mark));
   const links = options.links !== false;
   const original = { html: element.innerHTML, attributes: ['contenteditable', 'role', 'aria-multiline', 'aria-label', 'spellcheck', 'tabindex'].map((name) => [name, element.getAttribute(name)]) };
   const history = [];
@@ -12864,7 +13786,7 @@ function startInlineEdit(element, options = {}) {
   const read = () => readInlineDom(element, { marks, links });
   const selectionOffsets = () => {
     const selection = doc.getSelection();
-    if (!selection?.rangeCount || !element.contains(selection.anchorNode)) return [(0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.inlineLength)(read()), (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.inlineLength)(read())];
+    if (!selection?.rangeCount || !element.contains(selection.anchorNode)) return [(0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.inlineLength)(read()), (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.inlineLength)(read())];
     const range = selection.getRangeAt(0);
     return [textOffset(element, range.startContainer, range.startOffset), textOffset(element, range.endContainer, range.endOffset)];
   };
@@ -12897,66 +13819,166 @@ function startInlineEdit(element, options = {}) {
   };
 
   // Toolbar ----------------------------------------------------------------
+  // One row of icon buttons in groups (owner decisions C141 (4), C144, C172):
+  // the marks, a separator, the link; 4 apart inside a group, a 1 px line with
+  // 4 on each side between groups. What does not fit the row leaves for
+  // ⋯ «Ещё» at its end, a whole group with its separator, the link first
+  // (core/js/overflow-row.js, C155); the marks stay.
   const toolbar = doc.createElement('div');
   toolbar.className = 'sf-inline-editor-toolbar';
   toolbar.setAttribute('role', 'toolbar');
   toolbar.setAttribute('aria-label', text.toolbar);
   toolbar.dataset.sfToolbar = toolbarMode;
-  if (toolbarMode === 'selection') toolbar.hidden = true;
+  toolbar.hidden = toolbarMode === 'selection';
   const buttons = new Map();
-  for (const mark of marks) {
+  const tools = [];
+  const toolButton = (id, icon, label) => {
     const button = doc.createElement('button');
     button.type = 'button';
-    button.className = `sf-inline-editor-button sf-inline-editor-button--${mark}`;
+    button.classList.add('sf-inline-editor-button', `sf-inline-editor-button--${id}`, ...ICON_BUTTON);
+    button.dataset.sfTool = id;
+    button.setAttribute('aria-label', label);
+    button.title = label;
+    const glyph = doc.createElement('i');
+    glyph.className = 'sf-icon';
+    glyph.setAttribute('aria-hidden', 'true');
+    glyph.textContent = icon;
+    button.append(glyph);
+    tools.push(button);
+    return button;
+  };
+  const group = (priority) => {
+    const box = doc.createElement('div');
+    box.className = 'sf-inline-editor-group';
+    box.setAttribute('role', 'group');
+    box.dataset.sfPriority = String(priority);
+    return box;
+  };
+  const separator = (...extra) => {
+    const line = doc.createElement('span');
+    line.className = ['sf-inline-editor-separator', ...extra].join(' ');
+    line.setAttribute('aria-hidden', 'true');
+    return line;
+  };
+  const groups = [];
+  const separators = [];
+  const marksGroup = group(1);
+  for (const mark of offered) {
+    const button = toolButton(mark, MARK_ICONS[mark] || 'format_clear', text[mark]);
     button.dataset.mark = mark;
-    button.textContent = text[mark];
     button.setAttribute('aria-pressed', 'false');
-    button.setAttribute('aria-keyshortcuts', `Control+${SHORTCUTS[mark].toUpperCase()} Meta+${SHORTCUTS[mark].toUpperCase()}`);
+    if (SHORTCUTS[mark]) button.setAttribute('aria-keyshortcuts', `Control+${SHORTCUTS[mark].toUpperCase()} Meta+${SHORTCUTS[mark].toUpperCase()}`);
     buttons.set(mark, button);
-    toolbar.append(button);
+    marksGroup.append(button);
   }
-  const linkForm = doc.createElement('div');
-  linkForm.className = 'sf-inline-editor-link';
-  linkForm.hidden = true;
-  const linkInput = doc.createElement('input');
-  linkInput.type = 'url';
+  if (marksGroup.childElementCount) groups.push(marksGroup);
+  if (links) {
+    const linkGroup = group(2);
+    const button = toolButton('link', 'link', text.link);
+    button.dataset.link = 'toggle';
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-haspopup', 'dialog');
+    button.setAttribute('aria-expanded', 'false');
+    button.setAttribute('aria-keyshortcuts', 'Control+K Meta+K');
+    buttons.set('link', button);
+    linkGroup.append(button);
+    groups.push(linkGroup);
+  }
+  groups.forEach((box, at) => {
+    if (at) {
+      const line = separator();
+      separators.push(line);
+      toolbar.append(line);
+    }
+    toolbar.append(box);
+  });
+  const moreSeparator = separator('sf-inline-editor-more-separator', OUT);
+  const moreButton = toolButton('more', 'more_horiz', text.more);
+  moreButton.classList.add(OUT);
+  moreButton.setAttribute('aria-haspopup', 'menu');
+  moreButton.setAttribute('aria-expanded', 'false');
+  toolbar.append(moreSeparator, moreButton);
+  doc.body.append(toolbar);
+  // The toolbar's keys (owner decision C184 (1)-(3), TL-4): one Tab stop that
+  // comes back to the tool left, the arrows in the row's direction, Home and
+  // End; a tool under «Ещё» (C155) and the link panel's buttons are not in the walk.
+  const toolbarKeys = (0,_roving_js__WEBPACK_IMPORTED_MODULE_2__.roving)(toolbar, { items: () => [...tools, moreButton], out: `.${OUT}, [hidden], [inert]` });
+  let toolsOut = [];
+  let docked = false;
+  let savedSelection = [0, 0];
+  let lastSelection = null;
+
+  // The link window (C141 (6), C172 (4)): its own panel under the selected
+  // text -- the address field with its hint under it, then «Применить» and,
+  // on a link, «Убрать ссылку» in a row from the start -- and a sheet at the
+  // bottom of the screen on a phone (C32), above the keyboard. A refused
+  // address says why in the hint's place.
+  const linkPanel = doc.createElement('div');
+  linkPanel.className = 'sf-inline-editor-link';
+  linkPanel.setAttribute('role', 'dialog');
+  linkPanel.setAttribute('aria-label', text.link);
+  linkPanel.hidden = true;
+  const linkInput = doc.createElement('sf-input');
   linkInput.className = 'sf-inline-editor-url';
-  linkInput.setAttribute('aria-label', text.url);
-  const linkApply = doc.createElement('button');
-  linkApply.type = 'button';
-  linkApply.className = 'sf-inline-editor-button';
-  linkApply.textContent = text.apply;
-  const linkRemove = doc.createElement('button');
-  linkRemove.type = 'button';
-  linkRemove.className = 'sf-inline-editor-button';
-  linkRemove.textContent = text.unlink;
+  linkInput.setAttribute('size', LINK_SIZE);
+  linkInput.setAttribute('label', text.url);
+  linkInput.setAttribute('hint', text['link-hint']);
+  linkInput.setAttribute('autocomplete', 'url');
+  linkInput.setAttribute('inputmode', 'url');
+  const linkActions = doc.createElement('div');
+  linkActions.className = 'sf-inline-editor-link-actions';
+  const linkApply = doc.createElement('sf-button');
+  linkApply.className = 'sf-inline-editor-apply';
+  linkApply.setAttribute('size', LINK_SIZE);
+  linkApply.setAttribute('text', text.apply);
+  const linkRemove = doc.createElement('sf-button');
+  linkRemove.className = 'sf-inline-editor-unlink';
+  linkRemove.setAttribute('size', LINK_SIZE);
+  linkRemove.setAttribute('appearance', 'outline');
+  linkRemove.setAttribute('text', text.unlink);
+  linkActions.append(linkApply, linkRemove);
+  // The reason, said once to a screen reader as it appears; the field shows it.
   const linkError = doc.createElement('span');
   linkError.className = 'sf-inline-editor-error';
   linkError.setAttribute('role', 'alert');
-  linkForm.append(linkInput, linkApply, linkRemove, linkError);
-  if (links) {
-    const button = doc.createElement('button');
-    button.type = 'button';
-    button.className = 'sf-inline-editor-button sf-inline-editor-button--link';
-    button.dataset.link = 'toggle';
-    button.textContent = text.link;
-    button.setAttribute('aria-pressed', 'false');
-    button.setAttribute('aria-keyshortcuts', 'Control+K Meta+K');
-    buttons.set('link', button);
-    toolbar.append(button, linkForm);
-  }
-  doc.body.append(toolbar);
-  let savedSelection = [0, 0];
+  linkPanel.append(linkInput, linkActions, linkError);
+  if (links) doc.body.append(linkPanel);
+
+  const inside = (node) => Boolean(node) && (element.contains(node) || toolbar.contains(node) || linkPanel.contains(node) || Boolean(toolbar._sfRowMoreMenu?.contains?.(node)) || node === toolbar._sfRowMoreMenu);
+  const fieldControl = () => linkInput.querySelector('input');
+  const linkValue = () => String(fieldControl()?.value ?? linkInput.value ?? '');
+  const setLinkValue = (value) => {
+    linkInput.value = value;
+    const control = fieldControl();
+    if (control) control.value = value;
+  };
+  const clearError = () => {
+    linkInput.removeAttribute('invalid');
+    linkInput.removeAttribute('error-message');
+    linkError.textContent = '';
+  };
+  const showError = (problem) => {
+    const message = format(text[problem] ?? text.invalid, { max: _inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.INLINE_LIMITS.maxHrefLength });
+    linkInput.setAttribute('invalid', '');
+    linkInput.setAttribute('error-message', message);
+    linkError.textContent = message;
+  };
 
   // The box of the text between two offsets: the first line's top, the last
-  // line's bottom, the span between the leftmost and rightmost edge.
+  // line's bottom, the span between the leftmost and rightmost edge; for a
+  // caret, its line.
   function rangeBox(start, end) {
-    if (start === end) return null;
     const range = doc.createRange();
     range.setStart(...locate(element, Math.min(start, end)));
     range.setEnd(...locate(element, Math.max(start, end)));
     const lines = [...range.getClientRects()].filter((rect) => rect.width > 0 || rect.height > 0);
-    if (!lines.length) return null;
+    if (!lines.length) {
+      if (start !== end) return null;
+      const box = range.getBoundingClientRect();
+      if (box.height > 0) return { top: box.top, bottom: box.bottom, left: box.left, right: box.right };
+      const own = element.getBoundingClientRect();
+      return { top: own.top, bottom: own.bottom, left: own.left, right: own.right };
+    }
     return {
       top: Math.min(...lines.map((rect) => rect.top)),
       bottom: Math.max(...lines.map((rect) => rect.bottom)),
@@ -12964,87 +13986,244 @@ function startInlineEdit(element, options = {}) {
       right: Math.max(...lines.map((rect) => rect.right)),
     };
   }
+  // The room between the text and what floats by it: the toolbar's own gap
+  // (--sf-space-1/4 through its sheet).
+  const gap = () => parseFloat(globalThis.getComputedStyle(toolbar).columnGap) || 4;
+  // The bottom of what the person sees: above the screen keyboard where the
+  // browser says where it is (visualViewport).
+  const keyboardEdge = () => {
+    const view = globalThis.visualViewport;
+    return view ? view.offsetTop + view.height : globalThis.innerHeight;
+  };
 
   // The selection mode's place: above the selected text, centred on it,
   // below it when there is no room above, kept inside the viewport. While the
-  // link form is open the selection is in its field, so the saved one counts.
+  // link window is open the selection is in its field, so the saved one counts.
   function positionOverSelection() {
-    if (toolbar.hidden) return;
-    const box = rangeBox(...(linkForm.hidden ? selectionOffsets() : savedSelection));
+    const [start, end] = linkPanel.hidden ? selectionOffsets() : savedSelection;
+    if (start === end && linkPanel.hidden) return;
+    const box = rangeBox(start, end);
     if (!box) return;
     const bar = toolbar.getBoundingClientRect();
-    const above = box.top - bar.height - 4;
-    const top = above >= 0 ? above : Math.min(globalThis.innerHeight - bar.height, box.bottom + 4);
+    const above = box.top - bar.height - gap();
+    const top = above >= 0 ? above : Math.min(globalThis.innerHeight - bar.height, box.bottom + gap());
     const left = (box.left + box.right) / 2 - bar.width / 2;
-    Object.assign(toolbar.style, { top: `${top}px`, left: `${Math.max(0, Math.min(left, globalThis.innerWidth - bar.width))}px` });
+    Object.assign(toolbar.style, { top: `${top}px`, left: `${Math.max(0, Math.min(left, doc.documentElement.clientWidth - bar.width))}px` });
   }
 
   function positionToolbar() {
-    if (toolbarMode === 'selection') {
-      positionOverSelection();
+    if (finished) return;
+    if (!toolbar.hidden) {
+      if (docked) {
+        const bar = toolbar.getBoundingClientRect();
+        Object.assign(toolbar.style, { top: `${keyboardEdge() - bar.height}px`, left: '' });
+      } else if (toolbarMode === 'selection') positionOverSelection();
+      else {
+        const box = element.getBoundingClientRect();
+        const bar = toolbar.getBoundingClientRect();
+        const rtl = globalThis.getComputedStyle(element).direction === 'rtl';
+        const above = box.top - bar.height - gap();
+        const top = above >= 0 ? above : Math.min(globalThis.innerHeight - bar.height, box.bottom + gap());
+        const start = rtl ? box.right - bar.width : box.left;
+        Object.assign(toolbar.style, { top: `${top}px`, left: `${Math.max(0, Math.min(start, doc.documentElement.clientWidth - bar.width))}px` });
+      }
+    }
+    placeLinkPanel();
+  }
+
+  // The link window under the selected text (above the toolbar when there is
+  // no room below), from its start edge, inside the viewport; on a phone a
+  // sheet standing on the keyboard.
+  function placeLinkPanel() {
+    if (linkPanel.hidden) return;
+    if (docked) {
+      linkPanel.setAttribute('data-sf-sheet', '');
+      linkPanel.style.left = '';
+      linkPanel.style.top = `${keyboardEdge() - linkPanel.getBoundingClientRect().height}px`;
       return;
     }
-    const box = element.getBoundingClientRect();
-    const bar = toolbar.getBoundingClientRect();
+    linkPanel.removeAttribute('data-sf-sheet');
+    const box = rangeBox(...savedSelection);
+    if (!box) return;
+    const panel = linkPanel.getBoundingClientRect();
+    const bar = toolbar.hidden ? null : toolbar.getBoundingClientRect();
+    const space = gap();
+    const barBelow = bar && bar.top >= box.bottom - 1;
+    let top = (barBelow ? bar.bottom : box.bottom) + space;
+    if (top + panel.height > globalThis.innerHeight) {
+      const above = (bar && !barBelow ? bar.top : box.top) - space - panel.height;
+      top = above >= 0 ? above : Math.max(0, globalThis.innerHeight - panel.height);
+    }
     const rtl = globalThis.getComputedStyle(element).direction === 'rtl';
-    const above = box.top - bar.height - 4;
-    const top = above >= 0 ? above : Math.min(globalThis.innerHeight - bar.height, box.bottom + 4);
-    const start = rtl ? box.right - bar.width : box.left;
-    Object.assign(toolbar.style, { top: `${top}px`, left: `${Math.max(0, Math.min(start, globalThis.innerWidth - bar.width))}px` });
+    const start = rtl ? box.right - panel.width : box.left;
+    Object.assign(linkPanel.style, { top: `${top}px`, left: `${Math.max(0, Math.min(start, doc.documentElement.clientWidth - panel.width))}px` });
+  }
+
+  // The row: the groups that fit, the rest in ⋯ (C155 (3), (4)). A floating
+  // toolbar's room is the viewport's width less its own padding; the strip's
+  // is its own width.
+  function layoutBar() {
+    if (finished || toolbar.hidden) return;
+    let room = null;
+    if (!docked) {
+      const style = globalThis.getComputedStyle(toolbar);
+      const chrome = ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'].reduce((sum, edge) => sum + (parseFloat(style[edge]) || 0), 0);
+      room = doc.documentElement.clientWidth - chrome;
+    }
+    const units = groups.map((box, at) => ({ element: box, rank: at + 1, pin: at === 0, group: at }));
+    const { out } = (0,_overflow_row_js__WEBPACK_IMPORTED_MODULE_1__.layoutActionRow)({ row: toolbar, units, more: moreButton, moreSeparator, separators: separators.map((line, at) => ({ element: line, after: at })), outClass: OUT, room });
+    toolsOut = out.flatMap((at) => [...groups[at].querySelectorAll('button')]);
+    toolbar.setAttribute('data-sf-row-laid', '');
+  }
+
+  // A phone takes the strip above the keyboard with buttons on the touch
+  // rung; wider, the floating toolbar on the 1/2 rung.
+  function followScreen() {
+    const next = onPhone(doc);
+    if (next === docked && toolbar.hasAttribute('data-sf-size')) return;
+    docked = next;
+    toolbar.classList.toggle('sf-inline-editor-toolbar--dock', docked);
+    const size = docked ? BAR_SIZE.dock : BAR_SIZE.float;
+    toolbar.dataset.sfSize = size;
+    for (const button of tools) {
+      for (const name of [...button.classList]) if (name.startsWith('sf-icon-button--size-')) button.classList.remove(name);
+      button.classList.add(`sf-icon-button--size-${size}`);
+    }
   }
 
   function updateToolbar() {
-    const [start, end] = selectionOffsets();
-    const state = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.marksIn)(read(), start, end === start ? Math.max(0, start - 1) : end);
-    for (const mark of marks) buttons.get(mark).setAttribute('aria-pressed', state.marks.includes(mark) ? 'true' : 'false');
+    if (finished) return;
+    const [start, end] = linkPanel.hidden ? selectionOffsets() : savedSelection;
+    if (linkPanel.hidden && element.contains(doc.getSelection()?.anchorNode)) lastSelection = [start, end];
+    const state = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.marksIn)(read(), start, end === start ? Math.max(0, start - 1) : end);
+    for (const mark of offered) buttons.get(mark).setAttribute('aria-pressed', state.marks.includes(mark) ? 'true' : 'false');
     buttons.get('link')?.setAttribute('aria-pressed', state.href ? 'true' : 'false');
+    const wasHidden = toolbar.hidden;
     // Selection mode: the bar is there while text is selected or a link is
-    // being written, and nowhere while the caret only stands in the text.
-    if (toolbarMode === 'selection') toolbar.hidden = start === end && linkForm.hidden;
+    // being written, and nowhere while the caret only stands in the text --
+    // except on a phone, where the strip stays for the whole edit.
+    toolbar.hidden = !docked && toolbarMode === 'selection' && start === end && linkPanel.hidden;
+    if (wasHidden && !toolbar.hidden) layoutBar();
     positionToolbar();
   }
 
   function toggle(mark) {
     const [start, end] = selectionOffsets();
     if (start === end) return;
-    apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.toggleMark)(read(), start, end, mark), start, end);
+    apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.toggleMark)(read(), start, end, mark), start, end);
+  }
+
+  function insertBreak() {
+    const [start, end] = selectionOffsets();
+    const content = read();
+    const at = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.toSegments)((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.sliceInline)(content, Math.max(0, start - 1), start)).find((segment) => !segment.node);
+    apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.replaceRange)(content, start, end, [(0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.breakSegment)(at?.marks || [], at?.href || null)]), start + 1, start + 1);
+  }
+
+  // The field takes the focus once sf-input has drawn it.
+  function focusField() {
+    const ready = globalThis.customElements?.get('sf-input') ? null : globalThis.SF?.Loader?.ensure?.(['sf-input', 'sf-button']);
+    Promise.resolve(ready).then(() => linkInput.updateComplete).then(() => {
+      if (finished || linkPanel.hidden) return;
+      const control = fieldControl();
+      if (control) {
+        control.focus({ preventScroll: true });
+        control.select?.();
+      } else linkInput.focus?.({ preventScroll: true });
+      placeLinkPanel();
+    });
   }
 
   function openLink() {
-    savedSelection = selectionOffsets();
-    if (savedSelection[0] === savedSelection[1]) return;
-    linkForm.hidden = false;
-    linkError.textContent = '';
-    linkInput.value = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.marksIn)(read(), ...savedSelection).href || '';
-    linkInput.focus();
-    positionToolbar();
+    if (!links || finished) return;
+    let [start, end] = selectionOffsets();
+    // No selection: the word under the caret; none there, the address
+    // becomes the link's text where the caret stands.
+    if (start === end) {
+      const word = wordAround(read(), start);
+      if (word) {
+        [start, end] = word;
+        setSelection(element, start, end);
+      }
+    }
+    savedSelection = [start, end];
+    const href = start === end ? '' : ((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.marksIn)(read(), start, end).href || '');
+    linkRemove.hidden = !href;
+    clearError();
+    setLinkValue(href);
+    linkPanel.hidden = false;
+    buttons.get('link')?.setAttribute('aria-expanded', 'true');
+    updateToolbar();
+    focusField();
   }
 
   function closeLink(focusEditor = true) {
-    linkForm.hidden = true;
-    if (focusEditor) {
-      element.focus();
+    if (linkPanel.hidden) return;
+    linkPanel.hidden = true;
+    linkPanel.removeAttribute('data-sf-sheet');
+    buttons.get('link')?.setAttribute('aria-expanded', 'false');
+    clearError();
+    if (focusEditor && !finished) {
+      element.focus({ preventScroll: true });
       setSelection(element, ...savedSelection);
     }
-    if (toolbarMode === 'selection' && !finished) updateToolbar();
+    if (!finished) updateToolbar();
   }
 
   function applyLink(href) {
-    if (href !== null && !(0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.safeHref)(href)) {
-      linkError.textContent = text.invalid;
-      linkInput.setAttribute('aria-invalid', 'true');
-      return;
+    if (href !== null) {
+      const problem = linkProblem(href);
+      if (problem) {
+        showError(problem);
+        return;
+      }
     }
-    linkInput.removeAttribute('aria-invalid');
     closeLink();
-    apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.setLink)(read(), ...savedSelection, href), ...savedSelection);
+    const [start, end] = savedSelection;
+    if (href !== null && start === end) {
+      // Nothing selected and no word: the address is the link's text.
+      const shown = href.replace(/^(mailto|tel):/u, '');
+      apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.replaceRange)(read(), start, end, [{ text: shown, marks: [], href }]), start + shown.length, start + shown.length);
+    } else apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.setLink)(read(), start, end, href), start, end);
+  }
+
+  // A tool of the toolbar or of its «Ещё»: from the menu the text gets the
+  // focus and its selection back first.
+  function runTool(id, fromMenu = false) {
+    if (finished) return;
+    if (fromMenu) {
+      element.focus({ preventScroll: true });
+      if (lastSelection) setSelection(element, ...lastSelection);
+    }
+    if (id === 'link') (linkPanel.hidden ? openLink() : closeLink());
+    else if (offered.includes(id)) toggle(id);
+  }
+
+  async function openMore() {
+    const entries = [];
+    let last = null;
+    for (const button of toolsOut) {
+      const box = button.closest('.sf-inline-editor-group');
+      if (last && box !== last) entries.push({ type: 'separator' });
+      last = box;
+      const entry = (0,_overflow_row_js__WEBPACK_IMPORTED_MODULE_1__.actionEntry)(button, button.dataset.sfTool);
+      const key = button.dataset.mark ? SHORTCUTS[button.dataset.mark] : button.dataset.link ? 'k' : null;
+      if (key) entry.shortcut = `mod+${key}`;
+      entries.push(entry);
+    }
+    await (0,_overflow_row_js__WEBPACK_IMPORTED_MODULE_1__.openRowMenu)(toolbar, { anchor: moreButton, entries, label: text.more, size: docked ? '1' : '1/2', select: (id) => runTool(id, true) });
   }
 
   // Lifecycle --------------------------------------------------------------
+  let observer = null;
   function teardown() {
     finished = true;
     connection.abort();
+    observer?.disconnect();
+    toolbarKeys.destroy();
+    toolbar._sfRowMoreMenu?.remove?.();
     toolbar.remove();
+    linkPanel.remove();
     element.innerHTML = original.html;
     for (const [name, value] of original.attributes) {
       if (value === null) element.removeAttribute(name);
@@ -13055,10 +14234,23 @@ function startInlineEdit(element, options = {}) {
 
   function commit() {
     if (finished) return null;
-    const content = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.normalizeInline)(read());
+    const content = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.normalizeInline)(read());
     teardown();
     emitInline(element, 'commit', options.nodeId ?? null, content);
     return content;
+  }
+
+  // Enter in a block editor (enter: 'new-block'): the text before the caret
+  // is saved, the text after it (the selection dropped) goes as next.
+  function commitNewBlock() {
+    if (finished) return null;
+    const [start, end] = selectionOffsets();
+    const content = read();
+    const before = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.normalizeInline)((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.sliceInline)(content, 0, start));
+    const next = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.normalizeInline)((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.sliceInline)(content, end, (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.inlineLength)(content)));
+    teardown();
+    emitInline(element, 'commit', options.nodeId ?? null, before, next);
+    return before;
   }
 
   function cancel() {
@@ -13068,15 +14260,15 @@ function startInlineEdit(element, options = {}) {
   }
 
   // Start ------------------------------------------------------------------
-  const initial = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.normalizeInline)(options.content ?? readInlineDom(element, { marks, links }));
+  const initial = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.normalizeInline)(options.content ?? readInlineDom(element, { marks, links }));
   element.setAttribute('data-sf-inline-editing', '');
   element.setAttribute('contenteditable', 'true');
   element.setAttribute('role', 'textbox');
   element.setAttribute('aria-multiline', 'false');
-  element.setAttribute('aria-label', format(text.editing, { label: options.label || '' }).replace(/^: /u, ''));
+  element.setAttribute('aria-label', format(enterMode === 'new-block' ? text['editing-block'] : text.editing, { label: options.label || '' }).replace(/^: /u, ''));
   element.replaceChildren(renderInlineDom(doc, initial));
   element.focus();
-  setSelection(element, (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.inlineLength)(initial));
+  setSelection(element, (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.inlineLength)(initial));
   history.push({ content: initial, selection: selectionOffsets(), typing: false });
   historyIndex = 0;
 
@@ -13114,13 +14306,18 @@ function startInlineEdit(element, options = {}) {
     const data = event.clipboardData;
     const html = data?.getData('text/html');
     const plain = data?.getData('text/plain') || '';
-    const parsed = html
-      ? readInlineDom(new globalThis.DOMParser().parseFromString(html, 'text/html').body, { marks, links, collapse: true })
-      : [{ type: 'text', value: plain.replace(/\s+/gu, ' ').trim() }];
-    const inserted = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.toSegments)(parsed);
+    let parsed = [{ type: 'text', value: plain.replace(/\s+/gu, ' ').trim() }];
+    if (html) {
+      const body = new globalThis.DOMParser().parseFromString(html, 'text/html').body;
+      if (body.querySelector(`[${COPY_ATTRIBUTE}]`)?.getAttribute(COPY_ATTRIBUTE) !== copyToken()) {
+        for (const node of body.querySelectorAll('*')) for (const name of node.getAttributeNames()) if (name.startsWith('data-sf-inline-')) node.removeAttribute(name);
+      }
+      parsed = readInlineDom(body, { marks, links, collapse: true });
+    }
+    const inserted = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.toSegments)(parsed);
     const [start, end] = selectionOffsets();
-    const length = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.inlineLength)((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.fromSegments)(inserted));
-    apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.replaceRange)(read(), start, end, inserted), start + length, start + length);
+    const length = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.inlineLength)((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.fromSegments)(inserted));
+    apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.replaceRange)(read(), start, end, inserted), start + length, start + length);
   }, signal);
   element.addEventListener('drop', (event) => event.preventDefault(), signal);
   // Copy and cut write the editor's own HTML, in which an atom keeps its
@@ -13129,12 +14326,15 @@ function startInlineEdit(element, options = {}) {
     const [start, end] = selectionOffsets();
     if (start === end || !event.clipboardData) return;
     event.preventDefault();
-    const slice = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.sliceInline)(read(), start, end);
+    const slice = (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.sliceInline)(read(), start, end);
     const holder = doc.createElement('div');
-    holder.append(renderInlineDom(doc, slice));
+    const wrapper = doc.createElement('span');
+    wrapper.setAttribute(COPY_ATTRIBUTE, copyToken());
+    wrapper.append(renderInlineDom(doc, slice));
+    holder.append(wrapper);
     event.clipboardData.setData('text/html', holder.innerHTML);
-    event.clipboardData.setData('text/plain', (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.toSegments)(slice).map(({ text, node }) => (node ? (typeof node.props?.text === 'string' ? node.props.text : '') : text)).join(''));
-    if (remove) apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.replaceRange)(read(), start, end, []), start, start);
+    event.clipboardData.setData('text/plain', (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.toSegments)(slice).map(({ text, node, break: isBreak }) => (node ? (typeof node.props?.text === 'string' ? node.props.text : '') : isBreak ? '\n' : text)).join(''));
+    if (remove) apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.replaceRange)(read(), start, end, []), start, start);
   };
   element.addEventListener('copy', (event) => copySelection(event, false), signal);
   element.addEventListener('cut', (event) => copySelection(event, true), signal);
@@ -13147,13 +14347,13 @@ function startInlineEdit(element, options = {}) {
     const [start, end] = selectionOffsets();
     if (event.key === 'Backspace' || event.key === 'Delete') {
       if (start !== end) {
-        if (!(0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.toSegments)((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.sliceInline)(content, start, end)).some(({ node }) => node)) return false;
-        apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.replaceRange)(content, start, end, []), start, start);
+        if (!(0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.toSegments)((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.sliceInline)(content, start, end)).some(({ node }) => node)) return false;
+        apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.replaceRange)(content, start, end, []), start, start);
         return true;
       }
       const at = event.key === 'Backspace' ? start - 1 : start;
-      if (at < 0 || !(0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.objectAt)(content, at)) return false;
-      apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.replaceRange)(content, at, at + 1, []), at, at);
+      if (at < 0 || !(0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.objectAt)(content, at)) return false;
+      apply((0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.replaceRange)(content, at, at + 1, []), at, at);
       return true;
     }
     const rtl = globalThis.getComputedStyle(element).direction === 'rtl';
@@ -13162,7 +14362,7 @@ function startInlineEdit(element, options = {}) {
     const focus = textOffset(element, selection.focusNode, selection.focusOffset);
     if (!event.shiftKey && anchor !== focus) return false;
     const next = forward ? focus + 1 : focus - 1;
-    if (!(0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.objectAt)(content, forward ? focus : focus - 1)) return false;
+    if (!(0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.objectAt)(content, forward ? focus : focus - 1)) return false;
     setSelection(element, event.shiftKey ? anchor : next, next);
     updateToolbar();
     return true;
@@ -13172,9 +14372,16 @@ function startInlineEdit(element, options = {}) {
     const modifier = event.ctrlKey || event.metaKey;
     if (['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete'].includes(event.key) && stepOverAtom(event)) {
       event.preventDefault();
-    } else if (event.key === 'Enter' && !event.shiftKey) {
+    } else if (event.key === 'Enter' && event.shiftKey) {
+      // Shift+Enter: a soft line break in the same block, with the marks and
+      // link of the text before it (inline model 1.2.0).
       event.preventDefault();
-      commit();
+      insertBreak();
+    } else if (event.key === 'Enter' && !event.shiftKey) {
+      // Enter saves (C172 (2)); in a block editor it starts the next block.
+      event.preventDefault();
+      if (enterMode === 'new-block') commitNewBlock();
+      else commit();
     } else if (event.key === 'Escape') {
       event.preventDefault();
       cancel();
@@ -13202,31 +14409,70 @@ function startInlineEdit(element, options = {}) {
   toolbar.addEventListener('click', (event) => {
     const button = event.target.closest('button');
     if (!button) return;
-    if (button.dataset.mark) toggle(button.dataset.mark);
-    else if (button.dataset.link) (linkForm.hidden ? openLink() : closeLink());
-    else if (button === linkApply) applyLink(linkInput.value.trim());
-    else if (button === linkRemove) applyLink(null);
+    if (button === moreButton) openMore();
+    else runTool(button.dataset.sfTool);
   }, signal);
-  linkInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') { event.preventDefault(); applyLink(linkInput.value.trim()); }
+  // The arrows, Home and End are core's roving helper (C184, above); Escape
+  // goes back to the text.
+  toolbar.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    element.focus({ preventScroll: true });
+    if (lastSelection) setSelection(element, ...lastSelection);
+  }, signal);
+  linkPanel.addEventListener('keydown', (event) => {
+    if (event.isComposing) return;
+    if (event.key === 'Enter' && !event.target.closest?.('sf-button')) { event.preventDefault(); applyLink(linkValue().trim()); }
     if (event.key === 'Escape') { event.preventDefault(); closeLink(); }
   }, signal);
+  // The reason goes as soon as the address changes (C153 (3)).
+  linkPanel.addEventListener('input', () => { if (linkInput.hasAttribute('invalid')) clearError(); }, signal);
+  linkPanel.addEventListener('click', (event) => {
+    if (event.target.closest('.sf-inline-editor-apply')) applyLink(linkValue().trim());
+    else if (event.target.closest('.sf-inline-editor-unlink')) applyLink(null);
+  }, signal);
+  // On a phone the sheet stands over a scrim: a press outside it closes it
+  // and keeps the edit.
+  doc.addEventListener('pointerdown', (event) => {
+    if (!docked || linkPanel.hidden || linkPanel.contains(event.target)) return;
+    event.preventDefault();
+    closeLink();
+  }, { ...signal, capture: true });
   const onFocusOut = (event) => {
-    const next = event.relatedTarget;
-    if (next && (element.contains(next) || toolbar.contains(next))) return;
-    // Let a click inside the toolbar land before deciding to commit.
+    if (inside(event.relatedTarget)) return;
+    // Let a click inside the toolbar or the link window land before deciding to commit.
     globalThis.setTimeout(() => {
-      if (!finished && !element.contains(doc.activeElement) && !toolbar.contains(doc.activeElement)) commit();
+      if (!finished && !inside(doc.activeElement)) commit();
     }, 0);
   };
   element.addEventListener('focusout', onFocusOut, signal);
   toolbar.addEventListener('focusout', onFocusOut, signal);
+  linkPanel.addEventListener('focusout', onFocusOut, signal);
   doc.addEventListener('selectionchange', () => { if (element.contains(doc.getSelection()?.anchorNode)) updateToolbar(); }, signal);
+  const onResize = () => {
+    const was = docked;
+    followScreen();
+    if (was !== docked) toolbar.removeAttribute('data-sf-row-laid');
+    layoutBar();
+    positionToolbar();
+  };
   globalThis.addEventListener('scroll', positionToolbar, { ...signal, passive: true, capture: true });
-  globalThis.addEventListener('resize', positionToolbar, { ...signal, passive: true });
+  globalThis.addEventListener('resize', onResize, { ...signal, passive: true });
+  globalThis.visualViewport?.addEventListener('resize', positionToolbar, { ...signal, passive: true });
+  globalThis.visualViewport?.addEventListener('scroll', positionToolbar, { ...signal, passive: true });
+  // The groups widen when the icon face arrives: the row is laid out again.
+  if (typeof globalThis.ResizeObserver === 'function') {
+    observer = new globalThis.ResizeObserver(() => { layoutBar(); positionToolbar(); });
+    for (const box of groups) observer.observe(box);
+    // The link window grows when a reason takes two lines: it is placed again.
+    if (links) observer.observe(linkPanel);
+  }
+  followScreen();
   updateToolbar();
+  layoutBar();
+  positionToolbar();
 
-  return Object.freeze({ element, commit, cancel, value: () => (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_2__.normalizeInline)(read()) });
+  return Object.freeze({ element, commit, cancel, value: () => (0,_inline_model_mjs__WEBPACK_IMPORTED_MODULE_4__.normalizeInline)(read()) });
 }
 
 /**
@@ -13253,11 +14499,11 @@ function defineInlineEditor(registry = globalThis.customElements, { base = null 
   }
   registry.define('sf-editor-inline', SfInlineEditor);
   // The former tag sf-inline-editor is a dated alias (a subclass, noted once).
-  (0,_tag_aliases_js__WEBPACK_IMPORTED_MODULE_1__.defineTagAliases)(SfInlineEditor, 'sf-editor-inline', { define: (name, Class) => registry.define(name, Class) });
+  (0,_tag_aliases_js__WEBPACK_IMPORTED_MODULE_3__.defineTagAliases)(SfInlineEditor, 'sf-editor-inline', { define: (name, Class) => registry.define(name, Class) });
   return SfInlineEditor;
 }
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({ INLINE_EVENTS, INLINE_EVENTS_FORMER_TAG, INLINE_EVENTS_LEGACY, INLINE_TOOLBAR_MODES, defineInlineEditor, readInlineDom, renderInlineDom, startInlineEdit, textOffset });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({ INLINE_ENTER_MODES, INLINE_EVENTS, INLINE_EVENTS_FORMER_TAG, INLINE_EVENTS_LEGACY, INLINE_TOOLBAR_MODES, defineInlineEditor, linkProblem, readInlineDom, renderInlineDom, startInlineEdit, textOffset, useInlineEditorWords, wordAround });
 
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
@@ -13270,16 +14516,25 @@ __webpack_async_result__();
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   INLINE_COMPONENTS: () => (/* binding */ INLINE_COMPONENTS),
+/* harmony export */   INLINE_EXTENSION_KEY: () => (/* binding */ INLINE_EXTENSION_KEY),
+/* harmony export */   INLINE_FORBIDDEN_KEYS: () => (/* binding */ INLINE_FORBIDDEN_KEYS),
 /* harmony export */   INLINE_LIMITS: () => (/* binding */ INLINE_LIMITS),
 /* harmony export */   INLINE_MARKS: () => (/* binding */ INLINE_MARKS),
+/* harmony export */   INLINE_MODEL_VERSION: () => (/* binding */ INLINE_MODEL_VERSION),
 /* harmony export */   INLINE_OBJECT: () => (/* binding */ INLINE_OBJECT),
+/* harmony export */   INLINE_PROP_ALIASES: () => (/* binding */ INLINE_PROP_ALIASES),
+/* harmony export */   INLINE_RESERVED_KEYS: () => (/* binding */ INLINE_RESERVED_KEYS),
+/* harmony export */   breakSegment: () => (/* binding */ breakSegment),
+/* harmony export */   currentInlineProps: () => (/* binding */ currentInlineProps),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
 /* harmony export */   fromSegments: () => (/* binding */ fromSegments),
 /* harmony export */   inlineComponentSchemas: () => (/* binding */ inlineComponentSchemas),
 /* harmony export */   inlineComponentView: () => (/* binding */ inlineComponentView),
+/* harmony export */   inlineExtensions: () => (/* binding */ inlineExtensions),
 /* harmony export */   inlineLength: () => (/* binding */ inlineLength),
 /* harmony export */   inlineText: () => (/* binding */ inlineText),
 /* harmony export */   isInlineComponent: () => (/* binding */ isInlineComponent),
+/* harmony export */   isInlineExtensionKey: () => (/* binding */ isInlineExtensionKey),
 /* harmony export */   marksIn: () => (/* binding */ marksIn),
 /* harmony export */   normalizeInline: () => (/* binding */ normalizeInline),
 /* harmony export */   objectAt: () => (/* binding */ objectAt),
@@ -13291,18 +14546,67 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   toggleMark: () => (/* binding */ toggleMark)
 /* harmony export */ });
 // Pure operations on the Composition inline content model used by
-// content.heading and content.paragraph: text runs with strong, em and code
-// marks, links whose children are text runs, and inline component atoms
+// content.heading and content.paragraph: text runs with strong, em, code and
+// strike marks, soft line breaks ({type: 'break', marks?}), links whose
+// children are text runs and breaks, and inline component atoms
 // ({type: 'component', name, props}). No DOM access here.
+//
+// Inline model 1.2.0 (2026-11-10): the break and the mark strike. A break is
+// one unit of offset, like a character: it takes marks and stands inside a
+// link, and no operation removes one except a deletion of its own range.
 //
 // Every other entry -- a node from a newer producer, or an atom this model
 // does not know -- is opaque: it holds one caret stop, takes no marks, and
 // comes back out of every operation exactly as it went in. toSegments used
 // to drop such entries, so an edit next to them lost them silently.
+//
+// Extension keys (2026-11-11, owner rule: no silent data loss): a key a
+// newer producer adds to a known entry -- a text run's `lang`, a link's
+// `title`, any other -- rides with that entry through every operation
+// (normalize, typing, marks, links, slice, split, join, copy). Runs merge
+// only when their extension keys are the same. Validation accepts a key as
+// extension data when its name matches INLINE_EXTENSION_KEY (lowercase,
+// not one of the model's own names, not on*, not a forbidden name such as
+// style or class); render never draws one.
 
-const INLINE_MARKS = Object.freeze(['strong', 'em', 'code']);
+const INLINE_MARKS = Object.freeze(['strong', 'em', 'code', 'strike']);
+const INLINE_MODEL_VERSION = '1.2.0';
 const MARK_ORDER = new Map(INLINE_MARKS.map((mark, index) => [mark, index]));
 const SAFE_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:']);
+
+// The keys each known entry defines; any other key is extension data.
+const OWN_KEYS = Object.freeze({ text: ['type', 'value', 'marks'], break: ['type', 'marks'], link: ['type', 'href', 'children'], component: ['type', 'name', 'props'] });
+// Names an extension key may not take: the model's own (on any entry), an
+// event handler (on*), and the Document's forbidden names (validation's
+// FORBIDDEN_KEYS: executable, styling or secret data, F1.6).
+const INLINE_RESERVED_KEYS = Object.freeze(['type', 'value', 'marks', 'href', 'children', 'name', 'props']);
+const INLINE_FORBIDDEN_KEYS = Object.freeze([
+  'html', 'innerhtml', 'script', 'javascript', 'php', 'eval', 'function',
+  'expression', 'query', 'sql', 'graphql', 'class', 'classname', 'rootclass',
+  'cssclass', 'style', 'secret', 'password', 'token', 'cookie', 'authorization', 'request',
+]);
+/** The name rule of an extension key, as a JSON Schema pattern (patternProperties). */
+const INLINE_EXTENSION_KEY = `^(?!on)(?!(?:${[...INLINE_RESERVED_KEYS, ...INLINE_FORBIDDEN_KEYS].join('|')})$)[a-z][a-z0-9_.:]{0,63}$`;
+const EXTENSION_PATTERN = new RegExp(INLINE_EXTENSION_KEY, 'u');
+/** Whether a key is accepted as extension data on a known inline entry. */
+const isInlineExtensionKey = (key) => EXTENSION_PATTERN.test(key);
+
+// The extension keys of an entry: every key its type does not define, as it came.
+function extensionsOf(entry, kind) {
+  const own = OWN_KEYS[kind];
+  const out = {};
+  for (const [key, value] of Object.entries(entry)) if (!own.includes(key)) out[key] = clone(value);
+  return Object.keys(out).length ? out : null;
+}
+/** The extension keys of a known entry (text, break, link, component), or null. */
+function inlineExtensions(entry) {
+  return isPlainEntry(entry) && Object.hasOwn(OWN_KEYS, entry.type) ? extensionsOf(entry, entry.type) : null;
+}
+// Extension keys compare by value: key order does not count, at any depth
+// ({lang, title} and {title, lang} are the same keys, so their runs merge).
+const sortedKeys = (value) => (Array.isArray(value) ? value.map(sortedKeys)
+  : value !== null && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, sortedKeys(value[key])])) : value);
+const sameExtra = (left, right) => JSON.stringify(sortedKeys(left ?? null)) === JSON.stringify(sortedKeys(right ?? null));
 const INLINE_LIMITS = Object.freeze({ maxTextLength: 100000, maxHrefLength: 2048, maxPropLength: 1000 });
 
 // The closed list of inline atoms. Each name draws one element; its props
@@ -13310,11 +14614,32 @@ const INLINE_LIMITS = Object.freeze({ maxTextLength: 100000, maxHrefLength: 2048
 // component reads from a fixed set) or a boolean. Nothing else is drawn, so
 // no prop can become an event handler or markup.
 const INLINE_COMPONENTS = Object.freeze({
-  badge: Object.freeze({ tag: 'sf-badge', required: [], props: Object.freeze({ text: 'text', icon: 'token', appearance: 'token', scheme: 'token', status: 'token', size: 'token', compact: 'boolean' }) }),
+  badge: Object.freeze({ tag: 'sf-badge', required: [], props: Object.freeze({ text: 'text', icon: 'token', appearance: 'token', scheme: 'token', status: 'token', size: 'token', 'icon-only': 'boolean', compact: 'boolean' }) }),
   kbd: Object.freeze({ tag: 'kbd', required: ['text'], props: Object.freeze({ text: 'text' }) }),
   icon: Object.freeze({ tag: 'sf-icon', required: ['icon'], props: Object.freeze({ icon: 'token', label: 'text', size: 'token', filled: 'boolean' }) }),
   button: Object.freeze({ tag: 'sf-button', required: [], props: Object.freeze({ text: 'text', icon: 'token', appearance: 'token', scheme: 'token', size: 'token' }) }),
 });
+// Dated prop aliases of an atom: the old prop is still accepted and drawn as
+// the new one, until remove_after. The badge that shows its icon alone is
+// icon-only (owner decision C134: the word compact means density only,
+// sf-badge 1.6.0); compact is its alias in a Document, as on the element
+// (journal property-inline-badge-compact-to-icon-only). An entry that has
+// both draws the new one.
+const INLINE_PROP_ALIASES = Object.freeze({
+  badge: Object.freeze({ compact: Object.freeze({ to: 'icon-only', since: '2026-11-16', remove_after: '2027-01-01' }) }),
+});
+const aliasOf = (name, key) => INLINE_PROP_ALIASES[name]?.[key]?.to ?? null;
+
+/** The atom's props under their current names: a dated alias moved to its new prop (the new prop wins). */
+function currentInlineProps(name, props = {}) {
+  const out = {};
+  for (const [key, value] of Object.entries(props)) if (!aliasOf(name, key)) out[key] = value;
+  for (const [key, value] of Object.entries(props)) {
+    const to = aliasOf(name, key);
+    if (to && !(to in out)) out[to] = value;
+  }
+  return out;
+}
 const TOKEN = '^[a-z0-9][a-z0-9_/-]{0,63}$';
 const TOKEN_PATTERN = new RegExp(TOKEN, 'u');
 // The one unit an atom or an opaque node holds in segment offsets.
@@ -13327,6 +14652,7 @@ function inlineComponentSchemas() {
     type: 'object',
     required: ['type', 'name', ...(entry.required.length ? ['props'] : [])],
     additionalProperties: false,
+    patternProperties: { [INLINE_EXTENSION_KEY]: {} },
     properties: {
       type: { const: 'component' },
       name: { const: name },
@@ -13344,7 +14670,7 @@ function inlineComponentSchemas() {
 function isInlineComponent(node) {
   const entry = node?.type === 'component' && Object.hasOwn(INLINE_COMPONENTS, node.name) ? INLINE_COMPONENTS[node.name] : null;
   if (!entry) return false;
-  if (Object.keys(node).some((key) => !['type', 'name', 'props'].includes(key))) return false;
+  if (Object.keys(node).some((key) => !['type', 'name', 'props'].includes(key) && !isInlineExtensionKey(key))) return false;
   const props = node.props ?? {};
   if (!props || typeof props !== 'object' || Array.isArray(props)) return false;
   if (entry.required.some((key) => !(key in props))) return false;
@@ -13360,7 +14686,7 @@ function isInlineComponent(node) {
 function inlineComponentView(node) {
   if (!isInlineComponent(node)) return null;
   const entry = INLINE_COMPONENTS[node.name];
-  const props = node.props ?? {};
+  const props = currentInlineProps(node.name, node.props ?? {});
   if (node.name === 'kbd') return { tag: entry.tag, attributes: [], text: props.text };
   const attributes = Object.keys(entry.props).filter((key) => key in props && props[key] !== false)
     .map((key) => [key, props[key] === true ? '' : props[key]]);
@@ -13368,7 +14694,16 @@ function inlineComponentView(node) {
 }
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
-const isObjectEntry = (entry) => entry !== null && typeof entry === 'object' && !Array.isArray(entry) && entry.type !== 'text' && entry.type !== 'link';
+const isAtom = (entry) => entry?.type === 'component';
+const isObjectEntry = (entry) => entry !== null && typeof entry === 'object' && !Array.isArray(entry) && entry.type !== 'text' && entry.type !== 'link' && !isBreak(entry);
+// A break as the model knows it: type break, marks (if any) a list; any
+// other key is its extension data.
+const isBreak = (entry) => entry?.type === 'break' && (entry.marks === undefined || Array.isArray(entry.marks));
+
+/** The segment of one soft line break: one unit, with the marks and link of its place. */
+function breakSegment(marks = [], href = null, extra = null) {
+  return { text: INLINE_OBJECT, marks: [...marks], href, break: true, ...(extra ? { extra } : {}) };
+}
 
 /** Same link rule as Document validation: relative, fragment or http(s)/mailto/tel. */
 function safeHref(value) {
@@ -13382,69 +14717,101 @@ function safeHref(value) {
   }
 }
 
+// Known marks in their canonical order, then any mark this model does not
+// know (a newer producer's), in the order it came: an edit never drops a mark
+// it cannot draw. Validation still refuses an unknown mark; render draws none.
 function sortMarks(marks) {
-  return [...new Set(marks)].filter((mark) => MARK_ORDER.has(mark)).sort((left, right) => MARK_ORDER.get(left) - MARK_ORDER.get(right));
+  const unique = [...new Set(marks)].filter((mark) => typeof mark === 'string' && mark);
+  const known = unique.filter((mark) => MARK_ORDER.has(mark)).sort((left, right) => MARK_ORDER.get(left) - MARK_ORDER.get(right));
+  return [...known, ...unique.filter((mark) => !MARK_ORDER.has(mark))];
 }
 
 /**
  * Flat segments: {text, marks: string[], href: string|null}. An atom or an
  * opaque node is one segment {text: INLINE_OBJECT, marks: [], href, node}
- * that carries the entry unchanged; inside a link it keeps the link's href.
+ * that carries the entry unchanged. An atom ({type: 'component'}) never
+ * carries a link's href: a link holds no atom, so one that held an atom is
+ * split around it. An opaque node from a newer producer keeps its link.
  */
 function toSegments(content) {
   const segments = [];
-  const push = (run, href) => {
+  const push = (run, href, linkExtra) => {
+    const link = href && linkExtra ? { linkExtra } : {};
+    if (isBreak(run)) {
+      segments.push({ ...breakSegment(sortMarks(run.marks || []), href, extensionsOf(run, 'break')), ...link });
+      return;
+    }
     if (isObjectEntry(run)) {
-      segments.push({ text: INLINE_OBJECT, marks: [], href, node: clone(run) });
+      segments.push({ text: INLINE_OBJECT, marks: [], href: isAtom(run) ? null : href, node: clone(run), ...(isAtom(run) ? {} : link) });
       return;
     }
     if (run?.type !== 'text' || typeof run.value !== 'string' || !run.value) return;
-    segments.push({ text: run.value, marks: sortMarks(Array.isArray(run.marks) ? run.marks : []), href });
+    const extra = extensionsOf(run, 'text');
+    segments.push({ text: run.value, marks: sortMarks(Array.isArray(run.marks) ? run.marks : []), href, ...(extra ? { extra } : {}), ...link });
   };
   for (const entry of Array.isArray(content) ? content : []) {
     if (entry?.type === 'link') {
+      // An unsafe link is dropped by design (its href and its extension keys); its text stays.
       const href = safeHref(entry.href) ? entry.href : null;
-      for (const child of Array.isArray(entry.children) ? entry.children : []) push(child, href);
-    } else push(entry, null);
+      const linkExtra = isPlainEntry(entry) ? extensionsOf(entry, 'link') : null;
+      for (const child of Array.isArray(entry.children) ? entry.children : []) push(child, href, linkExtra);
+    } else push(entry, null, null);
   }
   return segments;
 }
 
-const sameStyle = (left, right) => !left.node && !right.node && left.href === right.href && left.marks.join() === right.marks.join();
+const isPlainEntry = (entry) => entry !== null && typeof entry === 'object' && !Array.isArray(entry);
+const sameStyle = (left, right) => !left.node && !right.node && !left.break && !right.break && left.href === right.href && left.marks.join() === right.marks.join()
+  && sameExtra(left.extra, right.extra) && sameExtra(left.linkExtra, right.linkExtra);
 
 /** Builds normalized content: merged runs, canonical marks, no empty parts. */
 function fromSegments(segments) {
   const merged = [];
   for (const segment of segments) {
+    // A link's extension keys go only where the link goes.
+    const linked = (href) => (href && segment.linkExtra ? { linkExtra: segment.linkExtra } : {});
     if (segment.node) {
-      merged.push({ text: INLINE_OBJECT, marks: [], href: segment.href && safeHref(segment.href) ? segment.href : null, node: segment.node });
+      // An atom is never inside a link: the link stops before it and starts again after.
+      const href = !isAtom(segment.node) && segment.href && safeHref(segment.href) ? segment.href : null;
+      merged.push({ text: INLINE_OBJECT, marks: [], href, node: segment.node, ...linked(href) });
+      continue;
+    }
+    if (segment.break) {
+      const href = segment.href && safeHref(segment.href) ? segment.href : null;
+      merged.push({ ...breakSegment(sortMarks(segment.marks || []), href, segment.extra || null), ...linked(href) });
       continue;
     }
     if (!segment.text) continue;
-    const clean = { text: segment.text, marks: sortMarks(segment.marks || []), href: segment.href && safeHref(segment.href) ? segment.href : null };
+    const cleanHref = segment.href && safeHref(segment.href) ? segment.href : null;
+    const clean = { text: segment.text, marks: sortMarks(segment.marks || []), href: cleanHref, ...(segment.extra ? { extra: segment.extra } : {}), ...linked(cleanHref) };
     const previous = merged.at(-1);
     if (previous && sameStyle(previous, clean)) previous.text += clean.text;
     else merged.push(clean);
   }
   const content = [];
   for (const segment of merged) {
-    const run = segment.node ? clone(segment.node) : { type: 'text', value: segment.text, ...(segment.marks.length ? { marks: segment.marks } : {}) };
+    const extra = segment.extra ? clone(segment.extra) : {};
+    const run = segment.node ? clone(segment.node)
+      : segment.break ? { type: 'break', ...(segment.marks.length ? { marks: segment.marks } : {}), ...extra }
+        : { type: 'text', value: segment.text, ...(segment.marks.length ? { marks: segment.marks } : {}), ...extra };
     const previous = content.at(-1);
     if (segment.href) {
-      if (previous?.type === 'link' && previous.href === segment.href) previous.children.push(run);
-      else content.push({ type: 'link', href: segment.href, children: [run] });
+      if (previous?.type === 'link' && previous.href === segment.href && sameExtra(linkExtraOf(previous), segment.linkExtra)) previous.children.push(run);
+      else content.push({ type: 'link', href: segment.href, ...(segment.linkExtra ? clone(segment.linkExtra) : {}), children: [run] });
     } else content.push(run);
   }
   return content;
 }
 
+const linkExtraOf = (link) => extensionsOf(link, 'link');
+
 function normalizeInline(content) {
   return fromSegments(toSegments(content));
 }
 
-/** The text of the text runs; atoms and opaque nodes add nothing. */
+/** The text of the text runs, a line feed for each break; atoms and opaque nodes add nothing. */
 function inlineText(content) {
-  return toSegments(content).filter(({ node }) => !node).map(({ text }) => text).join('');
+  return toSegments(content).filter(({ node }) => !node).map((segment) => (segment.break ? '\n' : segment.text)).join('');
 }
 
 /** Length in segment offsets: characters, plus one for each atom or opaque node. */
@@ -13536,7 +14903,7 @@ function replaceRange(content, start, end, inserted) {
   return fromSegments([...before, ...inserted, ...after]);
 }
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({ INLINE_COMPONENTS, INLINE_MARKS, INLINE_OBJECT, fromSegments, inlineComponentSchemas, inlineComponentView, inlineLength, inlineText, isInlineComponent, marksIn, normalizeInline, objectAt, replaceRange, safeHref, setLink, sliceInline, toSegments, toggleMark });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({ INLINE_EXTENSION_KEY, INLINE_FORBIDDEN_KEYS, INLINE_RESERVED_KEYS, inlineExtensions, isInlineExtensionKey, INLINE_COMPONENTS, INLINE_MARKS, INLINE_MODEL_VERSION, INLINE_OBJECT, breakSegment, fromSegments, inlineComponentSchemas, inlineComponentView, inlineLength, inlineText, isInlineComponent, marksIn, normalizeInline, objectAt, replaceRange, safeHref, setLink, sliceInline, toSegments, toggleMark });
 
 
 /***/ },
@@ -15817,6 +17184,72 @@ function withClasses(html, id, classes) {
 
 /***/ },
 
+/***/ "f7e83b012604"
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   files: () => (/* binding */ files)
+/* harmony export */ });
+/* harmony import */ var _en_json__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("df4271a1745f");
+// Written by scripts/build-language-packs.mjs from src/core/lang/built-in.json
+// (owner decision C282); do not edit. The words this bundle carries: the
+// built-in languages' (en); every other language comes from
+// a language file (core/lang/<code>.js or its parts).
+
+
+const files = { en: { runtime: _en_json__WEBPACK_IMPORTED_MODULE_0__.runtime } };
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({ en: _en_json__WEBPACK_IMPORTED_MODULE_0__.runtime });
+
+
+/***/ },
+
+/***/ "4294700087dc"
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   files: () => (/* binding */ files)
+/* harmony export */ });
+/* harmony import */ var _en_json__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("3694b5e2bf39");
+// Written by scripts/build-language-packs.mjs from src/core/lang/built-in.json
+// (owner decision C282); do not edit. The words this bundle carries: the
+// built-in languages' (en); every other language comes from
+// a language file (core/lang/<code>.js or its parts).
+
+
+const files = { en: { runtime: _en_json__WEBPACK_IMPORTED_MODULE_0__.runtime } };
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({ en: _en_json__WEBPACK_IMPORTED_MODULE_0__.runtime });
+
+
+/***/ },
+
+/***/ "15b764c9972d"
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   files: () => (/* binding */ files)
+/* harmony export */ });
+/* harmony import */ var _en_json__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("ea84b0a22415");
+// Written by scripts/build-language-packs.mjs from src/core/lang/built-in.json
+// (owner decision C282); do not edit. The words this bundle carries: the
+// built-in languages' (en); every other language comes from
+// a language file (core/lang/<code>.js or its parts).
+
+
+const files = { en: { runtime: _en_json__WEBPACK_IMPORTED_MODULE_0__.runtime } };
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({ en: _en_json__WEBPACK_IMPORTED_MODULE_0__.runtime });
+
+
+/***/ },
+
 /***/ "8d9331f1f24f"
 (__webpack_module__, __webpack_exports__, __webpack_require__) {
 
@@ -17946,10 +19379,31 @@ function within(root, ancestorId, id) {
 
 /***/ },
 
+/***/ "df4271a1745f"
+(module) {
+
+module.exports = /*#__PURE__*/JSON.parse('{"runtime":{"button":"Button","badge":"Badge","send":"Send","field":"Field","option":"Option","name":"Name","phone":"Phone","email":"Email","message":"Message"}}');
+
+/***/ },
+
+/***/ "3694b5e2bf39"
+(module) {
+
+module.exports = /*#__PURE__*/JSON.parse('{"runtime":{"b":"B","kb":"KB","mb":"MB","gb":"GB"}}');
+
+/***/ },
+
+/***/ "ea84b0a22415"
+(module) {
+
+module.exports = /*#__PURE__*/JSON.parse('{"runtime":{"heading":"This block could not be shown"}}');
+
+/***/ },
+
 /***/ "b1c5d4f6dddd"
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.2.3","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"host-states":{},"css-variables":{}}');
+module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.4.0","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"host-states":{},"css-variables":{}}');
 
 /***/ },
 

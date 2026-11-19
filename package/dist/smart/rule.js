@@ -36,11 +36,18 @@ SF.RuleLoader.registerPackage("editor", {
           "name": "cl-skeleton"
         },
         {
+          "name": "cl-tree"
+        },
+        {
           "name": "cl-editor-inline"
         },
         {
           "lazy": true,
           "name": "cl-menu-context"
+        },
+        {
+          "lazy": true,
+          "name": "cl-empty-state"
         },
         {
           "lazy": true,
