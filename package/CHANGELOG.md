@@ -31,6 +31,16 @@ versions in brackets.
   `--sf-space-3` over a line. A field's label is in the text colour and
   regular, one step under the value as in `sf-form`, 14 on a phone.
 
+- `sf-editor` 1.4.0: takes back the simai/ui-pro copy (1.2.6, 1.3.2) and
+  TL-4 of the toolbar study (C184 (1)(3)). The bar and the chosen block's
+  tool row are toolbars: one Tab stop each, ← → walk the buttons and wrap,
+  Home and End go to the ends; the screen switch and a host's slot controls
+  stay their own stops. On a grip ↓, the menu key and Shift+F10 open the
+  block's menu (C164 (2)). The editor relates `cl-empty-state` (lazy), the
+  error state of a failed fragment; the set now requires it.
+- Built over SIMAI Framework `ui-dc9fc39aeb26` (ui-source `1dd18375cbc2`),
+  which carries `simai.document-port` 1.0.0, `sf-form` and core's roving
+  helper.
 ## 1.1.1 — 2026-11-09
 
 - `sf-editor` 1.2.3: over SIMAI Framework `ui-b4a77681f0a7` the 1/3 control

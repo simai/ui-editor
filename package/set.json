@@ -15,7 +15,7 @@
   },
   "framework": {
     "core_runtime": ">=1.43.0",
-    "source_revision": "8c13bf45aecaae2c31188b729ef4765fc91bffae"
+    "source_revision": "1dd18375cbc23cf3392576d2e046fde52a047060"
   },
   "requires_sets": [],
   "families": [
@@ -33,6 +33,7 @@
         "cl-button-icon",
         "cl-dropdown",
         "cl-editor-inline",
+        "cl-empty-state",
         "cl-icon",
         "cl-input",
         "cl-menu-context",

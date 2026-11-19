@@ -22,6 +22,7 @@ import {CATALOGUE_GROUPS, catalogueEntry} from "../../core/js/composition/catalo
 import {isComposed} from "../../core/js/composition/composed.mjs";
 import {readInlineDom, renderInlineDom, startInlineEdit, textOffset} from "../../core/js/composition/inline-editor.mjs";
 import {localeText, pageLocale} from "../../core/js/page-language.js";
+import {roving} from "../../core/js/roving.js";
 import {EditorModel, MAX_COLUMNS, ORIGINS, SCREENS, refusedClasses} from "./js/model.mjs";
 import {catalogueAt, groupIcon, groupWordKey, itemKey, pick, pushRecent, searchItems, sectionForPlace, sectionsOf, skeletonOf, toggleFavourite, typeWordKey} from "./js/catalogue.mjs";
 import {isPlainObject, locate} from "./js/tree.mjs";
@@ -282,6 +283,30 @@ class SfEditor extends EditorElement {
         else this.placeOverlays();
         this.wireSearch();
         this.watchToolbar();
+        this.watchKeys();
+    }
+
+    /**
+     * The bar and the chosen block's tool row are toolbars of the WAI-ARIA
+     * pattern (defect TL-4 of the toolbar study): each is one Tab stop that
+     * comes back to the button left, ← → walk its buttons (reversed right to
+     * left), Home and End go to the ends, and the walk wraps; ↓ on a menu
+     * button opens its menu. Core's roving helper (core/js/roving.js, owner
+     * decision C184) holds the keys; a host's own controls in the bar's slots
+     * and the screen switch (sf-segmented, its own arrows) stay their own
+     * stops. Each row is bound again when it is drawn anew.
+     */
+    watchKeys() {
+        const rows = [
+            ["barKeys", ".sf-editor-bar", ":scope > .sf-editor-bar-start > sf-button-icon, :scope > .sf-editor-bar-start > sf-button, :scope > .sf-editor-bar-end > sf-button-icon, :scope > .sf-editor-bar-end > sf-button"],
+            ["toolbarKeys", ".sf-editor-toolbar", "sf-button, sf-button-icon"],
+        ];
+        for (const [field, selector, items] of rows) {
+            const row = this.querySelector(selector);
+            if (row === (this[field]?.row ?? null)) continue;
+            this[field]?.keys.destroy();
+            this[field] = row ? {row, keys: roving(row, {items})} : null;
+        }
     }
 
     /** sf-input names its own input only: the catalogue's search is a combobox over the list, said on the native input. */
@@ -1272,7 +1297,11 @@ class SfEditor extends EditorElement {
     /** The grip from the keyboard: Enter or Space opens its menu; Alt+arrows move. */
     onGripKey(event, id = this.gutterId) {
         if (!id) return;
-        if (event.key === "Enter" || event.key === " ") {
+        // ↓ opens the grip's menu as a menu button's (the tool row's arrows
+        // are core's roving keys), and so do the menu key and Shift+F10 (C164 (2)).
+        const opens = event.key === "Enter" || event.key === " " || (event.key === "ArrowDown" && !event.altKey && !event.shiftKey)
+            || event.key === "ContextMenu" || (event.shiftKey && event.key === "F10");
+        if (opens) {
             event.preventDefault();
             event.stopPropagation();
             this.hintUsed();

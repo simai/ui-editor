@@ -2,7 +2,7 @@
   "$comment": "The source of sf-editor's element plumbing (core/js/element-manifest.js); standard simai.smart-component 1.4, vocabulary 1.1.5. Part B of the owner's one-block-editor decision of 2026-11-03 (ui-control control/ui-editor/UNIFIED-BLOCK-EDITOR.md, control/decisions/2026-11-03-one-editor-part-a.md), on the Part A contracts of SIMAI Framework pair ui-a2ca21f06e0c. Written by hand in the 1.4 form on the shape of sf-editor-content; x-decisions says how each point was decided.",
   "id": "smart.editor",
   "tag": "sf-editor",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "kind": "leaf",
   "family": "editor",
   "settings": {
@@ -407,6 +407,10 @@
       "lazy": true
     },
     {
+      "name": "cl-empty-state",
+      "lazy": true
+    },
+    {
       "name": "cl-modal",
       "lazy": true
     }
@@ -467,7 +471,8 @@
     "version 1.3.0 (2026-11-14): a minor (K-07, C102). The Structure tab is the Framework tree, sf-tree (2.1.2 in pair ui-7fb26d395af2, relation cl-tree), instead of the editor's own list of buttons with role tree: one Tab stop, the arrows walk the blocks, ArrowRight and ArrowLeft open and close a branch, Space or a press chooses the block (sf-tree-select), and a branch the person closed stays closed while the editor redraws. A row is the block's name and its words as before; a locked block shows a lock icon. Settings, values and the editor's own events are unchanged.",
     "version 1.2.5 (2026-11-13): a patch. The editor's one menu (the block's ⋯ and the heading level's deeper steps) is an sf-menu-context with popup: it is drawn only while it is open through openFor(). Without popup a menu is drawn in place, so once it had entries it stayed drawn at the window's bottom after it closed. Settings, values and events are unchanged.",
     "version 1.2.4 (2026-11-12): a patch (look, sf-segmented 1.6.0 C47). Over SIMAI Framework pair ui-7fb26d395af2 a segmented track folds into its dropdown when its labels do not fit the room it is given. The heading level row (H1–H3 and «More» at 1440) no longer had the room with «More» as a field: its label and chevron took 96 of the 258. «More» is now a compact button that opens the editor's menu with the deeper steps (H4–H6); when one of them is chosen the button shows it (tonal, «H5»), so the level stays in sight. The track keeps the rest of the row and stays a track at 1440. The value it writes and the events are unchanged.",
-    "version 1.2.3 (2026-11-09): a patch (sizes, C27 with C18/C19, DEV option A). Over SIMAI Framework pair ui-b4a77681f0a7 (core.runtime 1.47.0) the 1/3 control is 28 on a desktop (C27); the gutter's + and grip keep following --sf-ui-1/3--control-height (28 on a desktop, the phone step on a phone), with no local 24. The gutter stands in the canvas's start inset (--sf-editor-gutter-room grows with the ladder), never at a negative offset, so it stays inside the window at 1280, 1440 and 390; at 1440 the sheet is 788, the canvas beside the larger room. The gap between the gutter and its block is the gutter's end margin (--sf-editor-gutter-gap, --sf-space-1/4) read by the placement, for the 4 the script held. Settings, values and events are unchanged."
+    "version 1.2.3 (2026-11-09): a patch (sizes, C27 with C18/C19, DEV option A). Over SIMAI Framework pair ui-b4a77681f0a7 (core.runtime 1.47.0) the 1/3 control is 28 on a desktop (C27); the gutter's + and grip keep following --sf-ui-1/3--control-height (28 on a desktop, the phone step on a phone), with no local 24. The gutter stands in the canvas's start inset (--sf-editor-gutter-room grows with the ladder), never at a negative offset, so it stays inside the window at 1280, 1440 and 390; at 1440 the sheet is 788, the canvas beside the larger room. The gap between the gutter and its block is the gutter's end margin (--sf-editor-gutter-gap, --sf-space-1/4) read by the placement, for the 4 the script held. Settings, values and events are unchanged.",
+    "version 1.4.0 (2026-11-19): a minor, over SIMAI Framework pair ui-dc9fc39aeb26 (ui-source 1dd18375c), taking back the simai/ui-pro copy (1.2.6 relation, 1.3.2 group-build snapshots) and TL-4 of the toolbar study (owner decision C184 (1)(3)). The bar and the chosen block's tool row are toolbars of the WAI-ARIA pattern through core's roving helper (core/js/roving.js): each is one Tab stop that comes back to the button left, ← → walk its buttons in the row's direction and wrap, Home and End go to the ends, a disabled button is skipped; the screen switch (sf-segmented) and a host's controls in the bar's slots stay stops of their own. On a grip, ↓, the menu key and Shift+F10 open the block's menu as Enter does (C164 (2)). sf-editor draws sf-empty-state as the error state of the Composition fragment boundary, so it relates cl-empty-state (lazy), as the Pro copy 1.2.6 did. The first-paint snapshots are retaken over the pair. The number is above 1.3.2, the Pro copy. Nothing drawn differently; settings, values and events unchanged."
   ],
   "x-rule": {
     "$comment": [

@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "id": "smart.editor",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "title": "Page editor",
   "summary": "The one block editor of the SIMAI page: layout and text in one Composition Document, edited by depth. A click on text types, a click beside it chooses the block, Esc goes up and Enter down. One catalogue (Text and Blocks, groups, variants with pictures, search, favourites, recent) serves the + between blocks, / in text and the library; blocks move by the grip with drop lines or Alt+arrows, and a drop beside a block splits it into columns. The parameter panel says where every value comes from (type, theme, variant, block, screen) and sets values per screen; the Data tab binds a block to a host source through the source port. The block builder makes and changes site blocks everywhere; the site template is a separate, explicit edit. Rights and theme come from the host. One undo history; output as JSON, HTML and Markdown.",
   "kind": "smart",
@@ -591,7 +591,7 @@
     "source_artifacts": [
       {
         "path": "src/smart/editor/index.js",
-        "sha256": "a1c6b45cec3b349bc6856836396c92e3629a4cf923856ecc6996aa2d789f91d4"
+        "sha256": "f72a3be5630fff1f7442c81c8c0b09518d44f935f9d79b2abfed2a74c9022792"
       },
       {
         "path": "src/smart/editor/js/model.mjs",
@@ -619,11 +619,11 @@
       },
       {
         "path": "src/smart/editor/docs.md",
-        "sha256": "32bfda6a72a9e340c758c7bcf465620ad4035bcedd4d54026af74f128706a9ed"
+        "sha256": "b872d0ac18c49b70b3901792d845aa54600883a96da5fe0208b3be7b6f063718"
       },
       {
         "path": "src/smart/editor/component.json",
-        "sha256": "a666342462ac5644d7151fbcbecc6ed1b6a06d0f5305976cb64a927f7c08a276"
+        "sha256": "034aa30a66e0b174adee24ffbe6c6572dd02d1c69ac418450f73ca258f3144d0"
       },
       {
         "path": "src/smart/editor/lang/en.json",

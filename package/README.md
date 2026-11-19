@@ -41,8 +41,9 @@ ui-source at the revision `framework.lock.json` pins (from git, never a
 working tree), with this folder's `src/` and `tests/` laid over it. A file
 here may not replace a ui-source file.
 
-The pin is `8c13bf45aeca`, the source of the released pair
-`ui-7fb26d395af2`, whose segmented track folds into its dropdown when its
+The pin is `1dd18375cbc2`, the source of the released pair
+`ui-dc9fc39aeb26`, the first that carries `simai.document-port` 1.0.0,
+`sf-form` and the core roving helper; `ui-7fb26d395af2` was the first segmented track folds into its dropdown when its
 labels do not fit (C47); `ui-b4a77681f0a7` was the first whose 1/3 control
 is 28 on a desktop (C27), `ui-cb287da78ab1` was the first that carries the shadow
 places (C20), `ui-d6f01121baca` was the first that names `sf-segmented`, the
