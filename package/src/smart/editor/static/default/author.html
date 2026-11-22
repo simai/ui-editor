@@ -47,17 +47,18 @@
 </div>
 
 
+
 </sf-segmented>
 <div class="sf-editor-bar-end">
 
 <sf-button-icon class="sf-editor-help-open" size="1/2" appearance="ghost" scheme="on-surface-variant" icon="help" aria-haspopup="dialog" aria-label="Справка" title="Справка" aria-expanded="false" style="display: contents;" data-sf-size-relative>
-<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--ghost flex items-cross-center sf-icon-button--on-surface-variant" aria-label="Справка" tabindex="0" aria-haspopup="dialog" aria-expanded="false" title data-sf-static>
+<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--ghost flex items-cross-center sf-icon-button--on-surface-variant" aria-label="Справка" tabindex="0" title aria-haspopup="dialog" aria-expanded="false" data-sf-static>
 
 <sf-icon root-class="pointer-events-none" weight="400" aria-hidden="true" filled="false" icon="help" style="display: contents;"><i class="sf-icon sf-icon--weight-regular pointer-events-none" aria-hidden="true" data-sf-static>help</i></sf-icon>
 </button>
 </sf-button-icon>
 <sf-button-icon class="sf-editor-output-open" size="1/2" appearance="ghost" scheme="on-surface-variant" icon="data_object" aria-haspopup="dialog" aria-label="Результат" title="Результат" style="display: contents;" data-sf-size-relative>
-<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--ghost flex items-cross-center sf-icon-button--on-surface-variant" aria-label="Результат" tabindex="-1" aria-haspopup="dialog" title data-sf-static>
+<button type="button" class="sf-icon-button sf-icon-button--size-1/2 sf-icon-button--icon sf-icon-button--ghost flex items-cross-center sf-icon-button--on-surface-variant" aria-label="Результат" tabindex="-1" title aria-haspopup="dialog" data-sf-static>
 
 <sf-icon root-class="pointer-events-none" weight="400" aria-hidden="true" filled="false" icon="data_object" style="display: contents;"><i class="sf-icon sf-icon--weight-regular pointer-events-none" aria-hidden="true" data-sf-static>data_object</i></sf-icon>
 </button>
@@ -67,7 +68,7 @@
 </div>
 
 
-<p id="sf-editor-author-1" class="sf-editor-visually-hidden">Щёлкните по тексту, чтобы печатать, рядом с ним — чтобы выбрать блок. Esc — уровень вверх, Enter — вниз. Alt+стрелки двигают выбранный блок, Alt+Shift+стрелки — во время набора. / в пустой строке открывает каталог.</p>
+<p id="sf-editor-author-1" class="sf-editor-visually-hidden">Щёлкните по тексту, чтобы печатать, рядом с ним — чтобы выбрать блок. Esc — уровень вверх, Enter — вниз. ⌥ и стрелки двигают выбранный блок, ⌥⇧ и стрелки — во время набора. / в пустой строке открывает каталог.</p>
 <div class="sf-editor-live sf-editor-visually-hidden" role="status" aria-live="polite"></div>
 </div>
 <div class="sf-editor-body">
@@ -82,7 +83,7 @@
 <sf-button appearance="default" scheme="primary" size="1/2" text="Блоки" root-class="selected" style="display: contents;" data-sf-size-relative>
 
 
-<button type="button" class="sf-button sf-button--size-1/2 sf-button--default sf-button--primary flex items-cross-center selected" id="sf-editor-author-2" role="tab" aria-controls="sf-editor-author-6" aria-selected="true" aria-disabled="false" aria-labelledby="sf-editor-author-3" tabindex="0" data-sf-tab-index="0" data-sf-static>
+<button type="button" class="sf-button sf-button--size-1/2 sf-button--default sf-button--primary flex items-cross-center selected" id="sf-editor-author-2" role="tab" aria-controls="sf-tabs-1--panel-0" aria-selected="true" aria-disabled="false" aria-labelledby="sf-editor-author-3" tabindex="0" data-sf-tab-index="0" data-sf-static>
 
 
 <span class="sf-button-text-container text-center pointer-events-none flex-1" id="sf-editor-author-3">
@@ -95,7 +96,7 @@
 <sf-button appearance="default" scheme="primary" size="1/2" text="Структура" root-class style="display: contents;" data-sf-size-relative>
 
 
-<button type="button" class="sf-button sf-button--size-1/2 sf-button--default sf-button--primary flex items-cross-center" id="sf-editor-author-4" role="tab" aria-controls="sf-editor-author-7" aria-selected="false" aria-disabled="false" aria-labelledby="sf-editor-author-5" tabindex="-1" data-sf-tab-index="1" data-sf-static>
+<button type="button" class="sf-button sf-button--size-1/2 sf-button--default sf-button--primary flex items-cross-center" id="sf-editor-author-4" role="tab" aria-controls="sf-tabs-1--panel-1" aria-selected="false" aria-disabled="false" aria-labelledby="sf-editor-author-5" tabindex="-1" data-sf-tab-index="1" data-sf-static>
 
 
 <span class="sf-button-text-container text-center pointer-events-none flex-1" id="sf-editor-author-5">
@@ -119,26 +120,18 @@
 
 
 </div>
-<div class="sf-tabs-main-container">
-
-<div class="sf-tabs-main-tab selected" role="tabpanel" id="sf-editor-author-6" aria-labelledby="sf-editor-author-2" data-sf-tab-panel="0" data-entry="blocks">
-
-</div>
-
-<div class="sf-tabs-main-tab" role="tabpanel" id="sf-editor-author-7" aria-labelledby="sf-editor-author-4" data-sf-tab-panel="1" data-entry="structure" hidden></div>
-
-</div>
+<div class="sf-tabs-main-container" hidden data-sf-panels-empty></div>
 </div>
 </sf-tabs>
 <div class="sf-editor-left-body">
 
 <sf-input class="sf-editor-search" size="1/2" appearance="filled" input-type="search" icon-start="search" placeholder="Найти блок" aria-label="Найти блок" value style="display: contents;" data-sf-size-relative>
-<label class="sf-input  sf-input--size-1/2 sf-input--filled    flex flex-col" data-mask="false" data-mask-pattern data-mask-lazy data-mask-placeholder-char data-mask-options data-sf-input-bound="1" for="sf-editor-author-8" data-sf-static>
+<label class="sf-input  sf-input--size-1/2 sf-input--filled    flex flex-col" data-mask="false" data-mask-pattern data-mask-lazy data-mask-placeholder-char data-mask-options data-sf-input-bound="1" for="sf-editor-author-6" data-sf-static>
 
 <span class="sf-input-field items-cross-center transition flex">
 <span class="sf-input-left flex"><sf-icon icon="search" style="display: contents;"><i class="sf-icon" aria-hidden="true" data-sf-static>search</i></sf-icon></span>
 
-<input id="sf-editor-author-8" type="search" placeholder="Найти блок" value aria-label="Найти блок" data-mask="false" data-mask-pattern data-mask-lazy data-mask-placeholder-char data-mask-options>
+<input id="sf-editor-author-6" type="search" placeholder="Найти блок" value aria-label="Найти блок" data-mask="false" data-mask-pattern data-mask-lazy data-mask-placeholder-char data-mask-options>
 
 
 
