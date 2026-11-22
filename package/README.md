@@ -30,7 +30,7 @@ Paid sets publish on the public npm registry (owner, 2026-11-05); nothing here
 is published by this repository's own hand. One line connects it:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@simai-studio/ui@5.20261118.1205/distr/core/js/core.min.js" data-sf-sets="editor@1.4.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@simai-studio/ui@5.20261121.928/distr/core/js/core.min.js" data-sf-sets="editor@1.5.0"></script>
 ```
 
 ## A Russian page needs the Russian language file
