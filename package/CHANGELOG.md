@@ -3,6 +3,13 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
+- `sf-editor` 1.5.0: takes back the simai/ui-pro copy's 1.3.3 and 1.4.0
+  (ui-pro f6c4382). Keys are named in the platform's marks through the
+  Framework's sf-kbd helper (C04, DF-12): ⌘Z and ⌥↑ on a Mac, Ctrl+Z and
+  Alt+↑ elsewhere. The library's favourite star is the Framework's toggle
+  look of sf-button-icon (C393), with aria-pressed.
+- Built over SIMAI Framework `ui-9ceecc24c988` (group build 15, ui-source
+  `e7ea89e07a3a`).
 ## 1.4.0 — 2026-11-19
 
 - `sf-editor` 1.2.4: over SIMAI Framework `ui-7fb26d395af2` a segmented
