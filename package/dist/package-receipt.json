@@ -9,9 +9,9 @@
   },
   "package_source": {
     "repository": "simai/ui-editor",
-    "revision": "9f3130485be136a40ca724ab9a1a582db9e25f7d",
+    "revision": "6912015a62bd6c234e0c8f77a868885b45da60ec",
     "path": "package",
-    "tree": "b38d41318fb1969f03e184419fcd6eb0125840d3"
+    "tree": "8f0b29aea19058767a2681e5f610609883ce030d"
   },
   "licence": {
     "ref": "PolyForm-Small-Business-1.0.0 OR PolyForm-Noncommercial-1.0.0 OR LicenseRef-SIMAI-Commercial"
@@ -19,9 +19,9 @@
   "framework": {
     "source": {
       "repository": "simai/ui-source",
-      "revision": "1dd18375cbc23cf3392576d2e046fde52a047060"
+      "revision": "e7ea89e07a3a6494cd2e6d4b4dd2dfa3a4d560cf"
     },
-    "release": "ui-dc9fc39aeb26",
+    "release": "ui-9ceecc24c988",
     "runtime": {
       "abi": 1,
       "modules": {
@@ -60,16 +60,16 @@
   },
   "builder": {
     "repository": "simai/ui-builder",
-    "revision": "ba79e739d1f9e2568d27e030606e8f95ce91b380",
+    "revision": "0ec5196b35aea0251abed7af4c60f498e1a3e411",
     "clean": true
   },
   "node": "v24.21.0",
   "output": {
     "runtime_path": "smart",
     "files_count": 37,
-    "manifest_sha256": "ab91ac2b639bca20dfcbca5104717832e49491911dac71cc0e8bd3168c2abafd",
+    "manifest_sha256": "e47a3d21d940947e5caa33f7602b3f96741c4c1fca6cb3afa2685b50c5829db4",
     "archive": "package-editor.tar",
-    "archive_sha256": "d0976f41a10faf2dc2141d84171a5521b70b77e60d58c651bc30c14500be15cd",
+    "archive_sha256": "b8ca5029724f31dc3b1a38b143f1d6d6a61a814ae11c30a2ce66832eb47f0a49",
     "archive_format": "ustar; entries sorted; owner 0:0; mtime 0; modes 0755/0644"
   },
   "required_files": [
@@ -80,13 +80,13 @@
     },
     {
       "path": "smart/editor/js/editor.js",
-      "sha256": "e48f4336714980ffc0e787fb2a64b76ac4580c9f2692c68518ecfbc907d332e9",
-      "size": 997058
+      "sha256": "1ca77d1c108cbbd22d969e3b306371c886b7b738d6a93f4239c73ab18e83ffb8",
+      "size": 1016133
     },
     {
       "path": "smart/editor/css/editor.css",
-      "sha256": "51b20ade33f281037cda3257b93b55c6e1746ff66cea9d4563a627e046e1d55b",
-      "size": 57081
+      "sha256": "873e15cb11a69c12b6018c7167d31d680835be5d2a0f4fceacf678e2dc2de419",
+      "size": 46659
     }
   ],
   "inventory": {
@@ -120,62 +120,62 @@
   },
   "package_reference": {
     "path": "distr/core/contracts/packages/editor.package.json",
-    "release": "ui-dc9fc39aeb26",
+    "release": "ui-9ceecc24c988",
     "status": "set-passport"
   },
   "set": {
     "id": "editor",
     "passport": "set.json",
-    "sha256": "a663019629106d0afa405ae46bcc760a752a4105a8c4f9c89416785ea58c5674",
+    "sha256": "27eaddc7838a7bceaddbc7d9ff23f101dd0527eccc38b01338add93fe64edd92",
     "api": null,
     "families": [
       "editor"
     ],
     "framework": {
       "core_runtime": ">=1.43.0",
-      "source_revision": "1dd18375cbc23cf3392576d2e046fde52a047060"
+      "source_revision": "e7ea89e07a3a6494cd2e6d4b4dd2dfa3a4d560cf"
     },
     "requires_sets": [],
     "registry": {
       "status": "agrees",
-      "sha256": "9358661f7b556503a0e4dc85c370ed6cfc39024594ebf7ef5e5a96bb4997e2df"
+      "sha256": "998128a68e2834d7f060d14ba2aae29c1a5b162eaa8dedc1f4c633e429f26a5b"
     }
   },
   "files": [
     {
       "path": "set.json",
-      "sha256": "a663019629106d0afa405ae46bcc760a752a4105a8c4f9c89416785ea58c5674",
+      "sha256": "27eaddc7838a7bceaddbc7d9ff23f101dd0527eccc38b01338add93fe64edd92",
       "size": 1392
     },
     {
       "path": "smart/editor/component.json",
-      "sha256": "b9bc506d6ad1022e77cdb6e369296073448fbbe4bc6af77d3bbfa0e4501e7952",
-      "size": 28409
+      "sha256": "92779db3b84bbb5ecaa0c2af9fb4c30fba9d20ed450afd7bf23a4b434a41a142",
+      "size": 29818
     },
     {
       "path": "smart/editor/component.json.gz",
-      "sha256": "2252ddc83987cb60412b37499405bbb548070a5cc1fe1943b723d673fb255870",
-      "size": 8736
+      "sha256": "ff14ab591fb117f97b4ae5a416ed855a6e90117cfdbe500b5b31104a5da2b9e3",
+      "size": 9343
     },
     {
       "path": "smart/editor/css/editor.css",
-      "sha256": "51b20ade33f281037cda3257b93b55c6e1746ff66cea9d4563a627e046e1d55b",
-      "size": 57081
+      "sha256": "873e15cb11a69c12b6018c7167d31d680835be5d2a0f4fceacf678e2dc2de419",
+      "size": 46659
     },
     {
       "path": "smart/editor/css/editor.css.gz",
-      "sha256": "6e7e61eaddbf41c94529951fa878b1a070b9c7fbef0c893dc4bfff87cbf34def",
-      "size": 8239
+      "sha256": "3bea4d6e8db35fac3f6d689aa8e7e41951c030b13b4060b6405493ab90a9d5c6",
+      "size": 7499
     },
     {
       "path": "smart/editor/css/editor.min.css",
-      "sha256": "3c028415f7f64ff160b3ab085d09b776281108b501c7094f3c3a3ea416450999",
-      "size": 41951
+      "sha256": "fd691ff5942451074cbc93e9a95cfaf528c2be059d75856207f5861183e10845",
+      "size": 32883
     },
     {
       "path": "smart/editor/css/editor.min.css.gz",
-      "sha256": "4f6b9d2abd63ab131eac01b325990f74b3591817417ff19cf1ca268a53a8ef87",
-      "size": 5202
+      "sha256": "90f3fb603af196120a4d680af1e097bb0c6d61b97c76356b52189300506baa08",
+      "size": 4598
     },
     {
       "path": "smart/editor/examples.json",
@@ -189,93 +189,93 @@
     },
     {
       "path": "smart/editor/js/editor.js",
-      "sha256": "e48f4336714980ffc0e787fb2a64b76ac4580c9f2692c68518ecfbc907d332e9",
-      "size": 997058
+      "sha256": "1ca77d1c108cbbd22d969e3b306371c886b7b738d6a93f4239c73ab18e83ffb8",
+      "size": 1016133
     },
     {
       "path": "smart/editor/js/editor.js.gz",
-      "sha256": "523e2845510f87e2c89327477e4a62205cd737b382dca61046d5c828bcdedd45",
-      "size": 234563
+      "sha256": "cbed8a73fcd7aaec7a62b9e7a6803955ed427ca55cf99d163a64b94524f0d61b",
+      "size": 239985
     },
     {
       "path": "smart/editor/js/editor.min.js",
-      "sha256": "f4bbad5ac6148e50f85e2d0c9e6bf6f0744b8b4d9829a6cd1d28b0d9e07b7ac4",
-      "size": 446868
+      "sha256": "a8a89442c8f862802af7e58530be776688e5e6e1ac0a177d53b0a4a81bd74feb",
+      "size": 450647
     },
     {
       "path": "smart/editor/js/editor.min.js.gz",
-      "sha256": "db1bae2eca96426dcd64c98f3d34b6bf6899976e5d4f6dab95970b419a88ad8c",
-      "size": 125248
+      "sha256": "d629b3cca6efb505250959d52a9968eda525197fc33b8b3bf38038da4f3973f2",
+      "size": 126374
     },
     {
       "path": "smart/editor/lang/en.json",
-      "sha256": "e5e74b6c243f633b9324837326cc9878b068ee6bcfd41d13f5284a2159ac7e3e",
-      "size": 10997
+      "sha256": "a4c6d651fe9b80838065bd4dfd10eb3129e71e958757fe68723d9c599b412180",
+      "size": 11025
     },
     {
       "path": "smart/editor/lang/en.json.gz",
-      "sha256": "ef22efa0068956a5764208805856b789b2feba55c4bd9964745a0adf43fb7a56",
-      "size": 3366
+      "sha256": "50effda8c211a2e76427e27836ebc1c209cd76c62d4660ee044809e0f327737d",
+      "size": 3353
     },
     {
       "path": "smart/editor/lang/ru.json",
-      "sha256": "a9135130e8fbf852ede1dd0561d27f72775e57e892e4333048af0ba6ef54b70a",
-      "size": 15052
+      "sha256": "1f94928a797ba4835083a174eb35bb5d7202faa98bdf4000246764e45eebcf88",
+      "size": 15065
     },
     {
       "path": "smart/editor/lang/ru.json.gz",
-      "sha256": "6427e5311d84158fe5e86898e1a3cc99de2df3e7d33b9ef2aeeca6c498ba73f8",
-      "size": 4368
+      "sha256": "b60e22b031b7eff5efc88fd5bd0d8a7e40c117b26375e4f93c4acc7094ead70b",
+      "size": 4367
     },
     {
       "path": "smart/editor/smart.manifest.json",
-      "sha256": "6d80012af1af6c9c82a7170035b837621862e981299932b19484558c7017645e",
-      "size": 19784
+      "sha256": "b584bd6d28b9f9d09331880a74c48959299c959a0b13c93bb152813a02362a35",
+      "size": 19880
     },
     {
       "path": "smart/editor/smart.manifest.json.gz",
-      "sha256": "46c838c6ffb665d485eb6ce2ce158381e12f07360fa3da32cc874cbe624269c8",
-      "size": 5294
+      "sha256": "b4fae8777a7121cb9dbfe6d6150273eb848442c086c69fcd58529f0fca4e927f",
+      "size": 5335
     },
     {
       "path": "smart/editor/static/default/author.html",
-      "sha256": "29ee67d1750e8a5377d7b0b6d31d61d538daef549b6f4312f9d669af69fb2919",
-      "size": 27806
+      "sha256": "beee7e901103521bc02c3caba9ba350196307de70b46cbd95470cc48eece6597",
+      "size": 27501
     },
     {
       "path": "smart/editor/static/default/author.html.gz",
-      "sha256": "dc179b80802ff38d352988f0bc72632f9512755088b52911ba0664feace914c6",
-      "size": 4565
+      "sha256": "2bc7115b464505d729de71f0d2a3272adbc4e3d08b5fdda6148a9e9b43c50219",
+      "size": 4523
     },
     {
       "path": "smart/editor/static/default/empty.html",
-      "sha256": "549c8e73515f965e20338585c7ea47f57263c11e04992f697ab8199c79036da3",
-      "size": 22558
+      "sha256": "dee0a5f62c4205ae3d9dc0f4ff048446713d69e8449a1313b3d11f3631a63aaa",
+      "size": 22259
     },
     {
       "path": "smart/editor/static/default/empty.html.gz",
-      "sha256": "b9e65c82a64a574ba5ce5d67bddd13aae7a791875a4ea231b1bf803e14b00568",
-      "size": 3723
+      "sha256": "56f0d1612c4a6c6b50e1cac4b7dd3064179232006aa2bcb065775f0010612028",
+      "size": 3678
     },
     {
       "path": "smart/editor/static/default/reference.html",
-      "sha256": "4129927f1aea314c76f24cc4448231f22310695900f2a3723ce1a1f9e06dd7d5",
-      "size": 30068
+      "sha256": "87862059c734de9d166c0bb348555d33fb05331018add7e8f7bdcad0d10f4355",
+      "size": 29745
     },
     {
       "path": "smart/editor/static/default/reference.html.gz",
-      "sha256": "148c90b5c9c6067bcf0324894a58ce0098ecd9de8ad6612dd6fe08b48ab18458",
-      "size": 4821
+      "sha256": "0c016696a7b32e6f055c99e4dd8d85dcd7aaafecdd086abd4090f6a92c643101",
+      "size": 4791
     },
     {
       "path": "smart/editor/static/sheets.json",
-      "sha256": "4b7abbfa9335f2d1539fb4a6acad927f1861a645ee3ebedb9544c4a3a47540d6",
-      "size": 11477
+      "sha256": "06b73d05649b3872a71c9a6ff60178df128193aed5daa4beaf3b29ff14e21fe5",
+      "size": 11711
     },
     {
       "path": "smart/editor/static/sheets.json.gz",
-      "sha256": "15e7ce4d31eef7b8ffa6439d3b2a89d5075198c555c753792c9c6f746720312f",
-      "size": 1019
+      "sha256": "c5c1c79841312c3ce3db7187e7c1505f204aa966ac291e4c4d084b32aa4175aa",
+      "size": 1034
     },
     {
       "path": "smart/editor/studio.fixture.json",
@@ -309,13 +309,13 @@
     },
     {
       "path": "smart/editor/template/default.js",
-      "sha256": "0fc3e6a355d9729245046c12c5dd465c696096826b012e35c2698cc46bbcc22e",
-      "size": 59569
+      "sha256": "f013fd3f392e6ddd13bc105cc813dd4b81ed9031baa0546afeade417fe241e1e",
+      "size": 61441
     },
     {
       "path": "smart/editor/template/default.js.gz",
-      "sha256": "28e7ef5f7dc1eb47c6513d43a77dab9d96fa8050b68d0e2704830ab6a46d0324",
-      "size": 13542
+      "sha256": "9bf60673d1a55b443822df0248ae711bee5f0d4961a095d1bf8a9bbac0d2affd",
+      "size": 14059
     },
     {
       "path": "smart/rule.js",

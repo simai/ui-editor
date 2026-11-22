@@ -161,24 +161,8 @@
     line-height: var(--sf-text--height-1\/2);
     font-weight: var(--sf-font-weight-medium);
   }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-help-list{
-    padding-left: var(--sf-space-1);
-  }
-  @supports not (padding-inline-start: initial){
-  html:not([dir="rtl"]) .sf-editor-help-list{
-    padding-left: var(--sf-space-1);
-    }
-  }
   .sf-editor-help-list:where(:dir(ltr)){
     padding-left: var(--sf-space-1);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-help-list{
-    padding-right: var(--sf-space-1);
-  }
-  @supports not (padding-inline-start: initial){
-  [dir="rtl"] .sf-editor-help-list{
-    padding-right: var(--sf-space-1);
-    }
   }
   .sf-editor-help-list:where(:dir(rtl)){
     padding-right: var(--sf-space-1);
@@ -209,24 +193,8 @@
     overflow: auto;
     background: var(--sf-surface-page);
   }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-left{
-    border-right: var(--sf-border--width) solid var(--sf-outline-variant);
-  }
-  @supports not (border-inline-end: initial){
-  html:not([dir="rtl"]) .sf-editor-left{
-    border-right: var(--sf-border--width) solid var(--sf-outline-variant);
-    }
-  }
   .sf-editor-left:where(:dir(ltr)){
     border-right: var(--sf-border--width) solid var(--sf-outline-variant);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-left{
-    border-left: var(--sf-border--width) solid var(--sf-outline-variant);
-  }
-  @supports not (border-inline-end: initial){
-  [dir="rtl"] .sf-editor-left{
-    border-left: var(--sf-border--width) solid var(--sf-outline-variant);
-    }
   }
   .sf-editor-left:where(:dir(rtl)){
     border-left: var(--sf-border--width) solid var(--sf-outline-variant);
@@ -240,24 +208,8 @@
     padding-right: var(--sf-space-1\/3);
     padding-inline: var(--sf-space-1\/3);
   }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-right{
-    border-left: var(--sf-border--width) solid var(--sf-outline-variant);
-  }
-  @supports not (border-inline-start: initial){
-  html:not([dir="rtl"]) .sf-editor-right{
-    border-left: var(--sf-border--width) solid var(--sf-outline-variant);
-    }
-  }
   .sf-editor-right:where(:dir(ltr)){
     border-left: var(--sf-border--width) solid var(--sf-outline-variant);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-right{
-    border-right: var(--sf-border--width) solid var(--sf-outline-variant);
-  }
-  @supports not (border-inline-start: initial){
-  [dir="rtl"] .sf-editor-right{
-    border-right: var(--sf-border--width) solid var(--sf-outline-variant);
-    }
   }
   .sf-editor-right:where(:dir(rtl)){
     border-right: var(--sf-border--width) solid var(--sf-outline-variant);
@@ -373,59 +325,11 @@
     padding: 0;
     list-style: none;
   }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-item,html:not([dir="rtl"])
-  .sf-editor-section-row,html:not([dir="rtl"])
-  .sf-editor-back{
-    padding-left: var(--sf-space-1\/3);
-  }
-  @supports not (padding-inline-start: initial){
-  html:not([dir="rtl"]) .sf-editor-item,html:not([dir="rtl"])
-  .sf-editor-section-row,html:not([dir="rtl"])
-  .sf-editor-back{
-    padding-left: var(--sf-space-1\/3);
-    }
-  }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-item,html:not([dir="rtl"])
-  .sf-editor-section-row,html:not([dir="rtl"])
-  .sf-editor-back{
-    padding-right: var(--sf-space-1\/4);
-  }
-  @supports not (padding-inline-end: initial){
-  html:not([dir="rtl"]) .sf-editor-item,html:not([dir="rtl"])
-  .sf-editor-section-row,html:not([dir="rtl"])
-  .sf-editor-back{
-    padding-right: var(--sf-space-1\/4);
-    }
-  }
   .sf-editor-item:where(:dir(ltr)),
   .sf-editor-section-row:where(:dir(ltr)),
   .sf-editor-back:where(:dir(ltr)){
     padding-left: var(--sf-space-1\/3);
     padding-right: var(--sf-space-1\/4);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-item,[dir="rtl"]
-  .sf-editor-section-row,[dir="rtl"]
-  .sf-editor-back{
-    padding-right: var(--sf-space-1\/3);
-  }
-  @supports not (padding-inline-start: initial){
-  [dir="rtl"] .sf-editor-item,[dir="rtl"]
-  .sf-editor-section-row,[dir="rtl"]
-  .sf-editor-back{
-    padding-right: var(--sf-space-1\/3);
-    }
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-item,[dir="rtl"]
-  .sf-editor-section-row,[dir="rtl"]
-  .sf-editor-back{
-    padding-left: var(--sf-space-1\/4);
-  }
-  @supports not (padding-inline-end: initial){
-  [dir="rtl"] .sf-editor-item,[dir="rtl"]
-  .sf-editor-section-row,[dir="rtl"]
-  .sf-editor-back{
-    padding-left: var(--sf-space-1\/4);
-    }
   }
   .sf-editor-item:where(:dir(rtl)),
   .sf-editor-section-row:where(:dir(rtl)),
@@ -479,34 +383,10 @@
   .sf-editor-section-name {
     display: contents;
   }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-item-name > button,html:not([dir="rtl"])
-  .sf-editor-section-name > button,html:not([dir="rtl"])
-  .sf-editor-back sf-button > button{
-    text-align: left;
-  }
-  @supports not (text-align: start){
-  html:not([dir="rtl"]) .sf-editor-item-name > button,html:not([dir="rtl"])
-  .sf-editor-section-name > button,html:not([dir="rtl"])
-  .sf-editor-back sf-button > button{
-    text-align: left;
-    }
-  }
   .sf-editor-item-name > button:where(:dir(ltr)),
   .sf-editor-section-name > button:where(:dir(ltr)),
   .sf-editor-back sf-button > button:where(:dir(ltr)){
     text-align: left;
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-item-name > button,[dir="rtl"]
-  .sf-editor-section-name > button,[dir="rtl"]
-  .sf-editor-back sf-button > button{
-    text-align: right;
-  }
-  @supports not (text-align: start){
-  [dir="rtl"] .sf-editor-item-name > button,[dir="rtl"]
-  .sf-editor-section-name > button,[dir="rtl"]
-  .sf-editor-back sf-button > button{
-    text-align: right;
-    }
   }
   .sf-editor-item-name > button:where(:dir(rtl)),
   .sf-editor-section-name > button:where(:dir(rtl)),
@@ -552,24 +432,8 @@
     -webkit-padding-after: var(--sf-space-1\/4);
             padding-block-end: var(--sf-space-1\/4);
   }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-count{
-    margin-left: auto;
-  }
-  @supports not (margin-inline-start: initial){
-  html:not([dir="rtl"]) .sf-editor-count{
-    margin-left: auto;
-    }
-  }
   .sf-editor-count:where(:dir(ltr)){
     margin-left: auto;
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-count{
-    margin-right: auto;
-  }
-  @supports not (margin-inline-start: initial){
-  [dir="rtl"] .sf-editor-count{
-    margin-right: auto;
-    }
   }
   .sf-editor-count:where(:dir(rtl)){
     margin-right: auto;
@@ -672,7 +536,6 @@
   }
   .sf-editor-shape-row {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-columns: repeat(var(--sf-editor-shape-columns, 2), minmax(0, 1fr));
     grid-gap: var(--sf-space-1\/4);
     gap: var(--sf-space-1\/4);
@@ -795,41 +658,9 @@
   }
   /* The canvas keeps the gutter's room at its start, so the gutter never
      stands over the start of a line however little margin the page leaves. */
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-canvas{
-    padding-left: max(var(--sf-space-3), var(--sf-editor-gutter-room));
-  }
-  @supports not (padding-inline-start: initial){
-  html:not([dir="rtl"]) .sf-editor-canvas{
-    padding-left: max(var(--sf-space-3), var(--sf-editor-gutter-room));
-    }
-  }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-canvas{
-    padding-right: var(--sf-space-2);
-  }
-  @supports not (padding-inline-end: initial){
-  html:not([dir="rtl"]) .sf-editor-canvas{
-    padding-right: var(--sf-space-2);
-    }
-  }
   .sf-editor-canvas:where(:dir(ltr)){
     padding-left: max(var(--sf-space-3), var(--sf-editor-gutter-room));
     padding-right: var(--sf-space-2);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-canvas{
-    padding-right: max(var(--sf-space-3), var(--sf-editor-gutter-room));
-  }
-  @supports not (padding-inline-start: initial){
-  [dir="rtl"] .sf-editor-canvas{
-    padding-right: max(var(--sf-space-3), var(--sf-editor-gutter-room));
-    }
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-canvas{
-    padding-left: var(--sf-space-2);
-  }
-  @supports not (padding-inline-end: initial){
-  [dir="rtl"] .sf-editor-canvas{
-    padding-left: var(--sf-space-2);
-    }
   }
   .sf-editor-canvas:where(:dir(rtl)){
     padding-right: max(var(--sf-space-3), var(--sf-editor-gutter-room));
@@ -898,24 +729,8 @@
     opacity: 0.55;
     cursor: not-allowed;
   }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-page .sf-editor-lock-mark{
-    right: var(--sf-space-1\/3);
-  }
-  @supports not (inset-inline-end: initial){
-  html:not([dir="rtl"]) .sf-editor-page .sf-editor-lock-mark{
-    right: var(--sf-space-1\/3);
-    }
-  }
   .sf-editor-page .sf-editor-lock-mark:where(:dir(ltr)){
     right: var(--sf-space-1\/3);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-page .sf-editor-lock-mark{
-    left: var(--sf-space-1\/3);
-  }
-  @supports not (inset-inline-end: initial){
-  [dir="rtl"] .sf-editor-page .sf-editor-lock-mark{
-    left: var(--sf-space-1\/3);
-    }
   }
   .sf-editor-page .sf-editor-lock-mark:where(:dir(rtl)){
     left: var(--sf-space-1\/3);
@@ -992,24 +807,8 @@
   }
   /* The gutter stands in the canvas's start inset, never at a negative
      offset; its end margin is the gap the placement reads. */
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-gutter{
-    margin-right: var(--sf-editor-gutter-gap);
-  }
-  @supports not (margin-inline-end: initial){
-  html:not([dir="rtl"]) .sf-editor-gutter{
-    margin-right: var(--sf-editor-gutter-gap);
-    }
-  }
   .sf-editor-gutter:where(:dir(ltr)){
     margin-right: var(--sf-editor-gutter-gap);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-gutter{
-    margin-left: var(--sf-editor-gutter-gap);
-  }
-  @supports not (margin-inline-end: initial){
-  [dir="rtl"] .sf-editor-gutter{
-    margin-left: var(--sf-editor-gutter-gap);
-    }
   }
   .sf-editor-gutter:where(:dir(rtl)){
     margin-left: var(--sf-editor-gutter-gap);
@@ -1073,46 +872,14 @@
   .sf-editor-toolbar[hidden] {
     display: none;
   }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-crumbs{
-    margin-right: var(--sf-space-1\/4);
-  }
-  @supports not (margin-inline-end: initial){
-  html:not([dir="rtl"]) .sf-editor-crumbs{
-    margin-right: var(--sf-space-1\/4);
-    }
-  }
   .sf-editor-crumbs:where(:dir(ltr)){
     margin-right: var(--sf-space-1\/4);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-crumbs{
-    margin-left: var(--sf-space-1\/4);
-  }
-  @supports not (margin-inline-end: initial){
-  [dir="rtl"] .sf-editor-crumbs{
-    margin-left: var(--sf-space-1\/4);
-    }
   }
   .sf-editor-crumbs:where(:dir(rtl)){
     margin-left: var(--sf-space-1\/4);
   }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-crumbs{
-    border-right: var(--sf-border--width) solid var(--sf-outline-variant);
-  }
-  @supports not (border-inline-end: initial){
-  html:not([dir="rtl"]) .sf-editor-crumbs{
-    border-right: var(--sf-border--width) solid var(--sf-outline-variant);
-    }
-  }
   .sf-editor-crumbs:where(:dir(ltr)){
     border-right: var(--sf-border--width) solid var(--sf-outline-variant);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-crumbs{
-    border-left: var(--sf-border--width) solid var(--sf-outline-variant);
-  }
-  @supports not (border-inline-end: initial){
-  [dir="rtl"] .sf-editor-crumbs{
-    border-left: var(--sf-border--width) solid var(--sf-outline-variant);
-    }
   }
   .sf-editor-crumbs:where(:dir(rtl)){
     border-left: var(--sf-border--width) solid var(--sf-outline-variant);
@@ -1135,24 +902,8 @@
   .sf-editor-path > sf-button {
     --sf-button-padding-inline: var(--sf-space-1\/4);
   }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-crumb-here{
-    padding-right: var(--sf-space-1\/3);
-  }
-  @supports not (padding-inline-end: initial){
-  html:not([dir="rtl"]) .sf-editor-crumb-here{
-    padding-right: var(--sf-space-1\/3);
-    }
-  }
   .sf-editor-crumb-here:where(:dir(ltr)){
     padding-right: var(--sf-space-1\/3);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-crumb-here{
-    padding-left: var(--sf-space-1\/3);
-  }
-  @supports not (padding-inline-end: initial){
-  [dir="rtl"] .sf-editor-crumb-here{
-    padding-left: var(--sf-space-1\/3);
-    }
   }
   .sf-editor-crumb-here:where(:dir(rtl)){
     padding-left: var(--sf-space-1\/3);
@@ -1442,24 +1193,8 @@
     display: block;
   }
   /* The Framework binding under a field: small monospace, left to right. */
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-utility{
-    text-align: left;
-  }
-  @supports not (text-align: start){
-  html:not([dir="rtl"]) .sf-editor-utility{
-    text-align: left;
-    }
-  }
   .sf-editor-utility:where(:dir(ltr)){
     text-align: left;
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-utility{
-    text-align: right;
-  }
-  @supports not (text-align: start){
-  [dir="rtl"] .sf-editor-utility{
-    text-align: right;
-    }
   }
   .sf-editor-utility:where(:dir(rtl)){
     text-align: right;
@@ -1554,41 +1289,9 @@
   /* A section row of the catalogue: its icon, name, count and chevron, as
      the library draws it; a block row: its picture, name and, under it, its
      type (a variant) or the section it comes from. */
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-pop-list > li[data-section]{
-    padding-left: var(--sf-space-1\/3);
-  }
-  @supports not (padding-inline-start: initial){
-  html:not([dir="rtl"]) .sf-editor-pop-list > li[data-section]{
-    padding-left: var(--sf-space-1\/3);
-    }
-  }
-  _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-pop-list > li[data-section]{
-    padding-right: var(--sf-space-1\/4);
-  }
-  @supports not (padding-inline-end: initial){
-  html:not([dir="rtl"]) .sf-editor-pop-list > li[data-section]{
-    padding-right: var(--sf-space-1\/4);
-    }
-  }
   .sf-editor-pop-list > li[data-section]:where(:dir(ltr)){
     padding-left: var(--sf-space-1\/3);
     padding-right: var(--sf-space-1\/4);
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-pop-list > li[data-section]{
-    padding-right: var(--sf-space-1\/3);
-  }
-  @supports not (padding-inline-start: initial){
-  [dir="rtl"] .sf-editor-pop-list > li[data-section]{
-    padding-right: var(--sf-space-1\/3);
-    }
-  }
-  _:-ms-input-placeholder, [dir="rtl"] .sf-editor-pop-list > li[data-section]{
-    padding-left: var(--sf-space-1\/4);
-  }
-  @supports not (padding-inline-end: initial){
-  [dir="rtl"] .sf-editor-pop-list > li[data-section]{
-    padding-left: var(--sf-space-1\/4);
-    }
   }
   .sf-editor-pop-list > li[data-section]:where(:dir(rtl)){
     padding-right: var(--sf-space-1\/3);
@@ -1694,24 +1397,8 @@
       max-height: 50vh;
       max-block-size: 50vh;
     }
-    _:-ms-input-placeholder, html:not([dir="rtl"]) .sf-editor-canvas{
-      padding-right: var(--sf-space-1\/2);
-    }
-    @supports not (padding-inline-end: initial){
-    html:not([dir="rtl"]) .sf-editor-canvas{
-      padding-right: var(--sf-space-1\/2);
-      }
-    }
     .sf-editor-canvas:where(:dir(ltr)){
       padding-right: var(--sf-space-1\/2);
-    }
-    _:-ms-input-placeholder, [dir="rtl"] .sf-editor-canvas{
-      padding-left: var(--sf-space-1\/2);
-    }
-    @supports not (padding-inline-end: initial){
-    [dir="rtl"] .sf-editor-canvas{
-      padding-left: var(--sf-space-1\/2);
-      }
     }
     .sf-editor-canvas:where(:dir(rtl)){
       padding-left: var(--sf-space-1\/2);

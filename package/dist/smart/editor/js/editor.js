@@ -2,6 +2,270 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "151a293c8c90"
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ariaKeyShortcuts: () => (/* binding */ ariaKeyShortcuts),
+/* harmony export */   isApplePlatform: () => (/* binding */ isApplePlatform),
+/* harmony export */   isCommandShortcut: () => (/* binding */ isCommandShortcut),
+/* harmony export */   isEditableTarget: () => (/* binding */ isEditableTarget),
+/* harmony export */   matchesShortcut: () => (/* binding */ matchesShortcut),
+/* harmony export */   parseShortcut: () => (/* binding */ parseShortcut),
+/* harmony export */   shortcutCaps: () => (/* binding */ shortcutCaps),
+/* harmony export */   shortcutView: () => (/* binding */ shortcutView)
+/* harmony export */ });
+// A key combination as a `shortcut` setting writes it (sf-button, an entry
+// of sf-menu-context, a row of sf-search): words joined by +, the modifiers
+// first and the key last -- mod+k, shift+/, /, escape. `mod` is the
+// platform's command modifier: Cmd on Apple platforms, Ctrl elsewhere. Read
+// once per render; nothing here holds state.
+//
+// The kbd component owns how a combination reads (owner decision 2026-11-07,
+// docs review R030, rule C04): on an Apple platform the modifiers are glyphs
+// in the platform's order, side by side (⇧⌘P); elsewhere they are words in
+// Ctrl+Shift+P order, and shortcutView() says to join them with + -- the kbd
+// sheet shows the joins where keys are plain glyphs (a menu row, a tooltip)
+// and hides them between caps, which stand apart. A host renders the view
+// and never styles the keys.
+const MODIFIERS = ['mod', 'ctrl', 'alt', 'shift', 'meta']; // What a person reads on a key cap, per platform.
+
+const MAC_CAPS = {
+  mod: '⌘',
+  meta: '⌘',
+  ctrl: '⌃',
+  alt: '⌥',
+  shift: '⇧'
+};
+const OTHER_CAPS = {
+  mod: 'Ctrl',
+  meta: 'Win',
+  ctrl: 'Ctrl',
+  alt: 'Alt',
+  shift: 'Shift'
+}; // A cap of one character -- a letter, ⌘, ⇧, ↵ -- is a square key; a cap of
+// several letters (Esc, Ctrl, Shift) hugs its word (sheet:
+// .sf-button-shortcut-key--square). A modifier's cap is the platform's own
+// word, so a page printed on a Mac and drawn on Windows widens by the
+// difference: the keys are true to their caps, not to the widest platform
+// (docs review R010, 2026-11-06).
+
+const KEY_CAPS = {
+  enter: '↵',
+  return: '↵',
+  escape: 'Esc',
+  esc: 'Esc',
+  tab: 'Tab',
+  space: 'Space',
+  backspace: '⌫',
+  delete: 'Del',
+  up: '↑',
+  down: '↓',
+  left: '←',
+  right: '→',
+  arrowup: '↑',
+  arrowdown: '↓',
+  arrowleft: '←',
+  arrowright: '→',
+  home: 'Home',
+  end: 'End',
+  pageup: 'PgUp',
+  pagedown: 'PgDn'
+}; // An Apple keyboard's own signs where they differ (component.kbd 1.3.3, CM-9
+// of ui-control research 2026-11-14-context-menu): forward delete is ⌦, as
+// macOS menus print it; Del is a Windows word.
+
+const MAC_KEY_CAPS = {
+  delete: '⌦'
+}; // The names of KeyboardEvent.key for the words above.
+
+const KEY_NAMES = {
+  enter: 'Enter',
+  return: 'Enter',
+  escape: 'Escape',
+  esc: 'Escape',
+  tab: 'Tab',
+  space: ' ',
+  backspace: 'Backspace',
+  delete: 'Delete',
+  up: 'ArrowUp',
+  down: 'ArrowDown',
+  left: 'ArrowLeft',
+  right: 'ArrowRight',
+  arrowup: 'ArrowUp',
+  arrowdown: 'ArrowDown',
+  arrowleft: 'ArrowLeft',
+  arrowright: 'ArrowRight',
+  home: 'Home',
+  end: 'End',
+  pageup: 'PageUp',
+  pagedown: 'PageDown'
+}; // KeyboardEvent.code of the punctuation a shortcut is usually written with,
+// so the combination is heard on any keyboard layout.
+
+const PUNCTUATION_CODES = {
+  '/': 'Slash',
+  '.': 'Period',
+  ',': 'Comma',
+  ';': 'Semicolon',
+  "'": 'Quote',
+  '[': 'BracketLeft',
+  ']': 'BracketRight',
+  '-': 'Minus',
+  '=': 'Equal',
+  '`': 'Backquote',
+  '\\': 'Backslash'
+};
+function isApplePlatform() {
+  const platform = globalThis.navigator?.userAgentData?.platform || globalThis.navigator?.platform || '';
+  return /mac|iphone|ipad|ipod/iu.test(platform);
+}
+/**
+ * The combination as parts: `{modifiers: Set, key}`, or null when there is
+ * none. `+` as the key itself is written `mod+plus`.
+ */
+
+function parseShortcut(value) {
+  const text = String(value ?? '').trim().toLowerCase();
+  if (!text) return null;
+  const words = text === '+' ? ['+'] : text.split('+').map(word => word.trim()).filter(Boolean);
+  if (!words.length) return null;
+  const key = words.at(-1) === 'plus' ? '+' : words.at(-1);
+  const modifiers = new Set(words.slice(0, -1).filter(word => MODIFIERS.includes(word)));
+  return {
+    modifiers,
+    key
+  };
+}
+/**
+ * What the keys read, one cap per key in the platform's words: {text, square},
+ * square when the cap is one character.
+ */
+
+function shortcutCaps(parsed, apple = isApplePlatform()) {
+  if (!parsed) return [];
+  const caps = apple ? MAC_CAPS : OTHER_CAPS;
+  const order = apple ? ['ctrl', 'alt', 'shift', 'mod', 'meta'] : ['mod', 'ctrl', 'meta', 'alt', 'shift'];
+  const modifiers = [];
+
+  for (const name of order.filter(one => parsed.modifiers.has(one))) {
+    // On a Mac mod and meta are one key.
+    if (modifiers.includes(caps[name])) continue;
+    modifiers.push(caps[name]);
+  }
+
+  const key = (apple ? MAC_KEY_CAPS[parsed.key] : undefined) ?? KEY_CAPS[parsed.key] ?? (parsed.key.length === 1 ? parsed.key.toUpperCase() : parsed.key.charAt(0).toUpperCase() + parsed.key.slice(1));
+  return [...modifiers, key].map(text => ({
+    text,
+    square: [...text].length === 1
+  }));
+} // A function key (F1-F24) reads as its name.
+
+const FUNCTION_KEY = /^f(?:[1-9]|1[0-9]|2[0-4])$/u; // Whether a written value is the notation above rather than text a page
+// already wrote for people (⇧⌘L, «Ctrl K»): every word but the last a
+// modifier, the last one character, a named key or a function key.
+
+function isNotation(value) {
+  const text = String(value ?? '').trim().toLowerCase();
+  if (!text || /\s/u.test(text.replace(/\s*\+\s*/gu, '+'))) return false;
+  if (text === '+') return true;
+  const words = text.split('+').map(word => word.trim());
+  if (words.some(word => !word)) return false;
+  const key = words.at(-1) === 'plus' ? '+' : words.at(-1);
+  return words.slice(0, -1).every(word => MODIFIERS.includes(word)) && ([...key].length === 1 || key in KEY_CAPS || FUNCTION_KEY.test(key));
+}
+/**
+ * What a host draws for a `shortcut` value: {keys: [{text, square}], join},
+ * the keys in this platform's words and whether they are joined with + (not
+ * on an Apple platform, and only between keys). A value that is not the
+ * notation -- text a page wrote for people, such as ⇧⌘L -- is one key of
+ * that text. Empty: no keys.
+ */
+
+
+function shortcutView(value, apple = isApplePlatform()) {
+  const text = String(value ?? '').trim();
+  if (!text) return {
+    keys: [],
+    join: false
+  };
+  if (!isNotation(text)) return {
+    keys: [{
+      text,
+      square: [...text].length === 1
+    }],
+    join: false
+  };
+  const keys = shortcutCaps(parseShortcut(text), apple);
+  return {
+    keys,
+    join: !apple && keys.length > 1
+  };
+}
+/** The value of aria-keyshortcuts (WAI-ARIA 1.2): Meta+K, Control+K, /. */
+
+function ariaKeyShortcuts(parsed, apple = isApplePlatform()) {
+  if (!parsed) return '';
+  const names = [];
+  if (parsed.modifiers.has('ctrl') || parsed.modifiers.has('mod') && !apple) names.push('Control');
+  if (parsed.modifiers.has('alt')) names.push('Alt');
+  if (parsed.modifiers.has('shift')) names.push('Shift');
+  if (parsed.modifiers.has('meta') || parsed.modifiers.has('mod') && apple) names.push('Meta');
+  const key = KEY_NAMES[parsed.key] ?? (parsed.key === ' ' ? 'Space' : parsed.key.length === 1 ? parsed.key.toUpperCase() : parsed.key);
+  return [...names, key === ' ' ? 'Space' : key].join('+');
+} // Whether the event's key is the combination's key: by the character it
+// typed, or by the physical key for a letter, a digit or the punctuation
+// above, so mod+k is heard on a Russian layout too.
+
+function sameKey(event, key) {
+  const name = KEY_NAMES[key];
+  if (name) return event.key === name;
+  if (String(event.key).toLowerCase() === key) return true;
+  if (/^[a-z]$/u.test(key)) return event.code === `Key${key.toUpperCase()}`;
+  if (/^[0-9]$/u.test(key)) return event.code === `Digit${key}`;
+  return PUNCTUATION_CODES[key] !== undefined && event.code === PUNCTUATION_CODES[key];
+}
+/** Whether a keydown is the combination. */
+
+
+function matchesShortcut(event, parsed, apple = isApplePlatform()) {
+  if (!parsed || !event) return false;
+  const wants = {
+    ctrl: parsed.modifiers.has('ctrl') || parsed.modifiers.has('mod') && !apple,
+    meta: parsed.modifiers.has('meta') || parsed.modifiers.has('mod') && apple,
+    alt: parsed.modifiers.has('alt'),
+    shift: parsed.modifiers.has('shift')
+  };
+  if (Boolean(event.ctrlKey) !== wants.ctrl || Boolean(event.metaKey) !== wants.meta || Boolean(event.altKey) !== wants.alt) return false; // Shift is part of typing a punctuation mark on many layouts (? is shift+/):
+  // a combination that does not name it does not mind it for punctuation, and
+  // minds it for a letter, a digit or a named key.
+
+  const punctuation = parsed.key.length === 1 && !/^[a-z0-9]$/u.test(parsed.key);
+  if (!punctuation && Boolean(event.shiftKey) !== wants.shift) return false;
+  if (punctuation && wants.shift && !event.shiftKey) return false;
+  return sameKey(event, parsed.key);
+}
+/** A combination with mod, ctrl, alt or meta is a command even in a field. */
+
+function isCommandShortcut(parsed) {
+  return Boolean(parsed) && ['mod', 'ctrl', 'alt', 'meta'].some(name => parsed.modifiers.has(name));
+}
+/** Whether focus is where a person types: a field, a select or editable text. */
+
+function isEditableTarget(target) {
+  const element = target instanceof Element ? target : null;
+  if (!element) return false;
+  if (element.isContentEditable) return true;
+  const tag = element.localName;
+  if (tag === 'textarea' || tag === 'select') return true;
+  if (tag !== 'input') return false;
+  const type = (element.getAttribute('type') || 'text').toLowerCase();
+  return !['button', 'submit', 'reset', 'checkbox', 'radio', 'range', 'color', 'file', 'image', 'hidden'].includes(type);
+}
+
+/***/ },
+
 /***/ "1412c5875b4d"
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
@@ -191,7 +455,9 @@ function hasDateStyle(style) {
  * chart's tick, «14:05» with two-digit hours). `timeZone` (an IANA name,
  * Europe/Moscow) writes the moment on that zone's clock instead of the
  * reader's (owner decision C183 (3): a product that knows the person's zone).
- * Anything that is not a date is `gap`, '' by default.
+ * Anything that is not a date is `gap`, '' by default. A marker after the year
+ * («2026 г.», «2026 р.») is held to it by a no-break space, so it never starts
+ * a line alone.
  */
 
 
@@ -216,8 +482,9 @@ function formatDate(value, {
 
   if (knownTimeZone(timeZone)) options = { ...options,
     timeZone
-  };
-  return (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('DateTimeFormat', (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.formatLocale)(where), options).format(moment);
+  }; // The year keeps its marker («2026 г.» never wraps before «г.»): format-intl.js.
+
+  return (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.formatDateText)((0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('DateTimeFormat', (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.formatLocale)(where), options), moment);
 }
 /**
  * Whether the platform knows an IANA time zone name (Europe/Moscow, UTC). An
@@ -409,9 +676,14 @@ const FILE_SIZE_UNITS = /* @__PURE__ */unitTable(_lang_file_size_index_mjs__WEBP
 /** The unit words for a locale: registered for it, its own, its language's, else English. */
 
 function fileSizeUnits(locale = 'en') {
-  const wanted = String(locale || 'en').trim().toLowerCase().replace('_', '-');
+  const wanted = String(locale || 'en').trim().toLowerCase().replace('_', '-'); // A registry alias takes its pack's words (zh-cn: zh-hans, pt: pt-br;
+  // core/lang/index.json aliases, kept on the shared store by core).
 
-  for (const code of [...new Set([wanted, wanted.split('-')[0]])]) {
+  const pack = code => globalThis.__sfPageLanguage?.packs?.aliases?.[code] ?? code;
+
+  const base = wanted.split('-')[0];
+
+  for (const code of [...new Set([wanted, pack(wanted), base, pack(base)])]) {
     const units = registeredUnits(code) ?? (Object.hasOwn(FILE_SIZE_UNITS, code) ? FILE_SIZE_UNITS[code] : null);
     if (units) return units;
   }
@@ -463,6 +735,7 @@ __webpack_async_result__();
 __webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   formatDateText: () => (/* binding */ formatDateText),
 /* harmony export */   formatLocale: () => (/* binding */ formatLocale),
 /* harmony export */   intlFormatter: () => (/* binding */ intlFormatter),
 /* harmony export */   toDate: () => (/* binding */ toDate)
@@ -533,6 +806,31 @@ function intlFormatter(kind, locale, options) {
   if (cache.size >= 256) cache.delete(cache.keys().next().value);
   cache.set(key, made);
   return made;
+} // A date's year keeps the abbreviation that follows it (A4, group build 15):
+// Russian, Ukrainian, Bulgarian, Belarusian, Kazakh, Lithuanian, Macedonian
+// and Armenian write one after the year -- «19 нояб. 2026 г.», «2026 р.»,
+// «2026 m.», «2026 թ.» -- and the platform joins it with an ordinary space, so
+// a narrow cell or a wrapped line printed «2026» at the end of one line and
+// «г.» alone at the start of the next. Only the space before an abbreviation
+// (letters closed by a full stop: г., гг., m.) becomes a no-break space; a word
+// such as English «at» or German «um», a comma, a slash or a time after the
+// year is left as the platform writes it (DEV answer msg-e6758728).
+
+/** A DateTimeFormat's text of a moment with the year's marker held to the year. */
+
+function formatDateText(formatter, moment) {
+  if (typeof formatter?.formatToParts !== 'function') return formatter.format(moment); // A module-level regular expression is a statement a bundler keeps (core-format test): made here.
+
+  const gap = /^[\s\u00a0\u202f]+(?=\p{L}+\.)/u;
+  let text = '';
+  let afterYear = false;
+
+  for (const part of formatter.formatToParts(moment)) {
+    text += afterYear && part.type === 'literal' ? part.value.replace(gap, '\u00a0') : part.value;
+    afterYear = part.type === 'year';
+  }
+
+  return text;
 }
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
@@ -750,9 +1048,13 @@ function intlSpeaks(locale) {
 function packDayWord(offset, locale) {
   if (intlSpeaks(locale)) return null;
   const words = globalThis.__sfPageLanguage?.registered?.get?.('sf-relative-day');
-  const wanted = String(locale || '').trim().toLowerCase().replace('_', '-');
+  const wanted = String(locale || '').trim().toLowerCase().replace('_', '-'); // A registry alias takes its pack's words (zh-cn: zh-hans, pt: pt-br).
 
-  for (const code of [...new Set([wanted, wanted.split('-')[0]])]) {
+  const pack = code => globalThis.__sfPageLanguage?.packs?.aliases?.[code] ?? code;
+
+  const base = wanted.split('-')[0];
+
+  for (const code of [...new Set([wanted, pack(wanted), base, pack(base)])]) {
     const word = words?.get?.(code)?.[DAY_KEYS[offset]];
     if (typeof word === 'string' && word.trim()) return word;
   }
@@ -818,12 +1120,12 @@ function formatRelativeDay(value, {
     const year = moment.getFullYear() === (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.toDate)(now).getFullYear() ? {} : {
       year: 'numeric'
     };
-    text = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('DateTimeFormat', locale, {
+    text = (0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.formatDateText)((0,_format_intl_js__WEBPACK_IMPORTED_MODULE_0__.intlFormatter)('DateTimeFormat', locale, {
       day: 'numeric',
       month: 'long',
       ...year,
       ...zone
-    }).format(moment);
+    }), moment);
   }
 
   return capital ? capitalise(text, locale) : text;
@@ -962,6 +1264,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   isMainAction: () => (/* binding */ isMainAction),
 /* harmony export */   isPressed: () => (/* binding */ isPressed),
 /* harmony export */   layoutActionRow: () => (/* binding */ layoutActionRow),
+/* harmony export */   layoutHeight: () => (/* binding */ layoutHeight),
+/* harmony export */   layoutRowRoom: () => (/* binding */ layoutRowRoom),
+/* harmony export */   layoutWidth: () => (/* binding */ layoutWidth),
 /* harmony export */   measureShown: () => (/* binding */ measureShown),
 /* harmony export */   openRowMenu: () => (/* binding */ openRowMenu),
 /* harmony export */   readPriority: () => (/* binding */ readPriority),
@@ -1092,6 +1397,38 @@ function rowRoom(list) {
   const style = getComputedStyle(list);
   const edges = ['borderInlineStartWidth', 'borderInlineEndWidth', 'paddingInlineStart', 'paddingInlineEnd'];
   return list.getBoundingClientRect().width - edges.reduce((sum, edge) => sum + (parseFloat(style[edge]) || 0), 0);
+} // The width an element is laid out at, in fractional CSS pixels, before any
+// transform of it or of an ancestor (its border box). getBoundingClientRect is
+// a screen box: inside scale(.7) a 90 px tab reads 63, inside rotate() it reads
+// the width of its rotated bounding box, and a row that compares such widths
+// with its padding, a text measured in canvas or a ResizeObserver size mixes
+// screen and layout pixels (docs hero study 2026-11-19, section 9). The used
+// width of the computed style is the layout's own, with its fractions; a box
+// without one (an inline box, an element not drawn) gives offsetWidth.
+
+function layoutWidth(element) {
+  if (!element) return 0;
+  const style = getComputedStyle(element);
+  const width = parseFloat(style.width);
+  if (!Number.isFinite(width)) return element.offsetWidth || 0;
+  if (style.boxSizing === 'border-box') return width;
+  return ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'].reduce((sum, edge) => sum + (parseFloat(style[edge]) || 0), width);
+} // The block size of the same box (layoutWidth's other axis).
+
+function layoutHeight(element) {
+  if (!element) return 0;
+  const style = getComputedStyle(element);
+  const height = parseFloat(style.height);
+  if (!Number.isFinite(height)) return element.offsetHeight || 0;
+  if (style.boxSizing === 'border-box') return height;
+  return ['paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth'].reduce((sum, edge) => sum + (parseFloat(style[edge]) || 0), height);
+} // rowRoom in layout pixels: the row's content box before any transform, for a
+// row whose items are measured with layoutWidth.
+
+function layoutRowRoom(list) {
+  const style = getComputedStyle(list);
+  const edges = ['borderInlineStartWidth', 'borderInlineEndWidth', 'paddingInlineStart', 'paddingInlineEnd'];
+  return layoutWidth(list) - edges.reduce((sum, edge) => sum + (parseFloat(style[edge]) || 0), 0);
 } // A text measurer in an element's own face, or null without a canvas: the
 // width «Ещё (7)» will have before its button draws it.
 
@@ -3589,6 +3926,25 @@ class SfEditor extends EditorElement {
   remember(item) {
     this.recent = (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.pushRecent)(this.recent, (0,_js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__.itemKey)(item));
     this.writePreferences();
+  } // The library star's look (C393, DEV msg-975e95fe): the Framework's toggle
+  // where sf-button-icon declares it (1.14.0), read from its own interface
+  // as sf-header-page does; until it is defined, the former ghost star
+  // filled when on, drawn again once it is.
+
+
+  starLook() {
+    const Button = globalThis.customElements?.get?.("sf-button-icon");
+
+    if (!Button) {
+      if (!this._starLookWait && globalThis.customElements?.whenDefined) {
+        this._starLookWait = globalThis.customElements.whenDefined("sf-button-icon").then(() => this.refresh());
+      }
+
+      return null;
+    }
+
+    const values = Button.sfInterface?.settings?.appearance?.values;
+    return Array.isArray(values) && values.includes("toggle") ? "toggle" : null;
   }
 
   favourite(item) {
@@ -3877,19 +4233,19 @@ class SfEditor extends EditorElement {
       id: "up",
       text: this.sfWord("menu-up"),
       icon: "arrow_upward",
-      shortcut: "Alt+↑",
+      shortcut: "alt+up",
       disabled: !at || at.index === 0
     }, {
       id: "down",
       text: this.sfWord("menu-down"),
       icon: "arrow_downward",
-      shortcut: "Alt+↓",
+      shortcut: "alt+down",
       disabled: !at?.parent || at.index >= at.parent.slots[at.slot].length - 1
     }, {
       id: "duplicate",
       text: this.sfWord("menu-duplicate"),
       icon: "content_copy",
-      shortcut: "⌘D"
+      shortcut: "mod+d"
     }, ...(this.model.rights.layout ? [{
       id: "columns",
       text: this.sfWord(columns ? "menu-add-column" : "menu-columns"),
@@ -3904,7 +4260,7 @@ class SfEditor extends EditorElement {
       text: this.sfWord("menu-remove"),
       icon: "delete",
       danger: true,
-      shortcut: "⌫"
+      shortcut: "backspace"
     }];
     menu.entries = entries;
     menu.dataset.for = id; // sf-button-icon's host is display: contents: the menu stands by its button.
@@ -3953,7 +4309,7 @@ class SfEditor extends EditorElement {
     }
 
     queueMicrotask(() => {
-      // The menu closes: the keys (⌘Z first) act where a person works, on the canvas.
+      // The menu closes: the keys (mod+z first) act where a person works, on the canvas.
       if (action !== "build") this.canvasElement?.focus({
         preventScroll: true
       });
@@ -4735,16 +5091,20 @@ __webpack_async_result__();
 __webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   keyWords: () => (/* binding */ keyWords),
+/* harmony export */   keysText: () => (/* binding */ keysText),
 /* harmony export */   renderEditorTemplate: () => (/* binding */ renderEditorTemplate)
 /* harmony export */ });
 /* harmony import */ var lit__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("2a080a730149");
 /* harmony import */ var lit_directives_repeat_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("efa66f8927d1");
 /* harmony import */ var _default_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__("87cfda6b7364");
 /* harmony import */ var _catalogue_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__("8d9331f1f24f");
+/* harmony import */ var _component_kbd_js_shortcut__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__("151a293c8c90");
 var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([lit__WEBPACK_IMPORTED_MODULE_0__, lit_directives_repeat_js__WEBPACK_IMPORTED_MODULE_1__, _catalogue_mjs__WEBPACK_IMPORTED_MODULE_3__]);
 ([lit__WEBPACK_IMPORTED_MODULE_0__, lit_directives_repeat_js__WEBPACK_IMPORTED_MODULE_1__, _catalogue_mjs__WEBPACK_IMPORTED_MODULE_3__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 /* harmony import */ var lit__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lit__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var lit_directives_repeat_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lit_directives_repeat_js__WEBPACK_IMPORTED_MODULE_1__);
+
 
 
 
@@ -4774,6 +5134,34 @@ var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([lit_
 // sf-dropdown, sf-switch, sf-tree, sf-menu-context, sf-modal, sf-skeleton,
 // sf-icon.
 
+/**
+ * A key combination in a title, in this platform's marks (rule C04): the
+ * Framework's sf-kbd helper reads the notation -- mod+z is ⌘Z on a Mac and
+ * Ctrl+Z elsewhere, joined with + where the platform joins keys.
+ */
+
+function keysText(value, last) {
+  const {
+    keys,
+    join
+  } = (0,_component_kbd_js_shortcut__WEBPACK_IMPORTED_MODULE_4__.shortcutView)(value);
+  const texts = keys.map(key => key.text); // A pair of arrows reads as one key: alt+up with "↑↓" is ⌥↑↓ or Alt+↑↓.
+
+  if (last !== undefined && texts.length) texts[texts.length - 1] = last;
+  return texts.join(join ? "+" : "");
+}
+/** The keys the editor's words name, in this platform's marks. */
+
+function keyWords() {
+  return {
+    alt: keysText("alt+up", "").replace(/\+$/u, ""),
+    altShift: keysText("alt+shift+up", "").replace(/\+$/u, ""),
+    undo: keysText("mod+z"),
+    move: keysText("alt+up", "↑↓"),
+    moveTyping: keysText("alt+shift+up", "↑↓"),
+    remove: keysText("backspace")
+  };
+}
 /** The word for each reason a class of «Extra classes» is not taken. */
 
 const REFUSED = {
@@ -4799,7 +5187,7 @@ function renderEditorTemplate(component) {
             <div class="sf-editor-top" role="region" aria-label=${component.label || w("label")}>
                 ${bar(component, view, w)}
                 ${component.builder ? builderBar(component, w) : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
-                <p id="sf-editor-help" class="sf-editor-visually-hidden">${w("help-text")}</p>
+                <p id="sf-editor-help" class="sf-editor-visually-hidden">${w("help-text", keyWords())}</p>
                 <div class="sf-editor-live sf-editor-visually-hidden" role="status" aria-live="polite"></div>
             </div>
             <div class="sf-editor-body">
@@ -4856,9 +5244,9 @@ function bar(component, view, w) {
             <div class="sf-editor-bar-start">
                 ${slotted(component, "start")}
                 ${view.heading ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<span class="sf-editor-title"><strong class="sf-editor-title-name">${view.heading}</strong>${view.caption ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<span class="sf-editor-title-caption">${view.caption}</span>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}</span>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
-                <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="undo" aria-label=${w("undo-label")} title=${`${w("undo-label")} (⌘Z)`}
+                <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="undo" aria-label=${w("undo-label")} title=${`${w("undo-label")} (${keysText("mod+z")})`}
                                 ?disabled=${!model.canUndo} @click=${() => component.history("undo")}></sf-button-icon>
-                <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="redo" aria-label=${w("redo-label")} title=${`${w("redo-label")} (⇧⌘Z)`}
+                <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="redo" aria-label=${w("redo-label")} title=${`${w("redo-label")} (${keysText("shift+mod+z")})`}
                                 ?disabled=${!model.canRedo} @click=${() => component.history("redo")}></sf-button-icon>
                 ${template ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button class="sf-editor-template-toggle" size="1/3" appearance=${model.templateEditing ? "tonal" : "ghost"} scheme=${model.templateEditing ? "primary" : "on-surface-variant"}
                         icon-start=${model.templateEditing ? "check" : ""} text=${w(model.templateEditing ? "template-done" : "template-edit")}
@@ -4896,7 +5284,8 @@ function helpPop(component, w) {
         <div class="sf-editor-help-pop" role="dialog" aria-label=${w("help-label")} style=${`inset-block-start:${component.helpOpen.y}px;inset-inline-end:${component.helpOpen.x}px`}>
             <h2 class="sf-editor-help-title">${w("help-title")}</h2>
             <ol class="sf-editor-help-list">
-                ${["help-1", "help-2", "help-3", "help-4"].map(key => (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<li>${w(key)}</li>`)}
+                ${["help-1", "help-2", "help-3"].map(key => (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<li>${w(key)}</li>`)}
+                <li>${w("help-4", keyWords())}</li>
             </ol>
         </div>
     `;
@@ -5103,7 +5492,15 @@ function rows(component, list, w, {
     }}></sf-button>
                     ${said ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<span class="sf-editor-item-note">${said}</span>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
                 </span>
-                ${favourite ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button-icon class="sf-editor-star" size="1/3" appearance="ghost" scheme="on-surface-variant" icon="star"
+                ${favourite ? component.starLook?.() // The toggle look (C393): on is the soft primary plate with a
+    // 1 px primary ring inside, the glyph kept outline; pressed
+    // writes aria-pressed, one name says the action.
+    ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button-icon class="sf-editor-star" size="1/3" appearance="toggle" icon="star"
+                                pressed=${starred ? "true" : "false"} data-on=${starred ? "true" : "false"}
+                                aria-label=${w("favourite", {
+      name: item.label
+    })}
+                                @click=${() => component.favourite(item)}></sf-button-icon>` : (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button-icon class="sf-editor-star" size="1/3" appearance="ghost" scheme="on-surface-variant" icon="star"
                                 ?filled=${starred} data-on=${starred ? "true" : "false"} aria-pressed=${starred ? "true" : "false"}
                                 aria-label=${w(starred ? "unfavourite" : "favourite", {
       name: item.label
@@ -5213,11 +5610,11 @@ function toolbar(component, view, w) {
                                 aria-label=${w("grip-label")} title=${w("grip-label")} aria-haspopup="menu"
                                 @pointerdown=${event => component.onToolbarGrip(event)}
                                 @keydown=${event => component.onGripKey(event, node.id)}></sf-button-icon>
-                <sf-button-icon size="1/3" appearance="ghost" scheme="on-surface-variant" icon="arrow_upward" aria-label=${w("menu-up")} title=${`${w("menu-up")} (Alt+↑)`}
+                <sf-button-icon size="1/3" appearance="ghost" scheme="on-surface-variant" icon="arrow_upward" aria-label=${w("menu-up")} title=${`${w("menu-up")} (${keysText("alt+up")})`}
                                 ?disabled=${!at || at.first} @click=${() => component.moveBy(node.id, -1)}></sf-button-icon>
-                <sf-button-icon size="1/3" appearance="ghost" scheme="on-surface-variant" icon="arrow_downward" aria-label=${w("menu-down")} title=${`${w("menu-down")} (Alt+↓)`}
+                <sf-button-icon size="1/3" appearance="ghost" scheme="on-surface-variant" icon="arrow_downward" aria-label=${w("menu-down")} title=${`${w("menu-down")} (${keysText("alt+down")})`}
                                 ?disabled=${!at || at.last} @click=${() => component.moveBy(node.id, 1)}></sf-button-icon>
-                <sf-button-icon size="1/3" appearance="ghost" scheme="on-surface-variant" icon="content_copy" aria-label=${w("menu-duplicate")} title=${`${w("menu-duplicate")} (⌘D)`}
+                <sf-button-icon size="1/3" appearance="ghost" scheme="on-surface-variant" icon="content_copy" aria-label=${w("menu-duplicate")} title=${`${w("menu-duplicate")} (${keysText("mod+d")})`}
                                 @click=${() => component.run(component.model.duplicate(node.id), "duplicated-text")}></sf-button-icon>
                 <sf-button-icon class="sf-editor-toolbar-more" size="1/3" appearance="ghost" scheme="on-surface-variant" icon="more_horiz" aria-label=${w("menu-more")} title=${w("menu-more")} aria-haspopup="menu"
                                 @click=${event => component.openGripMenu(node.id, event.currentTarget)}></sf-button-icon></div>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
@@ -5236,7 +5633,7 @@ function pathBar(component, view, w) {
                            text=${component.typeLabel(node.type)} aria-current=${node.id === view.model.selected ? "true" : "false"}
                            @click=${() => component.choose(node.id)}></sf-button>`)}
             <span class="sf-editor-spacer"></span>
-            <span class="sf-editor-keys">${w(view.model.typing ? "keys-typing" : view.selected ? "keys-chosen" : "keys-page")}</span>
+            <span class="sf-editor-keys">${w(view.model.typing ? "keys-typing" : view.selected ? "keys-chosen" : "keys-page", keyWords())}</span>
         </nav>
     `;
 } // ------------------------------------------------------------ the right panel
@@ -8995,13 +9392,20 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "tight": {
           "default": false,
           "type": "boolean"
+        },
+        "value": {
+          "default": "",
+          "type": "string"
+        },
+        "value-label": {
+          "type": "string"
         }
       },
       "type": "object"
     },
     "kind": "custom-element",
     "manifest": "smart.badge",
-    "version": "1.6.3"
+    "version": "1.7.0"
   },
   "sf-button": {
     "inputs": {
@@ -9013,7 +9417,8 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "default",
             "tonal",
             "outline",
-            "ghost"
+            "ghost",
+            "plain"
           ],
           "type": "string"
         },
@@ -9075,6 +9480,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": false,
           "type": "boolean"
         },
+        "max-width": {
+          "default": "",
+          "type": "string"
+        },
         "name": {
           "default": "",
           "type": "string"
@@ -9085,6 +9494,14 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "button",
             "submit",
             "reset"
+          ],
+          "type": "string"
+        },
+        "overflow": {
+          "default": "wrap",
+          "enum": [
+            "wrap",
+            "truncate"
           ],
           "type": "string"
         },
@@ -9132,6 +9549,14 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "shortcut-listen": {
           "default": false,
           "type": "boolean"
+        },
+        "shrink": {
+          "default": "none",
+          "enum": [
+            "none",
+            "icon"
+          ],
+          "type": "string"
         },
         "size": {
           "default": "1",
@@ -9201,7 +9626,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.button",
-    "version": "1.16.8"
+    "version": "1.18.1"
   },
   "sf-button-icon": {
     "inputs": {
@@ -9214,7 +9639,8 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
             "tonal",
             "outline",
             "ghost",
-            "plain"
+            "plain",
+            "toggle"
           ],
           "type": "string"
         },
@@ -9381,7 +9807,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.button-icon",
-    "version": "1.13.8"
+    "version": "1.14.0"
   },
   "sf-checkbox": {
     "inputs": {
@@ -9406,6 +9832,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "disabled": {
           "default": false,
           "type": "boolean"
+        },
+        "error-message": {
+          "default": "",
+          "type": "string"
         },
         "help": {
           "default": "",
@@ -9453,7 +9883,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.checkbox",
-    "version": "1.5.5"
+    "version": "1.6.0"
   },
   "sf-divider": {
     "component": "component.content-divider",
@@ -9525,6 +9955,15 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           ],
           "type": "string"
         },
+        "list-width": {
+          "default": "field",
+          "enum": [
+            "field",
+            "list",
+            "trigger"
+          ],
+          "type": "string"
+        },
         "mode": {
           "default": "select",
           "enum": [
@@ -9580,13 +10019,23 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "value": {
           "default": "",
           "type": "string"
+        },
+        "width": {
+          "default": "",
+          "enum": [
+            "",
+            "short",
+            "medium",
+            "long"
+          ],
+          "type": "string"
         }
       },
       "type": "object"
     },
     "kind": "custom-element",
     "manifest": "smart.dropdown",
-    "version": "1.20.4"
+    "version": "1.24.0"
   },
   "sf-icon": {
     "inputs": {
@@ -9678,7 +10127,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.icon",
-    "version": "1.4.2"
+    "version": "1.4.4"
   },
   "sf-input": {
     "inputs": {
@@ -9689,7 +10138,8 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "enum": [
             "bordered",
             "filled",
-            "hidden"
+            "hidden",
+            "plain"
           ],
           "type": "string"
         },
@@ -9881,13 +10331,23 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "value": {
           "default": "",
           "type": "string"
+        },
+        "width": {
+          "default": "",
+          "enum": [
+            "",
+            "short",
+            "medium",
+            "long"
+          ],
+          "type": "string"
         }
       },
       "type": "object"
     },
     "kind": "custom-element",
     "manifest": "smart.input",
-    "version": "1.15.2"
+    "version": "1.17.0"
   },
   "sf-input-textarea": {
     "inputs": {
@@ -10050,6 +10510,16 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "width": {
+          "default": "",
+          "enum": [
+            "",
+            "short",
+            "medium",
+            "long"
+          ],
+          "type": "string"
+        },
         "wrap": {
           "default": "soft",
           "enum": [
@@ -10063,7 +10533,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.input-textarea",
-    "version": "1.13.2"
+    "version": "1.14.0"
   },
   "sf-switch": {
     "inputs": {
@@ -10085,6 +10555,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": false,
           "type": "boolean"
         },
+        "error-message": {
+          "default": "",
+          "type": "string"
+        },
         "help": {
           "default": "",
           "type": "string"
@@ -10104,6 +10578,10 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
         "inherited-value": {
           "default": "",
           "type": "string"
+        },
+        "invalid": {
+          "default": false,
+          "type": "boolean"
         },
         "label": {
           "default": "",
@@ -10147,7 +10625,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.switch",
-    "version": "1.9.3"
+    "version": "1.10.0"
   }
 });
 
@@ -19403,21 +19881,21 @@ module.exports = /*#__PURE__*/JSON.parse('{"runtime":{"heading":"This block coul
 /***/ "b1c5d4f6dddd"
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.4.0","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"host-states":{},"css-variables":{}}');
+module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.5.0","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"host-states":{},"css-variables":{}}');
 
 /***/ },
 
 /***/ "5bf8f84cf5a8"
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"title":"Page editor","runtime":{"back":"Back","bar-label":"Editor tools","binding":"SIMAI Framework: {classes}","block-not-kept-text":"The site did not keep the block","block-saved-text":"Site block saved","builder-editing":"Changing a site block","builder-group":"Group","builder-invalid":"Not saved","builder-label":"Block builder","builder-name":"Name","builder-new":"New site block","builder-note":"Parameters for the author: {count}","builder-save":"Save block","builder-save-everywhere":"Save and change everywhere","builder-start":"Create your own block","cancel":"Cancel","canvas-role":"page","catalogue-label":"Add a block","catalogue-tabs":"Kind","columns-text":"Columns changed","data-binding":"Data: {target}","data-empty-text":"When there is nothing","data-follows":"Block in this section","data-limit":"How many","data-mapping":"Fields","data-no-port":"The site gives no data sources here; demo data is shown.","data-no-publishers":"No block in this section gives this.","data-none":"None","data-own-mapping":"My own","data-preset":"Mapping","data-runtime":"Follows: {target}","data-source":"Source","data-states":"Show as","data-states-help":"Look at the block with data, empty, with an error or while loading. Only the preview changes.","duplicated-text":"Block duplicated","editing-for":"Values for","empty-place":"Add a block here","expose":"For the author","favourite":"Add {name} to favourites","favourites":"Favourites","favourites-empty":"Star a block and it shows up here.","grip-label":"Drag to move, press for the menu","gutter-hint":"Drag ⠿ to move a block · press it for the menu","gutter-label":"Block actions","heading-placeholder":"Heading","help-1":"Press text to type in it; press beside it to choose its block.","help-2":"Drag a block from the library onto the page, or press it to add it after the chosen block.","help-3":"Drag ⠿ to move a block; + adds one after it; / in an empty line opens the catalogue.","help-4":"Esc goes a level up, Enter a level down; Alt+arrows move the chosen block; ⌘Z undoes.","help-label":"Help","help-text":"Click text to type, click beside it to choose the block. Esc goes up a level, Enter goes down. Alt+arrows move the chosen block; Alt+Shift+arrows move it while typing. / in an empty line opens the catalogue.","help-title":"How to edit","hidden-here":"Hidden on this screen","html-none":"This block prints nothing on its own.","html-note":"The block as the site prints it.","inserted-text":"Block added","item-drag-hint":"Drag onto the page, or press to add","json-note":"The block as the Document holds it.","keys-chosen":"Esc up · Enter down · Alt+↑↓ move · ⌫ remove","keys-page":"Enter: into the page","keys-typing":"Esc: choose the block · / insert · Alt+Shift+↑↓ move","label":"Page editor","left-blocks":"Blocks","left-label":"Blocks and structure","left-structure":"Structure","lock-layout":"The layout is set by the site; you write inside its text areas.","lock-mark-layout":"Layout","lock-mark-page":"Page","lock-mark-template":"Template","lock-page":"While the template is edited, the page waits.","lock-template":"The header and footer are the site template. Change them with Edit template.","locked":"locked","menu-add-column":"Add a column","menu-change-block":"Change the site block everywhere","menu-columns":"Split into columns","menu-down":"Move down","menu-duplicate":"Duplicate","menu-make-block":"Make a site block","menu-more":"More","menu-remove":"Remove","menu-up":"Move up","modifiers-dropped":"Not taken: {classes}","modifiers-hint":"Framework utilities only","modifiers-invalid":"Not a class: {classes}","modifiers-label":"Extra classes","modifiers-limit":"Over the limit: {classes}","modifiers-placeholder":"Framework classes","modifiers-unchecked":"Cannot be checked without the Framework rules: {classes}","modifiers-unknown":"Not in SIMAI Framework: {classes}","more":"more","more-steps":"{name}: other values","moved-text":"Block moved","no":"No","no-parameters":"This block has no parameters.","nothing-chosen":"Choose a block to see its parameters.","nothing-fits":"Nothing fits here.","nothing-found":"Nothing found.","origin-block":"Block","origin-block-help":"set on this block","origin-screen":"Screen","origin-screen-help":"set for this screen and wider","origin-theme":"Theme","origin-theme-help":"set by the site\'s theme","origin-type":"Type","origin-type-help":"what the block draws with nothing set","origin-variant":"Variant","origin-variant-help":"set by the variant the block was made from","origins-label":"Where a value comes from","origins-note":"The dot says where a value comes from: the type, the theme, the variant, this block or this screen.","output-html":"HTML","output-json":"JSON","output-markdown":"Markdown","output-open":"Output","output-title":"What the page is made of","page-address":"Address","page-hint":"Choose a block on the page to see its settings here. How to work here: the help button at the top.","page-history":"History · {count}","page-history-plain":"History","page-name":"Name","page-publish":"Publish","page-publishing":"Publishing","page-theme":"Site theme","page-title":"Page","path-label":"Where the chosen block is","path-page":"Page","per-screen":"Set per screen","plus-label":"Add a block below","range-hint":"From {min} to {max}","recent":"Recent","redo-label":"Redo","redone-text":"Redone","refused-closed":"A site block is changed in the block builder.","refused-edge":"It is already at the edge.","refused-empty":"There is nothing here.","refused-inside-itself":"A block cannot go inside itself.","refused-invalid":"That would break the page.","refused-layout":"The layout is set by the site.","refused-leaf":"This block has nothing inside.","refused-limit":"No more fit here.","refused-none":"Nothing is chosen.","refused-not-paragraph":"Only a paragraph can become that.","refused-not-text":"This is not text.","refused-page":"This is outside the template.","refused-place":"It does not fit there.","refused-publisher":"That block does not give this.","refused-required":"This block must stay.","refused-rights":"Your role does not allow it.","refused-same":"Nothing changed.","refused-template":"This is the site template.","refused-unknown":"That block is not on the page.","removed-text":"Block removed","reset":"Reset","reset-field":"Reset {name}","right-label":"Parameters","screen-desktop":"Desktop","screen-label":"Screen","screen-phone":"Phone","screen-tablet":"Tablet","screens-note":"Fields marked with a screen are set for {screen} and wider.","search-placeholder":"Find a block","section-count":"{count} blocks","from-section":"from {name}","search-results":"Found","section-content":"Content","section-extra":"More","section-layout":"Layout","section-open":"{name}, {count} blocks","sections":"Sections","set-alignment":"Alignment","set-background":"Background","set-breakout":"Breakout","set-color":"Colour","set-for":"Set for: {screens}","set-grid":"Grid","set-spacing":"Spacing","set-visibility":"Visibility","set-width":"Width","sets-none":"This block\'s parameters come from its type; no SIMAI Framework utilities are bound.","sets-note":"Sets: {sets}. Every parameter is bound to SIMAI Framework.","show-on-screen":"Show on this screen","site-block":"Site block","slash-filter":"Blocks with «{query}»","slash-hint":"Type to filter, Enter to insert, Esc to close","slash-label":"Insert","state-auto":"Data","state-empty":"Empty","state-error":"Error","state-error-text":"The source did not answer","state-loading":"Loading","structure-empty":"The page is empty.","tab-blocks":"Blocks","tab-data":"Data","tab-html":"HTML","tab-json":"JSON","tab-parameters":"Parameters","tab-text":"Text","template-badge":"Template: header and footer of every page","template-done":"Done with template","template-edit":"Edit template","template-help":"The header and footer are the same on every page. Change them only on purpose: Edit template.","template-no-rights":"The header and footer are the site template; your role does not change it.","template-off-text":"Back to the page","template-on-text":"Editing the site template","template-title":"Site template","text-placeholder":"Type, or / for a block","theme-label":"Theme: {name}","theme-read-only":"The theme is set for the whole site; it is not changed here.","theme-settings":"Theme settings","theme-title":"Theme","toolbar-label":"Chosen block","type-content-alert":"Note","type-content-card":"Card","type-content-code":"Code","type-content-details":"Details","type-content-diagram":"Diagram","type-content-divider":"Divider","type-content-document":"Document","type-content-figure":"Picture","type-content-file":"File","type-content-grid":"Grid","type-content-heading":"Heading","type-content-html":"HTML","type-content-list":"List","type-content-list-item":"List item","type-content-math":"Formula","type-content-media":"Media","type-content-paragraph":"Paragraph","type-content-quote":"Quote","type-content-step":"Step","type-content-steps":"Steps","type-content-tab":"Tab","type-content-table":"Table","type-content-tabs":"Tabs","type-layout-area":"Text area","type-layout-columns":"Columns","type-layout-page":"Page","type-layout-region":"Region","type-layout-regions":"Page with template","type-layout-section":"Section","undo-label":"Undo","undone-text":"Undone","unfavourite":"Remove {name} from favourites","utility-help":"The utility classes this value writes","variants-count":"Variants: {count}","variants-label":"Variants of {name}","yes":"Yes"}}');
+module.exports = /*#__PURE__*/JSON.parse('{"title":"Page editor","runtime":{"back":"Back","bar-label":"Editor tools","binding":"SIMAI Framework: {classes}","block-not-kept-text":"The site did not keep the block","block-saved-text":"Site block saved","builder-editing":"Changing a site block","builder-group":"Group","builder-invalid":"Not saved","builder-label":"Block builder","builder-name":"Name","builder-new":"New site block","builder-note":"Parameters for the author: {count}","builder-save":"Save block","builder-save-everywhere":"Save and change everywhere","builder-start":"Create your own block","cancel":"Cancel","canvas-role":"page","catalogue-label":"Add a block","catalogue-tabs":"Kind","columns-text":"Columns changed","data-binding":"Data: {target}","data-empty-text":"When there is nothing","data-follows":"Block in this section","data-limit":"How many","data-mapping":"Fields","data-no-port":"The site gives no data sources here; demo data is shown.","data-no-publishers":"No block in this section gives this.","data-none":"None","data-own-mapping":"My own","data-preset":"Mapping","data-runtime":"Follows: {target}","data-source":"Source","data-states":"Show as","data-states-help":"Look at the block with data, empty, with an error or while loading. Only the preview changes.","duplicated-text":"Block duplicated","editing-for":"Values for","empty-place":"Add a block here","expose":"For the author","favourite":"Add {name} to favourites","favourites":"Favourites","favourites-empty":"Star a block and it shows up here.","grip-label":"Drag to move, press for the menu","gutter-hint":"Drag ⠿ to move a block · press it for the menu","gutter-label":"Block actions","heading-placeholder":"Heading","help-1":"Press text to type in it; press beside it to choose its block.","help-2":"Drag a block from the library onto the page, or press it to add it after the chosen block.","help-3":"Drag ⠿ to move a block; + adds one after it; / in an empty line opens the catalogue.","help-4":"Esc goes a level up, Enter a level down; {alt} and the arrows move the chosen block; {undo} undoes.","help-label":"Help","help-text":"Click text to type, click beside it to choose the block. Esc goes up a level, Enter goes down. {alt} and the arrows move the chosen block; {altShift} and the arrows move it while typing. / in an empty line opens the catalogue.","help-title":"How to edit","hidden-here":"Hidden on this screen","html-none":"This block prints nothing on its own.","html-note":"The block as the site prints it.","inserted-text":"Block added","item-drag-hint":"Drag onto the page, or press to add","json-note":"The block as the Document holds it.","keys-chosen":"Esc up · Enter down · {move} move · {remove} remove","keys-page":"Enter: into the page","keys-typing":"Esc: choose the block · / insert · {moveTyping} move","label":"Page editor","left-blocks":"Blocks","left-label":"Blocks and structure","left-structure":"Structure","lock-layout":"The layout is set by the site; you write inside its text areas.","lock-mark-layout":"Layout","lock-mark-page":"Page","lock-mark-template":"Template","lock-page":"While the template is edited, the page waits.","lock-template":"The header and footer are the site template. Change them with Edit template.","locked":"locked","menu-add-column":"Add a column","menu-change-block":"Change the site block everywhere","menu-columns":"Split into columns","menu-down":"Move down","menu-duplicate":"Duplicate","menu-make-block":"Make a site block","menu-more":"More","menu-remove":"Remove","menu-up":"Move up","modifiers-dropped":"Not taken: {classes}","modifiers-hint":"Framework utilities only","modifiers-invalid":"Not a class: {classes}","modifiers-label":"Extra classes","modifiers-limit":"Over the limit: {classes}","modifiers-placeholder":"Framework classes","modifiers-unchecked":"Cannot be checked without the Framework rules: {classes}","modifiers-unknown":"Not in SIMAI Framework: {classes}","more":"more","more-steps":"{name}: other values","moved-text":"Block moved","no":"No","no-parameters":"This block has no parameters.","nothing-chosen":"Choose a block to see its parameters.","nothing-fits":"Nothing fits here.","nothing-found":"Nothing found.","origin-block":"Block","origin-block-help":"set on this block","origin-screen":"Screen","origin-screen-help":"set for this screen and wider","origin-theme":"Theme","origin-theme-help":"set by the site\'s theme","origin-type":"Type","origin-type-help":"what the block draws with nothing set","origin-variant":"Variant","origin-variant-help":"set by the variant the block was made from","origins-label":"Where a value comes from","origins-note":"The dot says where a value comes from: the type, the theme, the variant, this block or this screen.","output-html":"HTML","output-json":"JSON","output-markdown":"Markdown","output-open":"Output","output-title":"What the page is made of","page-address":"Address","page-hint":"Choose a block on the page to see its settings here. How to work here: the help button at the top.","page-history":"History · {count}","page-history-plain":"History","page-name":"Name","page-publish":"Publish","page-publishing":"Publishing","page-theme":"Site theme","page-title":"Page","path-label":"Where the chosen block is","path-page":"Page","per-screen":"Set per screen","plus-label":"Add a block below","range-hint":"From {min} to {max}","recent":"Recent","redo-label":"Redo","redone-text":"Redone","refused-closed":"A site block is changed in the block builder.","refused-edge":"It is already at the edge.","refused-empty":"There is nothing here.","refused-inside-itself":"A block cannot go inside itself.","refused-invalid":"That would break the page.","refused-layout":"The layout is set by the site.","refused-leaf":"This block has nothing inside.","refused-limit":"No more fit here.","refused-none":"Nothing is chosen.","refused-not-paragraph":"Only a paragraph can become that.","refused-not-text":"This is not text.","refused-page":"This is outside the template.","refused-place":"It does not fit there.","refused-publisher":"That block does not give this.","refused-required":"This block must stay.","refused-rights":"Your role does not allow it.","refused-same":"Nothing changed.","refused-template":"This is the site template.","refused-unknown":"That block is not on the page.","removed-text":"Block removed","reset":"Reset","reset-field":"Reset {name}","right-label":"Parameters","screen-desktop":"Desktop","screen-label":"Screen","screen-phone":"Phone","screen-tablet":"Tablet","screens-note":"Fields marked with a screen are set for {screen} and wider.","search-placeholder":"Find a block","section-count":"{count} blocks","from-section":"from {name}","search-results":"Found","section-content":"Content","section-extra":"More","section-layout":"Layout","section-open":"{name}, {count} blocks","sections":"Sections","set-alignment":"Alignment","set-background":"Background","set-breakout":"Breakout","set-color":"Colour","set-for":"Set for: {screens}","set-grid":"Grid","set-spacing":"Spacing","set-visibility":"Visibility","set-width":"Width","sets-none":"This block\'s parameters come from its type; no SIMAI Framework utilities are bound.","sets-note":"Sets: {sets}. Every parameter is bound to SIMAI Framework.","show-on-screen":"Show on this screen","site-block":"Site block","slash-filter":"Blocks with «{query}»","slash-hint":"Type to filter, Enter to insert, Esc to close","slash-label":"Insert","state-auto":"Data","state-empty":"Empty","state-error":"Error","state-error-text":"The source did not answer","state-loading":"Loading","structure-empty":"The page is empty.","tab-blocks":"Blocks","tab-data":"Data","tab-html":"HTML","tab-json":"JSON","tab-parameters":"Parameters","tab-text":"Text","template-badge":"Template: header and footer of every page","template-done":"Done with template","template-edit":"Edit template","template-help":"The header and footer are the same on every page. Change them only on purpose: Edit template.","template-no-rights":"The header and footer are the site template; your role does not change it.","template-off-text":"Back to the page","template-on-text":"Editing the site template","template-title":"Site template","text-placeholder":"Type, or / for a block","theme-label":"Theme: {name}","theme-read-only":"The theme is set for the whole site; it is not changed here.","theme-settings":"Theme settings","theme-title":"Theme","toolbar-label":"Chosen block","type-content-alert":"Note","type-content-card":"Card","type-content-code":"Code","type-content-details":"Details","type-content-diagram":"Diagram","type-content-divider":"Divider","type-content-document":"Document","type-content-figure":"Picture","type-content-file":"File","type-content-grid":"Grid","type-content-heading":"Heading","type-content-html":"HTML","type-content-list":"List","type-content-list-item":"List item","type-content-math":"Formula","type-content-media":"Media","type-content-paragraph":"Paragraph","type-content-quote":"Quote","type-content-step":"Step","type-content-steps":"Steps","type-content-tab":"Tab","type-content-table":"Table","type-content-tabs":"Tabs","type-layout-area":"Text area","type-layout-columns":"Columns","type-layout-page":"Page","type-layout-region":"Region","type-layout-regions":"Page with template","type-layout-section":"Section","undo-label":"Undo","undone-text":"Undone","unfavourite":"Remove {name} from favourites","utility-help":"The utility classes this value writes","variants-count":"Variants: {count}","variants-label":"Variants of {name}","yes":"Yes"}}');
 
 /***/ },
 
 /***/ "362a712abf5e"
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"title":"Редактор страницы","runtime":{"back":"Назад","bar-label":"Инструменты редактора","binding":"SIMAI Framework: {classes}","block-not-kept-text":"Сайт не сохранил блок","block-saved-text":"Блок сайта сохранён","builder-editing":"Изменение блока сайта","builder-group":"Группа","builder-invalid":"Не сохранено","builder-label":"Конструктор блоков","builder-name":"Название","builder-new":"Новый блок сайта","builder-note":"Параметров для автора: {count}","builder-save":"Сохранить блок","builder-save-everywhere":"Сохранить и изменить везде","builder-start":"Создать свой блок","cancel":"Отмена","canvas-role":"страница","catalogue-label":"Добавить блок","catalogue-tabs":"Вид","columns-text":"Колонки изменены","data-binding":"Данные: {target}","data-empty-text":"Когда ничего нет","data-follows":"Блок в этой секции","data-limit":"Сколько","data-mapping":"Поля","data-no-port":"Сайт не даёт здесь источников данных; показаны демо-данные.","data-no-publishers":"Ни один блок этой секции этого не даёт.","data-none":"Нет","data-own-mapping":"Своё","data-preset":"Сопоставление","data-runtime":"Следует за: {target}","data-source":"Источник","data-states":"Показать как","data-states-help":"Посмотрите блок с данными, пустым, с ошибкой или в загрузке. Меняется только предпросмотр.","duplicated-text":"Блок продублирован","editing-for":"Значения для","empty-place":"Добавьте блок сюда","expose":"Для автора","favourite":"Добавить «{name}» в избранное","favourites":"Избранное","favourites-empty":"Отметьте блок звёздочкой — он появится здесь.","grip-label":"Тяните, чтобы переместить; нажмите для меню","gutter-hint":"Тяните за ⠿, чтобы переместить блок · щелчок — меню","gutter-label":"Действия с блоком","heading-placeholder":"Заголовок","help-1":"Щёлкните по тексту, чтобы печатать; рядом с ним — чтобы выбрать блок.","help-2":"Перетащите блок из библиотеки на страницу или нажмите его, чтобы добавить после выбранного.","help-3":"Тяните за ⠿, чтобы переместить блок; + добавляет блок после него; / в пустой строке открывает каталог.","help-4":"Esc — уровень вверх, Enter — вниз; Alt+стрелки двигают выбранный блок; ⌘Z отменяет.","help-label":"Справка","help-text":"Щёлкните по тексту, чтобы печатать, рядом с ним — чтобы выбрать блок. Esc — уровень вверх, Enter — вниз. Alt+стрелки двигают выбранный блок, Alt+Shift+стрелки — во время набора. / в пустой строке открывает каталог.","help-title":"Как редактировать","hidden-here":"Скрыто на этом экране","html-none":"Этот блок сам по себе ничего не печатает.","html-note":"Блок, как его печатает сайт.","inserted-text":"Блок добавлен","item-drag-hint":"Перетащите на страницу или нажмите, чтобы добавить","json-note":"Блок, как его хранит документ.","keys-chosen":"Esc вверх · Enter вниз · Alt+↑↓ двигать · ⌫ удалить","keys-page":"Enter: внутрь страницы","keys-typing":"Esc: выбрать блок · / вставить · Alt+Shift+↑↓ двигать","label":"Редактор страницы","left-blocks":"Блоки","left-label":"Блоки и структура","left-structure":"Структура","lock-layout":"Раскладку задаёт сайт; вы пишете в её текстовых областях.","lock-mark-layout":"Макет","lock-mark-page":"Страница","lock-mark-template":"Шаблон","lock-page":"Пока редактируется шаблон, страница ждёт.","lock-template":"Шапка и подвал — шаблон сайта. Их меняют через «Изменить шаблон».","locked":"закреплён","menu-add-column":"Добавить колонку","menu-change-block":"Изменить блок сайта везде","menu-columns":"Разделить на колонки","menu-down":"Ниже","menu-duplicate":"Дублировать","menu-make-block":"Сделать блоком сайта","menu-more":"Ещё","menu-remove":"Удалить","menu-up":"Выше","modifiers-dropped":"Не приняты: {classes}","modifiers-hint":"Только утилиты Framework","modifiers-invalid":"Не класс: {classes}","modifiers-label":"Дополнительные классы","modifiers-limit":"Сверх предела: {classes}","modifiers-placeholder":"Классы SIMAI Framework","modifiers-unchecked":"Не проверить без правил Framework: {classes}","modifiers-unknown":"Нет в SIMAI Framework: {classes}","more":"ещё","more-steps":"{name}: другие значения","moved-text":"Блок перемещён","no":"Нет","no-parameters":"У этого блока нет параметров.","nothing-chosen":"Выберите блок, чтобы увидеть его параметры.","nothing-fits":"Сюда ничего не подходит.","nothing-found":"Ничего не найдено.","origin-block":"Блок","origin-block-help":"задано у этого блока","origin-screen":"Экран","origin-screen-help":"задано для этого экрана и шире","origin-theme":"Тема","origin-theme-help":"задано темой сайта","origin-type":"Тип","origin-type-help":"что блок рисует без настроек","origin-variant":"Вариант","origin-variant-help":"задано вариантом, из которого сделан блок","origins-label":"Откуда значение","origins-note":"Точка показывает, откуда значение: тип, тема, вариант, этот блок или этот экран.","output-html":"HTML","output-json":"JSON","output-markdown":"Markdown","output-open":"Результат","output-title":"Из чего состоит страница","page-address":"Адрес","page-hint":"Выберите блок на странице — здесь появятся его настройки. Как здесь работать — кнопка помощи вверху.","page-history":"История · {count}","page-history-plain":"История","page-name":"Название","page-publish":"Опубликовать","page-publishing":"Публикация","page-theme":"Тема сайта","page-title":"Страница","path-label":"Где выбранный блок","path-page":"Страница","per-screen":"Задаётся для каждого экрана","plus-label":"Добавить блок ниже","range-hint":"От {min} до {max}","recent":"Недавние","redo-label":"Повторить","redone-text":"Повторено","refused-closed":"Блок сайта меняется в конструкторе блоков.","refused-edge":"Блок уже с краю.","refused-empty":"Здесь ничего нет.","refused-inside-itself":"Блок нельзя поместить в себя.","refused-invalid":"Так страница сломается.","refused-layout":"Раскладку задаёт сайт.","refused-leaf":"Внутри этого блока ничего нет.","refused-limit":"Больше сюда не поместится.","refused-none":"Ничего не выбрано.","refused-not-paragraph":"Так можно превратить только абзац.","refused-not-text":"Это не текст.","refused-page":"Это вне шаблона.","refused-place":"Туда это не подходит.","refused-publisher":"Этот блок этого не даёт.","refused-required":"Этот блок обязателен.","refused-rights":"Ваша роль этого не позволяет.","refused-same":"Ничего не изменилось.","refused-template":"Это шаблон сайта.","refused-unknown":"Такого блока на странице нет.","removed-text":"Блок удалён","reset":"Сбросить","reset-field":"Сбросить «{name}»","right-label":"Параметры","screen-desktop":"Компьютер","screen-label":"Экран","screen-phone":"Телефон","screen-tablet":"Планшет","screens-note":"Поля со значком экрана задаются для экрана «{screen}» и шире.","search-placeholder":"Найти блок","section-count":"блоков: {count}","from-section":"из раздела «{name}»","search-results":"Найдено","section-content":"Содержимое","section-extra":"Дополнительно","section-layout":"Расположение","section-open":"{name}, блоков: {count}","sections":"Разделы","set-alignment":"Выравнивание","set-background":"Фон","set-breakout":"Выход за колонку","set-color":"Цвет","set-for":"Задано для: {screens}","set-grid":"Сетка","set-spacing":"Отступы","set-visibility":"Видимость","set-width":"Ширина","sets-none":"Параметры этого блока задаёт его тип; утилиты SIMAI Framework не подключены.","sets-note":"Наборы: {sets}. Каждый параметр связан с SIMAI Framework.","show-on-screen":"Показывать на этом экране","site-block":"Блок сайта","slash-filter":"Блоки с «{query}»","slash-hint":"Печатайте для отбора, Enter — вставить, Esc — закрыть","slash-label":"Вставить","state-auto":"Данные","state-empty":"Пусто","state-error":"Ошибка","state-error-text":"Источник не ответил","state-loading":"Загрузка","structure-empty":"Страница пуста.","tab-blocks":"Блоки","tab-data":"Данные","tab-html":"HTML","tab-json":"JSON","tab-parameters":"Параметры","tab-text":"Текст","template-badge":"Шаблон: шапка и подвал всех страниц","template-done":"Готово с шаблоном","template-edit":"Изменить шаблон","template-help":"Шапка и подвал одинаковы на всех страницах. Меняйте их только намеренно: «Изменить шаблон».","template-no-rights":"Шапка и подвал — шаблон сайта; ваша роль его не меняет.","template-off-text":"Снова страница","template-on-text":"Редактируется шаблон сайта","template-title":"Шаблон сайта","text-placeholder":"Печатайте или / для блока","theme-label":"Тема: {name}","theme-read-only":"Тема задана для всего сайта и здесь не меняется.","theme-settings":"Настройки темы","theme-title":"Тема","toolbar-label":"Выбранный блок","type-content-alert":"Заметка","type-content-card":"Карточка","type-content-code":"Код","type-content-details":"Подробности","type-content-diagram":"Диаграмма","type-content-divider":"Разделитель","type-content-document":"Документ","type-content-figure":"Изображение","type-content-file":"Файл","type-content-grid":"Сетка","type-content-heading":"Заголовок","type-content-html":"HTML","type-content-list":"Список","type-content-list-item":"Пункт списка","type-content-math":"Формула","type-content-media":"Медиа","type-content-paragraph":"Абзац","type-content-quote":"Цитата","type-content-step":"Шаг","type-content-steps":"Шаги","type-content-tab":"Вкладка","type-content-table":"Таблица","type-content-tabs":"Вкладки","type-layout-area":"Текстовая область","type-layout-columns":"Колонки","type-layout-page":"Страница","type-layout-region":"Область","type-layout-regions":"Страница с шаблоном","type-layout-section":"Секция","undo-label":"Отменить","undone-text":"Отменено","unfavourite":"Убрать «{name}» из избранного","utility-help":"Классы утилит, которые даёт это значение","variants-count":"Варианты: {count}","variants-label":"Варианты блока «{name}»","yes":"Да"}}');
+module.exports = /*#__PURE__*/JSON.parse('{"title":"Редактор страницы","runtime":{"back":"Назад","bar-label":"Инструменты редактора","binding":"SIMAI Framework: {classes}","block-not-kept-text":"Сайт не сохранил блок","block-saved-text":"Блок сайта сохранён","builder-editing":"Изменение блока сайта","builder-group":"Группа","builder-invalid":"Не сохранено","builder-label":"Конструктор блоков","builder-name":"Название","builder-new":"Новый блок сайта","builder-note":"Параметров для автора: {count}","builder-save":"Сохранить блок","builder-save-everywhere":"Сохранить и изменить везде","builder-start":"Создать свой блок","cancel":"Отмена","canvas-role":"страница","catalogue-label":"Добавить блок","catalogue-tabs":"Вид","columns-text":"Колонки изменены","data-binding":"Данные: {target}","data-empty-text":"Когда ничего нет","data-follows":"Блок в этой секции","data-limit":"Сколько","data-mapping":"Поля","data-no-port":"Сайт не даёт здесь источников данных; показаны демо-данные.","data-no-publishers":"Ни один блок этой секции этого не даёт.","data-none":"Нет","data-own-mapping":"Своё","data-preset":"Сопоставление","data-runtime":"Следует за: {target}","data-source":"Источник","data-states":"Показать как","data-states-help":"Посмотрите блок с данными, пустым, с ошибкой или в загрузке. Меняется только предпросмотр.","duplicated-text":"Блок продублирован","editing-for":"Значения для","empty-place":"Добавьте блок сюда","expose":"Для автора","favourite":"Добавить «{name}» в избранное","favourites":"Избранное","favourites-empty":"Отметьте блок звёздочкой — он появится здесь.","grip-label":"Тяните, чтобы переместить; нажмите для меню","gutter-hint":"Тяните за ⠿, чтобы переместить блок · щелчок — меню","gutter-label":"Действия с блоком","heading-placeholder":"Заголовок","help-1":"Щёлкните по тексту, чтобы печатать; рядом с ним — чтобы выбрать блок.","help-2":"Перетащите блок из библиотеки на страницу или нажмите его, чтобы добавить после выбранного.","help-3":"Тяните за ⠿, чтобы переместить блок; + добавляет блок после него; / в пустой строке открывает каталог.","help-4":"Esc — уровень вверх, Enter — вниз; {alt} и стрелки двигают выбранный блок; {undo} отменяет.","help-label":"Справка","help-text":"Щёлкните по тексту, чтобы печатать, рядом с ним — чтобы выбрать блок. Esc — уровень вверх, Enter — вниз. {alt} и стрелки двигают выбранный блок, {altShift} и стрелки — во время набора. / в пустой строке открывает каталог.","help-title":"Как редактировать","hidden-here":"Скрыто на этом экране","html-none":"Этот блок сам по себе ничего не печатает.","html-note":"Блок, как его печатает сайт.","inserted-text":"Блок добавлен","item-drag-hint":"Перетащите на страницу или нажмите, чтобы добавить","json-note":"Блок, как его хранит документ.","keys-chosen":"Esc вверх · Enter вниз · {move} двигать · {remove} удалить","keys-page":"Enter: внутрь страницы","keys-typing":"Esc: выбрать блок · / вставить · {moveTyping} двигать","label":"Редактор страницы","left-blocks":"Блоки","left-label":"Блоки и структура","left-structure":"Структура","lock-layout":"Раскладку задаёт сайт; вы пишете в её текстовых областях.","lock-mark-layout":"Макет","lock-mark-page":"Страница","lock-mark-template":"Шаблон","lock-page":"Пока редактируется шаблон, страница ждёт.","lock-template":"Шапка и подвал — шаблон сайта. Их меняют через «Изменить шаблон».","locked":"закреплён","menu-add-column":"Добавить колонку","menu-change-block":"Изменить блок сайта везде","menu-columns":"Разделить на колонки","menu-down":"Ниже","menu-duplicate":"Дублировать","menu-make-block":"Сделать блоком сайта","menu-more":"Ещё","menu-remove":"Удалить","menu-up":"Выше","modifiers-dropped":"Не приняты: {classes}","modifiers-hint":"Только утилиты Framework","modifiers-invalid":"Не класс: {classes}","modifiers-label":"Дополнительные классы","modifiers-limit":"Сверх предела: {classes}","modifiers-placeholder":"Классы SIMAI Framework","modifiers-unchecked":"Не проверить без правил Framework: {classes}","modifiers-unknown":"Нет в SIMAI Framework: {classes}","more":"ещё","more-steps":"{name}: другие значения","moved-text":"Блок перемещён","no":"Нет","no-parameters":"У этого блока нет параметров.","nothing-chosen":"Выберите блок, чтобы увидеть его параметры.","nothing-fits":"Сюда ничего не подходит.","nothing-found":"Ничего не найдено.","origin-block":"Блок","origin-block-help":"задано у этого блока","origin-screen":"Экран","origin-screen-help":"задано для этого экрана и шире","origin-theme":"Тема","origin-theme-help":"задано темой сайта","origin-type":"Тип","origin-type-help":"что блок рисует без настроек","origin-variant":"Вариант","origin-variant-help":"задано вариантом, из которого сделан блок","origins-label":"Откуда значение","origins-note":"Точка показывает, откуда значение: тип, тема, вариант, этот блок или этот экран.","output-html":"HTML","output-json":"JSON","output-markdown":"Markdown","output-open":"Результат","output-title":"Из чего состоит страница","page-address":"Адрес","page-hint":"Выберите блок на странице — здесь появятся его настройки. Как здесь работать — кнопка помощи вверху.","page-history":"История · {count}","page-history-plain":"История","page-name":"Название","page-publish":"Опубликовать","page-publishing":"Публикация","page-theme":"Тема сайта","page-title":"Страница","path-label":"Где выбранный блок","path-page":"Страница","per-screen":"Задаётся для каждого экрана","plus-label":"Добавить блок ниже","range-hint":"От {min} до {max}","recent":"Недавние","redo-label":"Повторить","redone-text":"Повторено","refused-closed":"Блок сайта меняется в конструкторе блоков.","refused-edge":"Блок уже с краю.","refused-empty":"Здесь ничего нет.","refused-inside-itself":"Блок нельзя поместить в себя.","refused-invalid":"Так страница сломается.","refused-layout":"Раскладку задаёт сайт.","refused-leaf":"Внутри этого блока ничего нет.","refused-limit":"Больше сюда не поместится.","refused-none":"Ничего не выбрано.","refused-not-paragraph":"Так можно превратить только абзац.","refused-not-text":"Это не текст.","refused-page":"Это вне шаблона.","refused-place":"Туда это не подходит.","refused-publisher":"Этот блок этого не даёт.","refused-required":"Этот блок обязателен.","refused-rights":"Ваша роль этого не позволяет.","refused-same":"Ничего не изменилось.","refused-template":"Это шаблон сайта.","refused-unknown":"Такого блока на странице нет.","removed-text":"Блок удалён","reset":"Сбросить","reset-field":"Сбросить «{name}»","right-label":"Параметры","screen-desktop":"Компьютер","screen-label":"Экран","screen-phone":"Телефон","screen-tablet":"Планшет","screens-note":"Поля со значком экрана задаются для экрана «{screen}» и шире.","search-placeholder":"Найти блок","section-count":"блоков: {count}","from-section":"из раздела «{name}»","search-results":"Найдено","section-content":"Содержимое","section-extra":"Дополнительно","section-layout":"Расположение","section-open":"{name}, блоков: {count}","sections":"Разделы","set-alignment":"Выравнивание","set-background":"Фон","set-breakout":"Выход за колонку","set-color":"Цвет","set-for":"Задано для: {screens}","set-grid":"Сетка","set-spacing":"Отступы","set-visibility":"Видимость","set-width":"Ширина","sets-none":"Параметры этого блока задаёт его тип; утилиты SIMAI Framework не подключены.","sets-note":"Наборы: {sets}. Каждый параметр связан с SIMAI Framework.","show-on-screen":"Показывать на этом экране","site-block":"Блок сайта","slash-filter":"Блоки с «{query}»","slash-hint":"Печатайте для отбора, Enter — вставить, Esc — закрыть","slash-label":"Вставить","state-auto":"Данные","state-empty":"Пусто","state-error":"Ошибка","state-error-text":"Источник не ответил","state-loading":"Загрузка","structure-empty":"Страница пуста.","tab-blocks":"Блоки","tab-data":"Данные","tab-html":"HTML","tab-json":"JSON","tab-parameters":"Параметры","tab-text":"Текст","template-badge":"Шаблон: шапка и подвал всех страниц","template-done":"Готово с шаблоном","template-edit":"Изменить шаблон","template-help":"Шапка и подвал одинаковы на всех страницах. Меняйте их только намеренно: «Изменить шаблон».","template-no-rights":"Шапка и подвал — шаблон сайта; ваша роль его не меняет.","template-off-text":"Снова страница","template-on-text":"Редактируется шаблон сайта","template-title":"Шаблон сайта","text-placeholder":"Печатайте или / для блока","theme-label":"Тема: {name}","theme-read-only":"Тема задана для всего сайта и здесь не меняется.","theme-settings":"Настройки темы","theme-title":"Тема","toolbar-label":"Выбранный блок","type-content-alert":"Заметка","type-content-card":"Карточка","type-content-code":"Код","type-content-details":"Подробности","type-content-diagram":"Диаграмма","type-content-divider":"Разделитель","type-content-document":"Документ","type-content-figure":"Изображение","type-content-file":"Файл","type-content-grid":"Сетка","type-content-heading":"Заголовок","type-content-html":"HTML","type-content-list":"Список","type-content-list-item":"Пункт списка","type-content-math":"Формула","type-content-media":"Медиа","type-content-paragraph":"Абзац","type-content-quote":"Цитата","type-content-step":"Шаг","type-content-steps":"Шаги","type-content-tab":"Вкладка","type-content-table":"Таблица","type-content-tabs":"Вкладки","type-layout-area":"Текстовая область","type-layout-columns":"Колонки","type-layout-page":"Страница","type-layout-region":"Область","type-layout-regions":"Страница с шаблоном","type-layout-section":"Секция","undo-label":"Отменить","undone-text":"Отменено","unfavourite":"Убрать «{name}» из избранного","utility-help":"Классы утилит, которые даёт это значение","variants-count":"Варианты: {count}","variants-label":"Варианты блока «{name}»","yes":"Да"}}');
 
 /***/ }
 
