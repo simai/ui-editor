@@ -8,8 +8,9 @@
 //   snapshot  scripts/snapshot-first-paint.mjs: renders every example from the
 //             built bytes and writes src/smart/<folder>/static/ here (the
 //             static markup, the skeletons, static/sheets.json);
-//   check     the same with --check: fails when a committed snapshot is stale,
-//             missing or over its size;
+//   check     renders the same into the overlay and compares with the
+//             committed snapshots: fails when one is stale, missing or over
+//             its size;
 //   gate      tests/browser/first-paint-gate.browser.mjs: the first paint
 //             holds still through the HTML and sheets, the code and the data
 //             (late settings, or the fake port an example declares), at 1280
@@ -22,9 +23,18 @@
 // tools is copied or edited. <free output> is a product output root
 // (core/core, smart/smart, ...) or the `distr` of the ui distribution; a
 // distr is laid out as a product root with symbolic links.
+//
+// Attribute order. A browser serializes an element's attributes in the order
+// they were set, and a component that sets two of them in callbacks that race
+// (the help and result buttons: title and aria-haspopup) gives either order
+// under load. Order carries no meaning in HTML, so the snapshots are written
+// and compared with every start tag's attributes in sorted order: snapshot
+// sorts what it copies back, and check renders into the overlay with the
+// tool's own writer, sorts both sides and compares them here (the tool's
+// --check compares bytes). Nothing else of the markup is touched.
 import {spawnSync} from 'node:child_process';
-import {cpSync, existsSync, mkdirSync, rmSync, symlinkSync, writeFileSync} from 'node:fs';
-import {join, resolve} from 'node:path';
+import {cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync} from 'node:fs';
+import {join, relative, resolve} from 'node:path';
 import {PACKAGE_COMPONENTS, PACKAGE_ROOT, materializeOverlay, packageNameOf} from './overlay.mjs';
 
 const args = process.argv.slice(2);
@@ -60,16 +70,109 @@ if (!existsSync(join(free, 'core', 'core', 'js', 'core.js'))) {
 const config = join(overlay, '.first-paint-config.json');
 writeFileSync(config, `${JSON.stringify({packages: {[packageNameOf(join(built, 'smart', 'rule.js'))]: {output: join(built, 'smart'), base: '/distr/smart/'}}}, null, 2)}\n`);
 
-const tool = mode === 'gate' ? 'tests/browser/first-paint-gate.browser.mjs' : 'scripts/snapshot-first-paint.mjs';
-const result = spawnSync(process.execPath, [tool, root, `--config=${config}`, ...own, ...(mode === 'check' ? ['--check'] : [])], {cwd: overlay, stdio: 'inherit'});
+// Every start tag's attributes in sorted order; raw text (script, style,
+// textarea, title) and comments stay as they are. Values are kept as written.
+function sortAttributes(html) {
+  let out = '';
+  let i = 0;
+  const raw = /^(script|style|textarea|title)$/iu;
+  while (i < html.length) {
+    const lt = html.indexOf('<', i);
+    if (lt === -1) { out += html.slice(i); break; }
+    out += html.slice(i, lt);
+    if (html.startsWith('<!--', lt)) {
+      const end = html.indexOf('-->', lt + 4);
+      const stop = end === -1 ? html.length : end + 3;
+      out += html.slice(lt, stop); i = stop; continue;
+    }
+    const name = /^<([A-Za-z][A-Za-z0-9-]*)/u.exec(html.slice(lt, lt + 64));
+    if (!name) { out += '<'; i = lt + 1; continue; }
+    let j = lt + name[0].length;
+    const attributes = [];
+    let close = '>';
+    for (;;) {
+      while (j < html.length && /\s/u.test(html[j])) j += 1;
+      if (j >= html.length) break;
+      if (html[j] === '>') { j += 1; break; }
+      if (html.startsWith('/>', j)) { close = '/>'; j += 2; break; }
+      const start = j;
+      while (j < html.length && !/[\s=>]/u.test(html[j]) && !html.startsWith('/>', j)) j += 1;
+      if (j < html.length && html[j] === '=') {
+        j += 1;
+        const quote = html[j];
+        if (quote === '"' || quote === "'") { const end = html.indexOf(quote, j + 1); j = end === -1 ? html.length : end + 1; }
+        else while (j < html.length && !/[\s>]/u.test(html[j])) j += 1;
+      }
+      attributes.push(html.slice(start, j));
+    }
+    const key = (attribute) => attribute.split('=')[0].toLowerCase();
+    attributes.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+    out += `<${name[1]}${attributes.map((attribute) => ` ${attribute}`).join('')}${close}`;
+    i = j;
+    if (raw.test(name[1])) {
+      const end = html.toLowerCase().indexOf(`</${name[1].toLowerCase()}`, i);
+      const stop = end === -1 ? html.length : end;
+      out += html.slice(i, stop); i = stop;
+    }
+  }
+  return out;
+}
 
-// A snapshot is written in the overlay's folders; it belongs to this repository's.
+const filesOf = (dir) => {
+  if (!existsSync(dir)) return [];
+  const found = [];
+  const walk = (at) => { for (const name of readdirSync(at).sort()) { const path = join(at, name); if (statSync(path).isDirectory()) walk(path); else found.push(relative(dir, path)); } };
+  walk(dir);
+  return found;
+};
+const normal = (path) => (path.endsWith('.html') ? sortAttributes(readFileSync(path, 'utf8')) : readFileSync(path, 'utf8'));
+
+const tool = mode === 'gate' ? 'tests/browser/first-paint-gate.browser.mjs' : 'scripts/snapshot-first-paint.mjs';
+// A check starts the overlay from the committed snapshots, so the tool's
+// writer reports what it rewrites against them.
+if (mode === 'check') {
+  for (const folder of own) {
+    const from = join(PACKAGE_ROOT, 'src', 'smart', folder, 'static');
+    const to = join(overlay, 'src', 'smart', folder, 'static');
+    rmSync(to, {force: true, recursive: true});
+    if (existsSync(from)) cpSync(from, to, {recursive: true});
+  }
+}
+const result = spawnSync(process.execPath, [tool, root, `--config=${config}`, ...own], {cwd: overlay, stdio: mode === 'check' ? ['ignore', 'pipe', 'inherit'] : 'inherit', encoding: 'utf8'});
+
+// A snapshot is written in the overlay's folders; it belongs to this
+// repository's, with sorted attributes.
 if (mode === 'snapshot') {
   for (const folder of own) {
     const from = join(overlay, 'src', 'smart', folder, 'static');
     const to = join(PACKAGE_ROOT, 'src', 'smart', folder, 'static');
     rmSync(to, {force: true, recursive: true});
     if (existsSync(from)) cpSync(from, to, {recursive: true});
+    for (const file of filesOf(to).filter((name) => name.endsWith('.html'))) writeFileSync(join(to, file), sortAttributes(readFileSync(join(to, file), 'utf8')));
   }
 }
-process.exitCode = result.status ?? 1;
+if (mode === 'check') {
+  const tail = (result.stdout ?? '').slice((result.stdout ?? '').lastIndexOf('\n{') + 1);
+  let report = {};
+  try { report = JSON.parse(tail); } catch { report = {failed: ['the snapshot tool printed no summary'], tooLarge: []}; }
+  const stale = [];
+  const missing = [];
+  for (const folder of own) {
+    const committed = join(PACKAGE_ROOT, 'src', 'smart', folder, 'static');
+    const rendered = join(overlay, 'src', 'smart', folder, 'static');
+    const want = filesOf(rendered);
+    const have = new Set(filesOf(committed));
+    for (const file of want) {
+      const shown = relative(PACKAGE_ROOT, join(committed, file));
+      if (!have.has(file)) missing.push(shown);
+      else if (normal(join(committed, file)) !== normal(join(rendered, file))) stale.push(shown);
+      have.delete(file);
+    }
+    for (const file of have) stale.push(`${relative(PACKAGE_ROOT, join(committed, file))} (no example)`);
+  }
+  const summary = {mode: 'check', order: 'attributes sorted', components: own.length, stale, missing, failed: report.failed ?? [], tooLarge: report.tooLarge ?? [], sheetDrift: report.sheetDrift ?? []};
+  console.log(JSON.stringify(summary, null, 2));
+  process.exitCode = (result.status ?? 1) !== 0 || stale.length || missing.length || summary.failed.length || summary.tooLarge.length ? 1 : 0;
+} else {
+  process.exitCode = result.status ?? 1;
+}
