@@ -448,7 +448,8 @@ class SfEditor extends EditorElement {
             // frame of a page with a template (the regions) and a container that
             // holds an open place (an author's text area) only say why on a press.
             const lock = this.model.lockOf(id);
-            if (lock) {
+            // Read only locks every part: nothing is dimmed, the bar says it once.
+            if (lock && lock !== "read-only") {
                 element.dataset.sfEditorLock = lock;
                 // Inactive for this person: said so, and its dimmed text is not
                 // held to the contrast of what can be changed (WCAG 1.4.3).

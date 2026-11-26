@@ -278,6 +278,7 @@
     "reason-storage-unavailable": "the storage cannot be reached",
     "reason-stale-revision": "the page was changed elsewhere",
     "reason-environment-changed": "the published page changed",
-    "reason-idempotency-conflict": "the same save was sent twice with other content"
+    "reason-idempotency-conflict": "the same save was sent twice with other content",
+    "lock-read-only": "Read only: this page cannot be changed here"
   }
 }

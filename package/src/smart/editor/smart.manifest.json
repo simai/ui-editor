@@ -595,7 +595,7 @@
     "source_artifacts": [
       {
         "path": "src/smart/editor/index.js",
-        "sha256": "c1d7d4102c25da7f918684a94d8b10c170eee184390b6873f068777ec3a6cfbf"
+        "sha256": "c3558abd284c15af979d65ffb066ad81bee1fcee496daefd3f7c9a492b9dd271"
       },
       {
         "path": "src/smart/editor/js/model.mjs",
@@ -611,11 +611,11 @@
       },
       {
         "path": "src/smart/editor/js/templates/default.js",
-        "sha256": "7a528ac51d6ad018a7e636e1ac435b790540c4bf7bec233b7bec0b0bc39920bd"
+        "sha256": "4cab0bf4c64e5d1799ddfec86157fe3f4ea2f2e5f43375e0b0ba420a1c411b39"
       },
       {
         "path": "src/smart/editor/js/templates/default.css",
-        "sha256": "dcb5c18c28e295c3aeafefec7a7c0b8c0841cf61a861ec74ba20e40a1e1d8233"
+        "sha256": "b6329b4eace6568a2ee3779c2bdb927b6c696c66f551face86f1624883e26973"
       },
       {
         "path": "src/smart/editor/rule.js",
@@ -631,11 +631,11 @@
       },
       {
         "path": "src/smart/editor/lang/en.json",
-        "sha256": "2e48145e2d2ef71500dc8c7977857f0c253e55cb7e5bf345c866826b9e9bc72e"
+        "sha256": "ec70ddf618957c74d9b867990a3041435334d292108af90d644d7f10b992ce32"
       },
       {
         "path": "src/smart/editor/lang/ru.json",
-        "sha256": "ab33ea1431db9177987176e4bfa25df090ab6512981ec59ec0cbe40c86714af2"
+        "sha256": "7ef6a38adaa178e5c7e5c5268d01c7229da0f8bb6555fca3072cce7cd5b5e13f"
       }
     ],
     "generated_runtime": []

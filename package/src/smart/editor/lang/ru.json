@@ -278,6 +278,7 @@
     "reason-storage-unavailable": "нет связи с хранилищем",
     "reason-stale-revision": "страницу изменили в другом месте",
     "reason-environment-changed": "опубликованная страница изменилась",
-    "reason-idempotency-conflict": "то же сохранение пришло дважды с разным содержимым"
+    "reason-idempotency-conflict": "то же сохранение пришло дважды с разным содержимым",
+    "lock-read-only": "Только просмотр: менять страницу здесь нельзя"
   }
 }

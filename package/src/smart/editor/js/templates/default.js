@@ -132,7 +132,7 @@ function bar(component, view, w) {
             <div class="sf-editor-bar-start">
                 ${slotted(component, "start")}
                 ${view.heading ? html`<span class="sf-editor-title"><strong class="sf-editor-title-name">${view.heading}</strong>${view.caption ? html`<span class="sf-editor-title-caption">${view.caption}</span>` : nothing}</span>` : nothing}
-                ${view.readOnly ? html`<span class="sf-editor-readonly-mark"><sf-icon icon="visibility" size="1/3" aria-hidden="true"></sf-icon>${w("read-only")}</span>` : html`
+                ${view.readOnly ? html`<span class="sf-editor-readonly-mark"><sf-icon icon="visibility" size="1/3" aria-hidden="true"></sf-icon><span>${w("read-only")}</span></span>` : html`
                 <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="undo" aria-label=${w("undo-label")} title=${`${w("undo-label")} (${keysText("mod+z")})`}
                                 ?disabled=${!model.canUndo} @click=${() => component.history("undo")}></sf-button-icon>
                 <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="redo" aria-label=${w("redo-label")} title=${`${w("redo-label")} (${keysText("shift+mod+z")})`}
