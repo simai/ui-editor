@@ -124,7 +124,7 @@ async function open({rights = {save: true}} = {}) {
     window.uploads = [];
     editor.media = {
       async upload(file) { window.uploads.push(file.name); return {answer: 'applied', data: {ref: 'media:8', url: '/media/8.png'}}; },
-      url: (ref) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><title>${ref}</title></svg>`)}`,
+      url: (ref) => `/media/${ref.slice(6)}.png`,
     };
     document.getElementById('box').append(editor);
     window.connected = editor.connectPort(host);
@@ -187,7 +187,7 @@ try {
   // image field uploads a file through editor.media and takes its reference.
   const media = await open();
   const image = await media.evaluate(() => document.querySelector('#editor [data-sf-composition-id="f1"] img')?.getAttribute('src') ?? '');
-  check('a media reference is drawn from the host url', image.startsWith('data:image/svg+xml') && decodeURIComponent(image).includes('media:7'), image.slice(0, 80));
+  check('a media reference is drawn from the host url, and the page is drawn with it', image === '/media/7.png', image);
   await media.evaluate(() => document.getElementById('editor').select({id: 'f1'}));
   await media.waitForTimeout(300);
   const upload = media.locator('#editor .sf-editor-upload input[type=file]');

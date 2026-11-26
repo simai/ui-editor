@@ -397,7 +397,9 @@ class SfEditor extends EditorElement {
         this.codeCache.clear();
         const typing = this.model.typing ? {...this.model.typing, at: this.session ? this.caretOffset() : "end"} : null;
         this.finishSession(false);
-        const {document, hidden} = this.model.canvasDocument(this.breakpoint);
+        const canvas = this.model.canvasDocument(this.breakpoint);
+        const hidden = canvas.hidden;
+        const document = this.withMediaAddresses(canvas.document);
         let result;
         try {
             // The canvas stands inside the editor's own page, which has its own
@@ -440,11 +442,6 @@ class SfEditor extends EditorElement {
     /** What only editing needs on the drawn page: locks, faded hidden blocks, empty places, placeholders. */
     decorate(hidden) {
         const page = this.pageElement;
-        // A media reference is drawn from the host's address for it.
-        for (const image of page.querySelectorAll('img[src^="media:"]')) {
-            const url = this.mediaUrl(image.getAttribute("src"));
-            if (url) image.setAttribute("src", url);
-        }
         for (const element of page.querySelectorAll(`[${ID}]`)) {
             const id = element.getAttribute(ID);
             const at = this.model.place(id);
@@ -660,6 +657,32 @@ class SfEditor extends EditorElement {
         } catch {
             return null;
         }
+    }
+
+    /**
+     * The canvas copy of a Document with every media reference ("media:<id>" in
+     * a block's data.src) replaced by the host's address for it, else by a
+     * local "#media:<id>": the Framework's Composition render takes only http,
+     * https and local addresses for an image, and would refuse the whole page
+     * for one media reference. The stored Document keeps the reference.
+     */
+    withMediaAddresses(document) {
+        let copied = null;
+        const visit = (node) => {
+            if (!isPlainObject(node)) return;
+            const src = node.data?.src;
+            if (typeof src === "string" && src.startsWith("media:")) {
+                const url = this.mediaUrl(src);
+                node.data = {...node.data, src: url && /^(?:https?:\/\/|\/(?!\/)|\.?\.\/)/u.test(url) ? url : `#${src}`};
+            }
+            for (const children of Object.values(isPlainObject(node.slots) ? node.slots : {})) {
+                if (Array.isArray(children)) children.forEach(visit);
+            }
+        };
+        if (!JSON.stringify(document ?? null).includes('"media:')) return document;
+        copied = JSON.parse(JSON.stringify(document));
+        visit(copied.root);
+        return copied;
     }
 
     /** Uploads a chosen file through the host and puts its media reference into the field. */
