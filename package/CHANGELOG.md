@@ -3,6 +3,14 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
+## 1.5.2 — 2026-11-26
+
+- Built over SIMAI Framework `ui-73df5d1b4d4c` (group build 19, ui-source
+  `5e30b946fd0e`; npm `@simai-studio/ui@5.20261125.1855`, core.runtime
+  1.69.0). `sf-editor` 1.5.2 is the same editor as 1.5.0; the number is
+  above the simai/ui-pro copy's 1.5.1. The set still needs core.runtime
+  1.43.0 or newer.
+
 ## 1.5.0 — 2026-11-22
 
 - `sf-editor` 1.5.0: takes back the simai/ui-pro copy's 1.3.3 and 1.4.0
