@@ -876,6 +876,19 @@
     margin-inline-start: var(--sf-space-1\/2);
   }
 
+  /* An image field with the host's upload: the reference and the upload button in one row. */
+  .sf-editor-upload {
+    display: flex;
+    align-items: center;
+    gap: var(--sf-space-1\/4);
+    min-inline-size: 0;
+  }
+
+  .sf-editor-upload > .sf-editor-control {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
   /* A conflict: the stored page changed; the person's version waits for a choice. */
   .sf-editor-conflict {
     display: flex;

@@ -79,6 +79,7 @@ const STORED = {
     {id: 's1', type: 'layout.section', slots: {default: [{id: 'a1', type: 'layout.area', slots: {default: [
       {id: 'h1', type: 'content.heading', data: {level: 2, content: t('Доставка и оплата')}},
       {id: 'p1', type: 'content.paragraph', data: {content: t('Привезём заказ за два дня.')}},
+      {id: 'f1', type: 'content.figure', data: {src: 'media:7', alt: 'Склад'}},
     ]}}]}},
   ]}},
 };
@@ -120,6 +121,11 @@ async function open({rights = {save: true}} = {}) {
     };
     const editor = document.createElement('sf-editor');
     editor.id = 'editor';
+    window.uploads = [];
+    editor.media = {
+      async upload(file) { window.uploads.push(file.name); return {answer: 'applied', data: {ref: 'media:8', url: '/media/8.png'}}; },
+      url: (ref) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><title>${ref}</title></svg>`)}`,
+    };
     document.getElementById('box').append(editor);
     window.connected = editor.connectPort(host);
   }, {stored: STORED, rights});
@@ -176,6 +182,24 @@ try {
   check('the conflict bar is gone after the choice', (await tab.evaluate(() => Boolean(document.querySelector('#editor .sf-editor-conflict')))) === false);
   check('no page errors', tab.errors.length === 0, tab.errors);
   await tab.close();
+
+  // 4. Media: the canvas draws a media reference from the host's url(ref); the
+  // image field uploads a file through editor.media and takes its reference.
+  const media = await open();
+  const image = await media.evaluate(() => document.querySelector('#editor [data-sf-composition-id="f1"] img')?.getAttribute('src') ?? '');
+  check('a media reference is drawn from the host url', image.startsWith('data:image/svg+xml') && decodeURIComponent(image).includes('media:7'), image.slice(0, 80));
+  await media.evaluate(() => document.getElementById('editor').select({id: 'f1'}));
+  await media.waitForTimeout(300);
+  const upload = media.locator('#editor .sf-editor-upload input[type=file]');
+  check('an image field has an upload when the host gives editor.media', (await upload.count()) === 1, await upload.count());
+  if (await upload.count()) {
+    await upload.setInputFiles({name: 'photo.png', mimeType: 'image/png', buffer: Buffer.from([137, 80, 78, 71])});
+    await media.waitForTimeout(1600);
+    const after = await media.evaluate(() => ({uploads: window.uploads, src: window.host.store.values.ru.root.slots.default[0].slots.default[0].slots.default[2].data.src}));
+    check('the uploaded file goes to upload(file) and its media reference is saved', after.uploads.join() === 'photo.png' && after.src === 'media:8', after);
+  }
+  check('no page errors with media', media.errors.length === 0, media.errors);
+  await media.close();
 
   // 3. A reader without rights.save: read only.
   const reader = await open({rights: {save: false}});

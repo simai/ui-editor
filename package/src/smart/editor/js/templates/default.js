@@ -685,6 +685,7 @@ function fieldRow(component, field, w) {
         const numeric = field.kind === "number" || field.kind === "integer";
         control = html`<sf-input class="sf-editor-control" aria-label=${field.label} inputmode=${numeric ? "numeric" : ""} .value=${String(value)}
                                  @change=${(event) => component.onField(event, field)}></sf-input>`;
+        if (field.media && component.mediaHost && !component.isReadOnly) control = uploadRow(component, field, control, w);
     }
     const own = field.origin === "block" || field.origin === "screen";
     return html`
@@ -705,6 +706,25 @@ function fieldRow(component, field, w) {
                         event.stopPropagation();
                         component.toggleExposed(component.model.selected, field, Boolean(event.currentTarget.checked));
                     }}></sf-switch>` : nothing}
+        </div>
+    `;
+}
+
+/** A media field with the host's upload: the reference's field and a button that picks a file for it. */
+function uploadRow(component, field, control, w) {
+    const pick = (event) => event.currentTarget.parentElement.querySelector("input[type=file]")?.click();
+    const chosen = (event) => {
+        const file = event.currentTarget.files?.[0];
+        event.currentTarget.value = "";
+        if (file) component.uploadInto(field, file);
+    };
+    const busy = component.uploading === field.key;
+    return html`
+        <div class="sf-editor-upload">
+            ${control}
+            <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="upload" aria-label=${w("upload-label", {name: field.label})} title=${w("upload")}
+                            ?disabled=${busy} @click=${pick}></sf-button-icon>
+            <input type="file" accept="image/*" hidden @change=${chosen}>
         </div>
     `;
 }

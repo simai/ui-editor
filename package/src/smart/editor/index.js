@@ -115,7 +115,7 @@ const EditorElement = elementFromManifest(manifest, {
 class SfEditor extends EditorElement {
     constructor() {
         super();
-        for (const name of ["document", "types", "editorManifests", "siteBlocks", "words", "rights", "theme", "renderers", "pageSettings"]) {
+        for (const name of ["document", "types", "editorManifests", "siteBlocks", "words", "rights", "theme", "renderers", "pageSettings", "media"]) {
             if (Object.prototype.hasOwnProperty.call(this, name)) {
                 const early = this[name];
                 delete this[name];
@@ -158,6 +158,7 @@ class SfEditor extends EditorElement {
         this.hintSeen = false;
         this.documentSession = null;
         this.documentLanguage = "";
+        this.uploading = "";
     }
 
     // ------------------------------------------------------------ inputs
@@ -439,6 +440,11 @@ class SfEditor extends EditorElement {
     /** What only editing needs on the drawn page: locks, faded hidden blocks, empty places, placeholders. */
     decorate(hidden) {
         const page = this.pageElement;
+        // A media reference is drawn from the host's address for it.
+        for (const image of page.querySelectorAll('img[src^="media:"]')) {
+            const url = this.mediaUrl(image.getAttribute("src"));
+            if (url) image.setAttribute("src", url);
+        }
         for (const element of page.querySelectorAll(`[${ID}]`)) {
             const id = element.getAttribute(ID);
             const at = this.model.place(id);
@@ -637,6 +643,49 @@ class SfEditor extends EditorElement {
 
     retrySave() {
         return this.documentSession?.retry();
+    }
+
+    /** The host's upload, beside the port: {upload(file) -> Promise<answer>, url(ref) -> address}, or null. */
+    get mediaHost() {
+        const media = this.media;
+        return media && typeof media === "object" && typeof media.upload === "function" ? media : null;
+    }
+
+    /** The address a media reference is drawn from on the canvas: the host's url(ref), else none. */
+    mediaUrl(ref) {
+        if (typeof ref !== "string" || !ref.startsWith("media:")) return null;
+        try {
+            const url = this.media?.url?.(ref);
+            return typeof url === "string" && url ? url : null;
+        } catch {
+            return null;
+        }
+    }
+
+    /** Uploads a chosen file through the host and puts its media reference into the field. */
+    async uploadInto(field, file) {
+        const media = this.mediaHost;
+        const id = this.model.selected;
+        if (!media || !file || !id || this.isReadOnly) return;
+        this.uploading = field.key;
+        this.say(this.sfWord("upload-busy"));
+        this.refresh();
+        let answer;
+        try {
+            answer = await media.upload(file);
+        } catch {
+            answer = {answer: "unavailable", reason: "storage-unavailable"};
+        }
+        this.uploading = "";
+        const ref = answer?.answer === "applied" ? answer.data?.ref : null;
+        if (typeof ref === "string" && ref) {
+            const result = this.model.setParam(id, field.key, ref, this.breakpoint);
+            this.say(this.sfWord(result?.ok === false ? `refused-${result.reason}` : "upload-done"));
+        } else {
+            const reason = answer?.reason ? this.sfWord(`reason-${answer.reason}`) : "";
+            this.say(this.sfWord("upload-failed", {vars: {reason}}));
+        }
+        this.redraw();
     }
 
     // ------------------------------------------------------------ overlays

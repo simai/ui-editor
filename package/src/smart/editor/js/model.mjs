@@ -1113,6 +1113,9 @@ export class EditorModel {
             target: field.target,
             plane: field.plane,
             kind,
+            // A media reference (an image source): a host with an upload may fill it
+            // with a "media:<id>" reference (simai.document-port, E4).
+            media: kind === "text" && (field.property?.format === "media" || (Array.isArray(field.capability_hints) && field.capability_hints.includes("composition.data.src"))),
             responsive,
             label_key: field.label_key,
             help_key: field.help_key,

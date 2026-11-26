@@ -75,6 +75,12 @@
       "default": false,
       "summary": "Read only: the page opens without edit affordances (no library, insertion, moving, removing, parameters, uploads or saving); choosing, the structure, the screen switch and the outputs stay. The editor is read only by itself too when its document port answers rights.save false, or a language outside rights.languages."
     },
+    "media": {
+      "type": "object",
+      "default": null,
+      "x-markup": "a property: {upload(file) -> Promise<{answer: \"applied\", data: {ref: \"media:<id>\", url}} | refused | unavailable with the port's reasons>, url(ref) -> address}.",
+      "summary": "The host's upload beside the document port: an image field gets an upload button, the file goes to upload(file) and the field takes the media reference it answers; the canvas draws a media reference from url(ref). Without it the upload is hidden and a media reference is kept as an opaque string."
+    },
     "preferences-key": {
       "type": "string",
       "default": "",

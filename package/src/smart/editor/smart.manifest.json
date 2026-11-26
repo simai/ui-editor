@@ -140,6 +140,11 @@
         "default": null,
         "description": "The site's theme: its defaults are a level of where a value comes from, its attributes are put on the drawn page. The editor never changes it; settings_url links to where it is changed."
       },
+      "media": {
+        "type": "object",
+        "default": null,
+        "description": "The host's upload beside the document port: an image field gets an upload button, the file goes to upload(file) and the field takes the media reference it answers; the canvas draws a media reference from url(ref). Without it the upload is hidden and a media reference is kept as an opaque string."
+      },
       "page-settings": {
         "type": "object",
         "default": null,
@@ -595,11 +600,11 @@
     "source_artifacts": [
       {
         "path": "src/smart/editor/index.js",
-        "sha256": "c3558abd284c15af979d65ffb066ad81bee1fcee496daefd3f7c9a492b9dd271"
+        "sha256": "4f412f9a537a74aacf2cae82caba26a0858c1bf0f66622892e90bb77cc173d67"
       },
       {
         "path": "src/smart/editor/js/model.mjs",
-        "sha256": "afde83a37ddf97f261db9a3f1c025b39d4c9218861f0bbcca21846cf1d98494d"
+        "sha256": "1b0a7043105e1b700a515dd98f6c540440ffd8e33e7643ab040c2eddef398670"
       },
       {
         "path": "src/smart/editor/js/catalogue.mjs",
@@ -611,11 +616,11 @@
       },
       {
         "path": "src/smart/editor/js/templates/default.js",
-        "sha256": "4cab0bf4c64e5d1799ddfec86157fe3f4ea2f2e5f43375e0b0ba420a1c411b39"
+        "sha256": "432236b888f4df34983e36d0821c5acfb5d54f94c32c2cc465a923bb1c868762"
       },
       {
         "path": "src/smart/editor/js/templates/default.css",
-        "sha256": "b6329b4eace6568a2ee3779c2bdb927b6c696c66f551face86f1624883e26973"
+        "sha256": "7e6fe64ae6f635f181ef871671a84861bcac663568d27e5baf73815d67808db7"
       },
       {
         "path": "src/smart/editor/rule.js",
@@ -627,15 +632,15 @@
       },
       {
         "path": "src/smart/editor/component.json",
-        "sha256": "ed853dadf5422d49b0cb67a445a6f7132eff769725ee9e6694d7fd6bb4e545a5"
+        "sha256": "7321f0f9c9e45fbf08c9bed968a096386d83a187adf59d3585a7ee5eb54f74b4"
       },
       {
         "path": "src/smart/editor/lang/en.json",
-        "sha256": "ec70ddf618957c74d9b867990a3041435334d292108af90d644d7f10b992ce32"
+        "sha256": "da28e4ce5274582e85bb78f1cd0bf1b4db057838bfd41cc34d8fb0c7b600c8fe"
       },
       {
         "path": "src/smart/editor/lang/ru.json",
-        "sha256": "7ef6a38adaa178e5c7e5c5268d01c7229da0f8bb6555fca3072cce7cd5b5e13f"
+        "sha256": "5e3c1c8b0cfd40e88b09328ad9aabee2e64c74377acccb0c082bb97a2851f41f"
       }
     ],
     "generated_runtime": []

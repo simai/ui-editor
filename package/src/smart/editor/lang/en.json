@@ -279,6 +279,11 @@
     "reason-stale-revision": "the page was changed elsewhere",
     "reason-environment-changed": "the published page changed",
     "reason-idempotency-conflict": "the same save was sent twice with other content",
-    "lock-read-only": "Read only: this page cannot be changed here"
+    "lock-read-only": "Read only: this page cannot be changed here",
+    "upload": "Upload a file",
+    "upload-label": "Upload a file for {name}",
+    "upload-busy": "Uploading…",
+    "upload-done": "The file is uploaded",
+    "upload-failed": "The file is not uploaded: {reason}"
   }
 }
