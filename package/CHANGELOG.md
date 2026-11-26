@@ -3,6 +3,19 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
+## 1.6.0 — 2026-11-27
+
+- `sf-editor` 1.6.0 takes the page's storage through SIMAI Framework's
+  `simai.document-port` 1.0.2, by `connectPort` beside the source port: it
+  loads the page, saves every change as a draft against the revision, keeps
+  the unsaved input when the storage is unreachable or the session ended,
+  and on a conflict offers «Оставить мои» or «Взять сохранённую».
+- `editor.media` {upload, url}: an image field uploads a file through the
+  host and keeps its `media:<id>` reference; the canvas draws it from `url`.
+- `readonly`, and by itself without `rights.save`: the page opens for reading
+  only.
+- Built over SIMAI Framework `ui-73df5d1b4d4c`, as 1.5.2.
+
 ## 1.5.2 — 2026-11-26
 
 - Built over SIMAI Framework `ui-73df5d1b4d4c` (group build 19, ui-source

@@ -628,11 +628,11 @@
       },
       {
         "path": "src/smart/editor/docs.md",
-        "sha256": "d529da977851de083b978659db06223baf0bc166fce0f1f58620e1c8a5848f4a"
+        "sha256": "d2416ef9a6ee57f0a487bb4f3a9e45deb374788fdbcf7dbbbe1831ed79badb04"
       },
       {
         "path": "src/smart/editor/component.json",
-        "sha256": "7321f0f9c9e45fbf08c9bed968a096386d83a187adf59d3585a7ee5eb54f74b4"
+        "sha256": "e23467ffcf30b8b1891204b1f1ee267620e73b9d50380dc04b3507d172de619d"
       },
       {
         "path": "src/smart/editor/lang/en.json",
