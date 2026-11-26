@@ -1273,6 +1273,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   rowRoom: () => (/* binding */ rowRoom),
 /* harmony export */   spanOf: () => (/* binding */ spanOf),
 /* harmony export */   spanOfUnits: () => (/* binding */ spanOfUnits),
+/* harmony export */   squeezeStep: () => (/* binding */ squeezeStep),
 /* harmony export */   standardMenu: () => (/* binding */ standardMenu),
 /* harmony export */   textWidth: () => (/* binding */ textWidth),
 /* harmony export */   triggerExtra: () => (/* binding */ triggerExtra)
@@ -1389,6 +1390,57 @@ function fitBesideMore({
     kept,
     squeezed
   };
+} // The current tab alone beside «Ещё» and still wider than the row (squeezed
+// above): how it gives way (group build 16 returns GB16-1 and GB16-2, DEV's
+// answer to question 1, 2026-11-22). It is shortened with an ellipsis while at
+// least two letters stay before it; below that a tab with an icon draws its
+// icon alone -- the whole glyph and the tab's padding, never a cut glyph or a
+// one-letter stub -- and a tab of words keeps two letters and the ellipsis.
+// When even that does not stand beside «Ещё (n)», the trigger gives way: it
+// draws its glyph alone as a square (its words stay its name, as shrink="icon"
+// does, C370). The current tab never goes into «Ещё».
+//   tabRoom: the width the tab can have beside the trigger as it will be;
+//   textRoom: the label's own width there; twoLetters: the label's width with
+//   two letters and the ellipsis; iconOnly: the tab's width with its icon
+//   alone, or null for a tab without one; moreGain: how much narrower the
+//   trigger is with its glyph alone; compactTextRoom: the label's width
+//   beside the trigger drawn as its glyph alone (measured; else textRoom and
+//   the gain).
+// The label is decided again beside the glyph-alone trigger before the tab
+// gives up its words (group build 16 return GB16-5, 2026-11-22): the trigger
+// keeps its name out of sight and as a tooltip, the current tab's name is the
+// row's content -- an icon beside a bare chevron with 40-96 px empty and the
+// whole name fitting there read as a fault. So: two letters or more beside
+// «Ещё (n)»; else two letters or more (up to the whole word) beside the
+// glyph alone; else the icon alone, the trigger keeping its words while the
+// icon stands beside them; a tab of words keeps two letters.
+// Answers {icon, compact}: the tab draws its icon alone; the trigger its glyph.
+
+function squeezeStep({
+  tabRoom,
+  textRoom,
+  twoLetters,
+  iconOnly = null,
+  moreGain = 0,
+  compactTextRoom = null
+}) {
+  if (textRoom + TOLERANCE >= twoLetters) return {
+    icon: false,
+    compact: false
+  };
+  const besideGlyph = compactTextRoom ?? textRoom + moreGain;
+  if (moreGain > 0 && besideGlyph + TOLERANCE >= twoLetters) return {
+    icon: false,
+    compact: true
+  };
+  if (iconOnly !== null) return {
+    icon: true,
+    compact: tabRoom + TOLERANCE < iconOnly && moreGain > 0
+  };
+  return {
+    icon: false,
+    compact: moreGain > 0
+  };
 } // The content box of a row that clips and has no scrollbar, in fractional
 // pixels: clientWidth is a whole pixel, and a row 383.6 px wide read as 383 or
 // 384 laid out differently (C54 return).
@@ -1449,8 +1501,8 @@ function triggerExtra(textBox, label) {
   const drawn = measure(textBox.textContent.trim());
   return count => measure(label(count)) - drawn;
 } // The standard menu «Ещё» opens: sf-menu-context, a relation fetched when
-// first used (SF.Loader.ensure: asked for, waited for up to 3 s, never
-// thrown), one per owner and field, on the body or in the open dialog. The
+// first used (SF.Loader.ensure with press: a press opens it, so the wait
+// goes on while its code is on its way, GB18 L2 / GB19; never thrown), one per owner and field, on the body or in the open dialog. The
 // one copy in core (defect TL-8): the sortable inserter and the handle's move
 // menu place theirs through it too. null when no sf-menu-context came (no
 // Loader, or the relation failed): an element that never upgrades opens
@@ -1460,7 +1512,9 @@ function triggerExtra(textBox, label) {
 async function standardMenu(owner, field, select, {
   setup
 } = {}) {
-  await globalThis.SF?.Loader?.ensure?.(['sf-menu-context']);
+  await globalThis.SF?.Loader?.ensure?.(['sf-menu-context'], {
+    press: true
+  });
   if (owner[field]?.isConnected) return owner[field];
   if (!globalThis.customElements?.get('sf-menu-context')) return null;
   const doc = owner.ownerDocument || globalThis.document;
@@ -9319,6 +9373,29 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
           "default": "",
           "type": "string"
         },
+        "hue": {
+          "default": "",
+          "enum": [
+            "",
+            "red",
+            "orange",
+            "amber",
+            "yellow",
+            "lime",
+            "green",
+            "teal",
+            "cyan",
+            "sky",
+            "blue",
+            "indigo",
+            "violet",
+            "purple",
+            "pink",
+            "brown",
+            "gray"
+          ],
+          "type": "string"
+        },
         "icon": {
           "default": "",
           "type": "string"
@@ -9405,7 +9482,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.badge",
-    "version": "1.7.0"
+    "version": "1.8.0"
   },
   "sf-button": {
     "inputs": {
@@ -9626,7 +9703,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.button",
-    "version": "1.18.1"
+    "version": "1.18.2"
   },
   "sf-button-icon": {
     "inputs": {
@@ -9807,7 +9884,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.button-icon",
-    "version": "1.14.0"
+    "version": "1.14.1"
   },
   "sf-checkbox": {
     "inputs": {
@@ -9883,7 +9960,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.checkbox",
-    "version": "1.6.0"
+    "version": "1.6.1"
   },
   "sf-divider": {
     "component": "component.content-divider",
@@ -10035,7 +10112,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.dropdown",
-    "version": "1.24.0"
+    "version": "1.25.3"
   },
   "sf-icon": {
     "inputs": {
@@ -10625,7 +10702,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.switch",
-    "version": "1.10.0"
+    "version": "1.10.1"
   }
 });
 
@@ -11134,6 +11211,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   FRAGMENT_DESCRIPTOR_SCHEMA: () => (/* binding */ FRAGMENT_DESCRIPTOR_SCHEMA),
 /* harmony export */   checkFragmentDescriptor: () => (/* binding */ checkFragmentDescriptor),
+/* harmony export */   checkRefreshPage: () => (/* binding */ checkRefreshPage),
 /* harmony export */   defineFragmentBoundary: () => (/* binding */ defineFragmentBoundary),
 /* harmony export */   definePageHost: () => (/* binding */ definePageHost),
 /* harmony export */   publishEffects: () => (/* binding */ publishEffects)
@@ -11159,6 +11237,9 @@ _page_language_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_async_dependencies_re
 const FRAGMENT_DESCRIPTOR_SCHEMA = 'simai.interface-fragment.v1';
 
 const FIELDS = ['schema', 'id', 'element', 'regions', 'port', 'outputs', 'inputs', 'operation', 'url_state', 'budget'];
+// Optional: schema_version (the format name without a version) and refresh
+// (descriptor 1.3.0, simai.interface-fragment 1.1.0, block refresh contract 1).
+const OPTIONAL = ['schema_version', 'refresh'];
 const ID = /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$/u;
 const ELEMENT = /^[a-z][a-z0-9]*-[a-z0-9-]+$/u;
 const NAME = /^[a-z][a-z0-9-]{0,31}$/u;
@@ -11190,7 +11271,7 @@ function checkFragmentDescriptor(descriptor) {
   const problems = [];
   const keys = Object.keys(descriptor);
   for (const field of FIELDS) if (!keys.includes(field)) problems.push(`${field}: required`);
-  for (const key of keys) if (!FIELDS.includes(key) && key !== 'schema_version') problems.push(`${key}: undeclared`);
+  for (const key of keys) if (!FIELDS.includes(key) && !OPTIONAL.includes(key)) problems.push(`${key}: undeclared`);
   // Either form of the format name: simai.interface-fragment.v1, or
   // simai.interface-fragment with schema_version 1 (schema-name.mjs).
   if (!(0,_schema_name_mjs__WEBPACK_IMPORTED_MODULE_3__.isSchema)(descriptor, 'simai.interface-fragment', 1)) problems.push('schema: not simai.interface-fragment, schema_version 1');
@@ -11207,6 +11288,44 @@ function checkFragmentDescriptor(descriptor) {
   if (!closed(budget, ['kb', 'first_answer_ms'])
     || !Number.isSafeInteger(budget.kb) || budget.kb < 0 || budget.kb > 2048
     || !Number.isSafeInteger(budget.first_answer_ms) || budget.first_answer_ms < 0 || budget.first_answer_ms > 10000) problems.push('budget: {kb 0-2048, first_answer_ms 0-10000}');
+  if ('refresh' in descriptor) problems.push(...refreshProblems(descriptor.refresh, descriptor.url_state));
+  return problems;
+}
+
+// The block refresh part of a descriptor: the mode, the wire contract, the
+// keys it reads (never its own: those are url_state) and its part names.
+function refreshProblems(refresh, own) {
+  if (!closed(refresh, ['mode', 'contract', 'reads', 'parts'])) return ['refresh: {mode, contract, reads?, parts?}'];
+  const problems = [];
+  if (!['data', 'html'].includes(refresh.mode)) problems.push('refresh.mode: data or html');
+  if (refresh.contract !== 1) problems.push('refresh.contract: 1');
+  if ('reads' in refresh && (!uniqueList(refresh.reads, 16, (key) => typeof key === 'string' && URL_KEY.test(key))
+    || (Array.isArray(own) && refresh.reads.some((key) => own.includes(key))))) problems.push('refresh.reads: up to sixteen query keys the fragment does not own');
+  if ('parts' in refresh && !uniqueList(refresh.parts, 32, (name) => typeof name === 'string' && NAME.test(name))) problems.push('refresh.parts: up to thirty-two part names');
+  if (refresh.mode === 'html' && Array.isArray(refresh.parts) && refresh.parts.length) problems.push('refresh.parts: a data block only');
+  return problems;
+}
+
+/**
+ * The page's refreshable blocks checked together (a package gate): ids
+ * unique, each key owned once, every key read owned by some block. Takes
+ * descriptors (or {id, url_state, refresh}); returns the problems.
+ */
+function checkRefreshPage(descriptors) {
+  const problems = [];
+  const ids = new Set();
+  const owners = new Map();
+  for (const descriptor of descriptors) {
+    if (ids.has(descriptor.id)) problems.push(`${descriptor.id}: id twice on the page`);
+    ids.add(descriptor.id);
+    for (const key of descriptor.url_state ?? []) {
+      if (owners.has(key)) problems.push(`${key}: owned by ${owners.get(key)} and ${descriptor.id}`);
+      else owners.set(key, descriptor.id);
+    }
+  }
+  for (const descriptor of descriptors) {
+    for (const key of descriptor.refresh?.reads ?? []) if (!owners.has(key)) problems.push(`${descriptor.id}: reads ${key}, which no block owns`);
+  }
   return problems;
 }
 
@@ -14600,7 +14719,7 @@ function startInlineEdit(element, options = {}) {
 
   // The field takes the focus once sf-input has drawn it.
   function focusField() {
-    const ready = globalThis.customElements?.get('sf-input') ? null : globalThis.SF?.Loader?.ensure?.(['sf-input', 'sf-button']);
+    const ready = globalThis.customElements?.get('sf-input') ? null : globalThis.SF?.Loader?.ensure?.(['sf-input', 'sf-button'], {press: true});
     Promise.resolve(ready).then(() => linkInput.updateComplete).then(() => {
       if (finished || linkPanel.hidden) return;
       const control = fieldControl();
@@ -19881,7 +20000,7 @@ module.exports = /*#__PURE__*/JSON.parse('{"runtime":{"heading":"This block coul
 /***/ "b1c5d4f6dddd"
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.5.0","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"host-states":{},"css-variables":{}}');
+module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.5.2","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"host-states":{},"css-variables":{}}');
 
 /***/ },
 
