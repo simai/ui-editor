@@ -2,7 +2,7 @@
   "$comment": "The source of sf-editor's element plumbing (core/js/element-manifest.js); standard simai.smart-component 1.4, vocabulary 1.1.5. Part B of the owner's one-block-editor decision of 2026-11-03 (ui-control control/ui-editor/UNIFIED-BLOCK-EDITOR.md, control/decisions/2026-11-03-one-editor-part-a.md), on the Part A contracts of SIMAI Framework pair ui-a2ca21f06e0c. Written by hand in the 1.4 form on the shape of sf-editor-content; x-decisions says how each point was decided.",
   "id": "smart.editor",
   "tag": "sf-editor",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "kind": "leaf",
   "family": "editor",
   "settings": {
@@ -69,6 +69,11 @@
       ],
       "default": "desktop",
       "summary": "The screen the page is drawn and its values are set for: desktop (lg), tablet (md), phone (xs)."
+    },
+    "readonly": {
+      "type": "boolean",
+      "default": false,
+      "summary": "Read only: the page opens without edit affordances (no library, insertion, moving, removing, parameters, uploads or saving); choosing, the structure, the screen switch and the outputs stay. The editor is read only by itself too when its document port answers rights.save false, or a language outside rights.languages."
     },
     "preferences-key": {
       "type": "string",
@@ -368,6 +373,11 @@
       "Escape": "close"
     }
   },
+  "port": {
+    "id": "simai.document-port",
+    "version": "1.0.2",
+    "contract": "src/core/contracts/ports/simai.document-port/1.0.2/port.json"
+  },
   "relations": [
     {
       "name": "cl-icon"
@@ -454,6 +464,15 @@
     "converted": "written by hand (2026-11-03) on the Part A contracts of ui-source a0b7f2ec (pair ui-a2ca21f06e0c); no code of the prototype was taken"
   },
   "x-words": [],
+  "x-port": {
+    "sha256": "e742566c046312655d2235c8f66600c9359af74b24be0770eb0985f08e71617a",
+    "supports": [
+      "1.0.0",
+      "1.0.1",
+      "1.0.2"
+    ],
+    "capabilities": []
+  },
   "x-renamed": [],
   "x-decisions": [
     "names: sf-editor, the name the dispatcher confirmed (one editor); sf-editor-content stays beside it until ui-editor's C2 passes.",
@@ -490,10 +509,10 @@
       "editing"
     ],
     "persistence": {
-      "mode": "none",
+      "mode": "external-host",
       "source_of_truth": "host",
       "network_owner": "host",
-      "revision_field": null
+      "revision_field": "revision"
     },
     "readiness": {
       "level": "host-required",
@@ -535,7 +554,7 @@
         "const": "Every change dispatches change {document, reason, scope}; nothing is stored by the element. select {ids} says which block is chosen; block-save {manifest, words, changes} hands a new or changed site block to the host."
       },
       "port": {
-        "const": "connect-port {sources(shape), fields(source), preview(binding, {settings, shape}), saveBlock?(manifest, words)}: the host's data sources (Composition source port) and where site blocks are kept."
+        "const": "connect-port {port}: simai.document-port 1.0.2 {id, capabilities, send(intent, payload)} is the page's storage (load, then drafts saved against the revision, a conflict shown with a choice); the Composition source port {sources(shape), fields(source), preview(binding, {settings, shape}), saveBlock?(manifest, words)} gives the data sources and keeps site blocks. Both may be handed; each is kept apart."
       }
     },
     "state": {

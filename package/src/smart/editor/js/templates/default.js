@@ -68,7 +68,7 @@ export function renderEditorTemplate(component) {
     const stop = (event) => {
         if (event.target !== event.currentTarget) event.stopPropagation();
     };
-    const classes = ["sf-editor", component.getRootClass?.() ?? "", component.builder ? "sf-editor--builder" : "", view.model.templateEditing ? "sf-editor--template" : ""].filter(Boolean).join(" ");
+    const classes = ["sf-editor", component.getRootClass?.() ?? "", component.builder ? "sf-editor--builder" : "", view.model.templateEditing ? "sf-editor--template" : "", view.readOnly ? "sf-editor--readonly" : ""].filter(Boolean).join(" ");
     return html`
         <div class=${classes} @input=${stop} @change=${stop}>
             <div class="sf-editor-top" role="region" aria-label=${component.label || w("label")}>
@@ -80,6 +80,7 @@ export function renderEditorTemplate(component) {
             <div class="sf-editor-body">
                 ${left(component, view, w)}
                 <div class="sf-editor-stage">
+                    ${view.save?.conflict ? conflictBar(component, view, w) : nothing}
                     <div class="sf-editor-canvas" tabindex="0" role=${view.landmarks ? "group" : "region"} aria-roledescription=${w("canvas-role")}
                          aria-label=${view.landmarks ? nothing : component.label || w("label")} aria-describedby="sf-editor-help">
                         <div class="sf-editor-frame" data-screen=${component.screenName}>
@@ -131,11 +132,12 @@ function bar(component, view, w) {
             <div class="sf-editor-bar-start">
                 ${slotted(component, "start")}
                 ${view.heading ? html`<span class="sf-editor-title"><strong class="sf-editor-title-name">${view.heading}</strong>${view.caption ? html`<span class="sf-editor-title-caption">${view.caption}</span>` : nothing}</span>` : nothing}
+                ${view.readOnly ? html`<span class="sf-editor-readonly-mark"><sf-icon icon="visibility" size="1/3" aria-hidden="true"></sf-icon>${w("read-only")}</span>` : html`
                 <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="undo" aria-label=${w("undo-label")} title=${`${w("undo-label")} (${keysText("mod+z")})`}
                                 ?disabled=${!model.canUndo} @click=${() => component.history("undo")}></sf-button-icon>
                 <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="redo" aria-label=${w("redo-label")} title=${`${w("redo-label")} (${keysText("shift+mod+z")})`}
-                                ?disabled=${!model.canRedo} @click=${() => component.history("redo")}></sf-button-icon>
-                ${template ? html`<sf-button class="sf-editor-template-toggle" size="1/3" appearance=${model.templateEditing ? "tonal" : "ghost"} scheme=${model.templateEditing ? "primary" : "on-surface-variant"}
+                                ?disabled=${!model.canRedo} @click=${() => component.history("redo")}></sf-button-icon>`}
+                ${template && !view.readOnly ? html`<sf-button class="sf-editor-template-toggle" size="1/3" appearance=${model.templateEditing ? "tonal" : "ghost"} scheme=${model.templateEditing ? "primary" : "on-surface-variant"}
                         icon-start=${model.templateEditing ? "check" : ""} text=${w(model.templateEditing ? "template-done" : "template-edit")}
                         @click=${() => component.toggleTemplate(!model.templateEditing)}></sf-button>` : nothing}
                 ${model.templateEditing ? html`<span class="sf-editor-badge">${w("template-badge")}</span>` : nothing}
@@ -206,6 +208,15 @@ function builderBar(component, w) {
 // ------------------------------------------------------------ the left panel
 
 function left(component, view, w) {
+    // A reader sees the structure only: the library inserts, and nothing is inserted.
+    if (view.readOnly) {
+        return html`
+            <aside class="sf-editor-left" aria-label=${w("left-label")}>
+                <h2 class="sf-editor-heading sf-editor-left-title">${w("left-structure")}</h2>
+                <div class="sf-editor-left-body">${structure(component, view, w)}</div>
+            </aside>
+        `;
+    }
     const tabs = [{id: "blocks", label: w("left-blocks")}, {id: "structure", label: w("left-structure")}];
     return html`
         <aside class="sf-editor-left" aria-label=${w("left-label")}>
@@ -432,8 +443,26 @@ function pathBar(component, view, w) {
                            text=${component.typeLabel(node.type)} aria-current=${node.id === view.model.selected ? "true" : "false"}
                            @click=${() => component.choose(node.id)}></sf-button>`)}
             <span class="sf-editor-spacer"></span>
+            ${view.save ? html`<span class="sf-editor-save" data-state=${view.save.state}>${view.save.text}</span>
+                ${view.save.retry ? html`<sf-button size="1/3" appearance="ghost" scheme="primary" text=${w("save-retry")} @click=${() => component.retrySave()}></sf-button>` : nothing}` : nothing}
             <span class="sf-editor-keys">${w(view.model.typing ? "keys-typing" : view.selected ? "keys-chosen" : "keys-page", keyWords())}</span>
         </nav>
+    `;
+}
+
+/**
+ * The page was changed elsewhere since it was loaded: the person's version is
+ * kept unsaved, and they choose to write it over the stored one or take the
+ * stored one (simai.document-port conflict stale-revision).
+ */
+function conflictBar(component, view, w) {
+    return html`
+        <div class="sf-editor-conflict" role="alert">
+            <sf-icon icon="sync_problem" size="1/2" aria-hidden="true"></sf-icon>
+            <p class="sf-editor-conflict-text">${w(view.save.reason === "idempotency-conflict" ? "conflict-repeat" : "conflict-text")}</p>
+            <sf-button size="1/3" appearance="tonal" scheme="primary" text=${w("conflict-keep")} @click=${() => component.keepMine()}></sf-button>
+            <sf-button size="1/3" appearance="ghost" scheme="on-surface-variant" text=${w("conflict-take")} @click=${() => component.takeTheirs()}></sf-button>
+        </div>
     `;
 }
 

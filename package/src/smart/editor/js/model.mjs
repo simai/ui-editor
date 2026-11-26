@@ -63,6 +63,9 @@ export function normalizeRights(rights) {
     };
 }
 
+// The methods that change the Document (or start a change); a read-only model refuses them.
+const MUTATORS = ["addColumn", "dropBeside", "duplicate", "insert", "insertBeside", "insertFromSlash", "insertNode", "joinBack", "markdownShortcut", "move", "moveBy", "redo", "remove", "resetParam", "saveBuilder", "setModifiers", "setParam", "setRuntime", "setSettings", "setSource", "setText", "splitColumns", "splitText", "startBuilder", "startTyping", "undo", "writeText", "editTemplate"];
+
 export class EditorModel {
     /**
      * options: {document, types, renderers, editorManifests, siteBlocks, rights, theme, now}
@@ -78,8 +81,23 @@ export class EditorModel {
         this.rights = normalizeRights(options.rights);
         this.theme = isPlainObject(options.theme) ? options.theme : null;
         this.templateEditing = false;
+        this.readOnly = options.readOnly === true;
+        // A reader without the right to write changes nothing: every method
+        // that changes the Document answers false while readOnly is set.
+        for (const name of MUTATORS) {
+            const change = this[name];
+            this[name] = (...args) => (this.readOnly ? false : change.apply(this, args));
+        }
         this.buildRegistry();
         this.setDocument(options.document);
+    }
+
+    setReadOnly(on) {
+        this.readOnly = on === true;
+        if (this.readOnly) {
+            this.typing = null;
+            this.templateEditing = false;
+        }
     }
 
     // ------------------------------------------------------------ setup
@@ -192,6 +210,7 @@ export class EditorModel {
      * right to; an author writes only in text areas).
      */
     lockOf(id) {
+        if (this.readOnly) return "read-only";
         const scope = this.scopeOf(id);
         if ((scope === "template" || scope === "frame") && !this.templateEditing) return "template";
         if (scope === "page" && this.templateEditing) return "page";
@@ -203,6 +222,7 @@ export class EditorModel {
     placeLock(parentId) {
         const parent = this.node(parentId);
         if (!parent) return "unknown";
+        if (this.readOnly) return "read-only";
         const scope = this.scopeOf(parentId);
         if ((scope === "template" || scope === "frame") && !this.templateEditing) return "template";
         if (scope === "page" && this.templateEditing) return "page";

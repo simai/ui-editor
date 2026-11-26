@@ -27,6 +27,7 @@ import {EditorModel, MAX_COLUMNS, ORIGINS, SCREENS, refusedClasses} from "./js/m
 import {catalogueAt, groupIcon, groupWordKey, itemKey, pick, pushRecent, searchItems, sectionForPlace, sectionsOf, skeletonOf, toggleFavourite, typeWordKey} from "./js/catalogue.mjs";
 import {isPlainObject, locate} from "./js/tree.mjs";
 import {renderEditorTemplate} from "./js/templates/default.js";
+import {DocumentSession, isDocumentPort} from "./js/document-port.mjs";
 import manifest from "./component.json";
 import en from "./lang/en.json";
 import ru from "./lang/ru.json";
@@ -155,6 +156,8 @@ class SfEditor extends EditorElement {
         this.helpOpen = null;
         this.codeCache = new Map();
         this.hintSeen = false;
+        this.documentSession = null;
+        this.documentLanguage = "";
     }
 
     // ------------------------------------------------------------ inputs
@@ -207,6 +210,13 @@ class SfEditor extends EditorElement {
         }
         if (this.screen !== seen.screen) {
             seen.screen = this.screen;
+            redraw = true;
+        }
+        const readOnly = this.isReadOnly;
+        if (readOnly !== seen.readOnly) {
+            seen.readOnly = readOnly;
+            this.finishSession(false);
+            this.main.setReadOnly(readOnly);
             redraw = true;
         }
         if (redraw) this.redraw();
@@ -335,6 +345,9 @@ class SfEditor extends EditorElement {
         if (event.silent) return;
         this.sent = JSON.stringify(this.main.doc);
         this.sfEmit("change", {document: JSON.parse(this.sent), reason: event.reason, scope: event.scope});
+        // With a document port the page's language is saved as a draft; the
+        // template belongs to the site level, which this port does not write.
+        if (this.documentSession && this.model === this.main && event.scope !== "template") this.documentSession.edit(this.documentLanguage, JSON.parse(this.sent));
     }
 
     readPreferences() {
@@ -529,6 +542,100 @@ class SfEditor extends EditorElement {
     onPortConnected() {
         this.dataCache.clear();
         this.redraw();
+    }
+
+    /**
+     * connect-port {port}: a simai.document-port (1.0.2) is the storage of the
+     * page and is kept beside the source port; any other port is the
+     * Framework's base action as before (the Composition source port).
+     */
+    connectPort(params) {
+        const port = params && typeof params === "object" && params.port && typeof params.port === "object" ? params.port : params;
+        if (isDocumentPort(port)) return this.connectDocumentPort(port);
+        return super.connectPort(params);
+    }
+
+    connectDocumentPort(port) {
+        this.documentSession?.close();
+        const session = new DocumentSession(port);
+        this.documentSession = session;
+        session.subscribe((event) => {
+            if (this.documentSession === session) this.onDocumentSession(event);
+        });
+        session.load();
+        return applied();
+    }
+
+    /** The document port's port, or null. */
+    get documentPort() {
+        return this.documentSession?.port ?? null;
+    }
+
+    /** Read-only: the readonly setting, or a port that does not let this reader write the language. */
+    get isReadOnly() {
+        if (this.readonly === true || this.hasAttribute("readonly")) return true;
+        const session = this.documentSession;
+        if (session?.element && !session.canWrite(this.documentLanguage)) return true;
+        return false;
+    }
+
+    /** The page's language when the element has it, else the main language (the first). */
+    pickLanguage(languages) {
+        const page = String(this.locale || "").toLowerCase();
+        return languages.find((tag) => tag.toLowerCase() === page)
+            ?? languages.find((tag) => tag.toLowerCase().split("-")[0] === page.split("-")[0])
+            ?? languages[0] ?? page;
+    }
+
+    onDocumentSession({type, session}) {
+        if (type === "loaded" || type === "taken") {
+            if (type === "loaded") this.documentLanguage = this.pickLanguage(session.languages);
+            const value = session.valueOf(this.documentLanguage) ?? {schema: "simai.composition.document", schema_version: 1, locale: this.documentLanguage, root: {id: "root", type: "layout.page", slots: {default: []}}};
+            this.finishSession(false);
+            this.main.setDocument(value);
+            this.builder = null;
+            this.model = this.main;
+            this.sent = JSON.stringify(this.main.doc);
+            this.adopted = this.document;
+            this.seen.readOnly = undefined;
+            this.adopt();
+            this.redraw();
+            if (type === "taken") this.say(this.sfWord("save-taken"));
+            return;
+        }
+        this.requestComponentUpdate?.("state");
+    }
+
+    /** What the save line says, or null without a document port. */
+    saveStatus() {
+        const session = this.documentSession;
+        if (!session) return null;
+        const reason = session.reason;
+        const key = {
+            idle: "save-loading", loading: "save-loading", ready: "save-saved", pending: "save-pending", saving: "save-saving",
+            conflict: "save-conflict", unavailable: "save-unavailable", failed: "save-load-failed",
+        }[session.state] ?? (reason === "session-expired" ? "save-expired" : "save-refused");
+        const reasonWord = reason ? this.sfWord(`reason-${reason}`) : "";
+        return {
+            state: session.state,
+            reason,
+            text: this.sfWord(key, {vars: {reason: reasonWord}}),
+            retry: session.state === "refused" && Boolean(session.pending),
+            readOnly: this.isReadOnly,
+            conflict: session.state === "conflict",
+        };
+    }
+
+    keepMine() {
+        return this.documentSession?.keepMine();
+    }
+
+    takeTheirs() {
+        return this.documentSession?.takeTheirs();
+    }
+
+    retrySave() {
+        return this.documentSession?.retry();
     }
 
     // ------------------------------------------------------------ overlays
@@ -1974,6 +2081,8 @@ class SfEditor extends EditorElement {
             caption: this.getAttribute("caption") || "",
             page: this.pageSettings && typeof this.pageSettings === "object" && !Array.isArray(this.pageSettings) ? this.pageSettings : null,
             landmarks: Boolean(this.pageLandmarks),
+            save: this.saveStatus(),
+            readOnly: this.isReadOnly,
             tree: this.treeOf(model.doc.root, 0),
         };
     }

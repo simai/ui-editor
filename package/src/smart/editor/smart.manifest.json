@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "id": "smart.editor",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "title": "Page editor",
   "summary": "The one block editor of the SIMAI page: layout and text in one Composition Document, edited by depth. A click on text types, a click beside it chooses the block, Esc goes up and Enter down. One catalogue (Text and Blocks, groups, variants with pictures, search, favourites, recent) serves the + between blocks, / in text and the library; blocks move by the grip with drop lines or Alt+arrows, and a drop beside a block splits it into columns. The parameter panel says where every value comes from (type, theme, variant, block, screen) and sets values per screen; the Data tab binds a block to a host source through the source port. The block builder makes and changes site blocks everywhere; the site template is a separate, explicit edit. Rights and theme come from the host. One undo history; output as JSON, HTML and Markdown.",
   "kind": "smart",
@@ -72,6 +72,11 @@
           "tablet",
           "phone"
         ]
+      },
+      "readonly": {
+        "type": "boolean",
+        "default": false,
+        "description": "Read only: the page opens without edit affordances (no library, insertion, moving, removing, parameters, uploads or saving); choosing, the structure, the screen switch and the outputs stay. The editor is read only by itself too when its document port answers rights.save false, or a language outside rights.languages."
       },
       "preferences-key": {
         "type": "string",
@@ -168,7 +173,7 @@
       "const": "Every change dispatches change {document, reason, scope}; nothing is stored by the element. select {ids} says which block is chosen; block-save {manifest, words, changes} hands a new or changed site block to the host."
     },
     "port": {
-      "const": "connect-port {sources(shape), fields(source), preview(binding, {settings, shape}), saveBlock?(manifest, words)}: the host's data sources (Composition source port) and where site blocks are kept."
+      "const": "connect-port {port}: simai.document-port 1.0.2 {id, capabilities, send(intent, payload)} is the page's storage (load, then drafts saved against the revision, a conflict shown with a choice); the Composition source port {sources(shape), fields(source), preview(binding, {settings, shape}), saveBlock?(manifest, words)} gives the data sources and keeps site blocks. Both may be handed; each is kept apart."
     }
   },
   "methods": {
@@ -495,10 +500,10 @@
     ]
   },
   "persistence": {
-    "mode": "none",
+    "mode": "external-host",
     "source_of_truth": "host",
     "network_owner": "host",
-    "revision_field": null
+    "revision_field": "revision"
   },
   "ownership": {
     "source": "simai/ui-pro",
@@ -590,11 +595,11 @@
     "source_artifacts": [
       {
         "path": "src/smart/editor/index.js",
-        "sha256": "9ef78e8ad129ee210e96ddd922f263462ae7deabe4bc039f51e6416c16e05f76"
+        "sha256": "c1d7d4102c25da7f918684a94d8b10c170eee184390b6873f068777ec3a6cfbf"
       },
       {
         "path": "src/smart/editor/js/model.mjs",
-        "sha256": "a122ac47f15d5fc6da0d7efef8bdfcb6cc4723691a63e670552b9bcc21e0e28c"
+        "sha256": "afde83a37ddf97f261db9a3f1c025b39d4c9218861f0bbcca21846cf1d98494d"
       },
       {
         "path": "src/smart/editor/js/catalogue.mjs",
@@ -606,7 +611,7 @@
       },
       {
         "path": "src/smart/editor/js/templates/default.js",
-        "sha256": "f013fd3f392e6ddd13bc105cc813dd4b81ed9031baa0546afeade417fe241e1e"
+        "sha256": "7a528ac51d6ad018a7e636e1ac435b790540c4bf7bec233b7bec0b0bc39920bd"
       },
       {
         "path": "src/smart/editor/js/templates/default.css",
@@ -622,15 +627,15 @@
       },
       {
         "path": "src/smart/editor/component.json",
-        "sha256": "c620c989297fdeb354acc488188c54613416bfc82d53d06e86c12fbf3810f3d5"
+        "sha256": "ed853dadf5422d49b0cb67a445a6f7132eff769725ee9e6694d7fd6bb4e545a5"
       },
       {
         "path": "src/smart/editor/lang/en.json",
-        "sha256": "a4c6d651fe9b80838065bd4dfd10eb3129e71e958757fe68723d9c599b412180"
+        "sha256": "2e48145e2d2ef71500dc8c7977857f0c253e55cb7e5bf345c866826b9e9bc72e"
       },
       {
         "path": "src/smart/editor/lang/ru.json",
-        "sha256": "1f94928a797ba4835083a174eb35bb5d7202faa98bdf4000246764e45eebcf88"
+        "sha256": "ab33ea1431db9177987176e4bfa25df090ab6512981ec59ec0cbe40c86714af2"
       }
     ],
     "generated_runtime": []
