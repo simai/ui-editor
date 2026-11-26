@@ -576,8 +576,8 @@
       "version": 2
     },
     "runtime_pair": {
-      "ui_revision": "a0b7f2ecb3bbff6a4de21fbe89cc4815db9695d4",
-      "ui_smart_revision": "a0b7f2ecb3bbff6a4de21fbe89cc4815db9695d4"
+      "ui_revision": "0000000000000000000000000000000000000000",
+      "ui_smart_revision": "0000000000000000000000000000000000000000"
     },
     "aliases": [],
     "deprecations": [],
@@ -622,7 +622,7 @@
       },
       {
         "path": "src/smart/editor/component.json",
-        "sha256": "92779db3b84bbb5ecaa0c2af9fb4c30fba9d20ed450afd7bf23a4b434a41a142"
+        "sha256": "c620c989297fdeb354acc488188c54613416bfc82d53d06e86c12fbf3810f3d5"
       },
       {
         "path": "src/smart/editor/lang/en.json",
