@@ -1,0 +1,228 @@
+{
+  "schema": "simai.framework.set-pair-range",
+  "schema_version": 1,
+  "set": "editor",
+  "release": "editor-3b5dc0c1b939",
+  "version": "1.6.0",
+  "repository": "simai/ui-editor",
+  "package": {
+    "source_revision": "3b5dc0c1b939de6fc78eb74f1fbcb53180f53259",
+    "build_revision": "25276626996e1569e8a403b1e88bb9a40ad3bd69",
+    "receipt_sha256": "8d83002bf5a7a77abd9fff8649ad901ba602e16602c6ec51a3c1eaa6ac450b7c",
+    "manifest_sha256": "0b7e6be2152c3ac6cc80cb7e4f029eb5a866806fbd172e7f461ca44bf89a6fcf",
+    "archive_sha256": "ba47a00f5ac49592ac7f0d2f796eeae15ca62a1f019760264cd762bf5e513807",
+    "files_count": 37
+  },
+  "built_over": {
+    "pair": "ui-73df5d1b4d4c",
+    "commit": "73df5d1b4d4c82d674dfa2c7fb4e41f49a6b47eb",
+    "source_revision": "5e30b946fd0e620a4d00ab771af143dc286be1b8"
+  },
+  "requires": {
+    "core_runtime": ">=1.43.0",
+    "runtime": {
+      "abi": 1,
+      "modules": {
+        "alias-table": [
+          "aliasExpired",
+          "readTagAliases"
+        ],
+        "deprecations": [
+          "noteDeprecated"
+        ],
+        "element-manifest": [
+          "elementFromManifest"
+        ],
+        "lit": [
+          "html",
+          "nothing"
+        ],
+        "lit/directives/repeat.js": [
+          "repeat"
+        ],
+        "page-language": [
+          "localeText",
+          "pageLocale",
+          "pageText",
+          "refreshLanguage"
+        ],
+        "smart-base": [
+          "default"
+        ]
+      }
+    },
+    "relations": [
+      {
+        "name": "cl-button",
+        "resolves_to": "cl-button"
+      },
+      {
+        "name": "cl-button-icon",
+        "resolves_to": "cl-button-icon"
+      },
+      {
+        "name": "cl-dropdown",
+        "resolves_to": "cl-dropdown"
+      },
+      {
+        "name": "cl-editor-inline",
+        "resolves_to": "cl-editor-inline"
+      },
+      {
+        "name": "cl-empty-state",
+        "resolves_to": "cl-empty-state"
+      },
+      {
+        "name": "cl-icon",
+        "resolves_to": "cl-icon"
+      },
+      {
+        "name": "cl-input",
+        "resolves_to": "cl-input"
+      },
+      {
+        "name": "cl-menu-context",
+        "resolves_to": "cl-menu-context"
+      },
+      {
+        "name": "cl-modal",
+        "resolves_to": "cl-modal"
+      },
+      {
+        "name": "cl-segmented",
+        "resolves_to": "cl-segmented"
+      },
+      {
+        "name": "cl-skeleton",
+        "resolves_to": "cl-skeleton"
+      },
+      {
+        "name": "cl-switch",
+        "resolves_to": "cl-switch"
+      },
+      {
+        "name": "cl-tabs",
+        "resolves_to": "cl-tabs"
+      },
+      {
+        "name": "cl-tree",
+        "resolves_to": "cl-tree"
+      }
+    ],
+    "elements": [
+      "sf-editor"
+    ],
+    "free_elements": [
+      "sf-button",
+      "sf-button-icon",
+      "sf-dropdown",
+      "sf-editor-inline",
+      "sf-empty-state",
+      "sf-icon",
+      "sf-input",
+      "sf-menu-context",
+      "sf-modal",
+      "sf-segmented",
+      "sf-skeleton",
+      "sf-switch",
+      "sf-tabs",
+      "sf-tree"
+    ],
+    "core_folder": null,
+    "variables": [
+      "--sf-border--width",
+      "--sf-duration-fast",
+      "--sf-ease-move",
+      "--sf-error",
+      "--sf-focus--color",
+      "--sf-focus--style",
+      "--sf-focus--width",
+      "--sf-font-weight-bold",
+      "--sf-font-weight-medium",
+      "--sf-info",
+      "--sf-mono",
+      "--sf-on-error-container",
+      "--sf-on-primary",
+      "--sf-on-primary-container",
+      "--sf-on-secondary-container",
+      "--sf-on-surface",
+      "--sf-on-surface-container-variant",
+      "--sf-on-surface-inverse",
+      "--sf-on-surface-popup-variant",
+      "--sf-on-warning-container",
+      "--sf-outline",
+      "--sf-outline-variant",
+      "--sf-primary",
+      "--sf-primary-container",
+      "--sf-primary-state-select",
+      "--sf-radius-1",
+      "--sf-radius-2",
+      "--sf-secondary",
+      "--sf-secondary-container",
+      "--sf-shadow-overlay",
+      "--sf-shadow-raised",
+      "--sf-space-1",
+      "--sf-space-2",
+      "--sf-space-3",
+      "--sf-space-5",
+      "--sf-space-6",
+      "--sf-space-7",
+      "--sf-space-8",
+      "--sf-success",
+      "--sf-surface-area",
+      "--sf-surface-container",
+      "--sf-surface-inverse",
+      "--sf-surface-page",
+      "--sf-surface-popup",
+      "--sf-surface-state-hover",
+      "--sf-text--family",
+      "--sf-text-height-1",
+      "--sf-text-size-1",
+      "--sf-ui-1--control-height",
+      "--sf-warning-container",
+      "--sf-z-index-8"
+    ],
+    "js_api": [
+      "Composition",
+      "Loader.ensure",
+      "Preferences",
+      "RuleLoader",
+      "deprecations",
+      "format",
+      "format.fileSize",
+      "format.number",
+      "format.relativeDay",
+      "language.register",
+      "language.use",
+      "runtimeModule",
+      "tags",
+      "tags.selector"
+    ]
+  },
+  "interface_sha256": "440f89ce3873a184ef68e27343a2835b1b449285ff79f3fdf6e923d1d431987d",
+  "expires": null,
+  "not_covered": [
+    "behaviour behind an unchanged interface: token values, free component looks, smart-base behaviour under the same ABI",
+    "Framework code a bundle inlined at build time: a rebuild over the pair may give other bytes (pair-receipt.py equivalence)",
+    "the set gates over the pair: unit, manifest, browser and first-paint probes",
+    "the attributes, events and slots of the free elements the set renders (renamed only with dated aliases)",
+    "window.SF reached through an alias the scan cannot see (const s = SF; s.x)"
+  ],
+  "tooling": {
+    "repository": "simai/ui-builder",
+    "revision": "58fc73027f3b40a9f6fcc82f67e89542e4f1fb05",
+    "clean": true,
+    "as_of": "2026-11-27",
+    "notes": {
+      "relations_to_required_sets": [],
+      "variables_bound_by_the_page": [],
+      "js_names_not_public": [
+        "SF.__internal"
+      ]
+    }
+  },
+  "created_on": "2026-11-27",
+  "claims": {
+    "production_ready": false
+  }
+}
