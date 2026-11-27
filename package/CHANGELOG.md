@@ -3,6 +3,13 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
+## 1.6.1 — 2026-11-27
+
+- The components of 1.6.0 (`sf-editor` 1.6.0), rebuilt over SIMAI Framework
+  `ui-4f5678e8c0ed` (group build 20, ui-source `1b1b9ea75610`; npm
+  `@simai-studio/ui@5.20261127.1637`, core.runtime 1.70.0): a site serves a
+  set only over its own exact pair. No behaviour changed.
+
 ## 1.6.0 — 2026-11-27
 
 - `sf-editor` 1.6.0 takes the page's storage through SIMAI Framework's
