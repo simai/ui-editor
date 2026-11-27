@@ -477,7 +477,7 @@ function refusedBar(view, w) {
     return html`
         <div class="sf-editor-conflict sf-editor-refused" role="alert">
             <sf-icon icon="error" size="1/2" aria-hidden="true"></sf-icon>
-            <p class="sf-editor-conflict-text">${w("render-refused", {vars: {code, path}})}</p>
+            <p class="sf-editor-conflict-text">${w("render-refused", {code, path})}</p>
         </div>
     `;
 }
