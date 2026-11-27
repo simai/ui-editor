@@ -263,6 +263,7 @@
     "conflict-keep": "Keep mine",
     "conflict-take": "Take the saved version",
     "read-only": "Read only",
+    "render-refused": "The page cannot be shown: the document did not pass the Framework's check ({code} at {path}). It is open read-only so that nothing is saved over it.",
     "reason-invalid": "the page has an error",
     "reason-too-large": "the page is too large",
     "reason-structure-mismatch": "the page does not fit its language",

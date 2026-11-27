@@ -84,7 +84,7 @@ const STORED = {
   ]}},
 };
 
-async function open({rights = {save: true}} = {}) {
+async function open({rights = {save: true}, stored = STORED, ready = '#editor [data-sf-composition-id="p1"]'} = {}) {
   const tab = await browser.newPage({viewport: {width: 1440, height: 900}, colorScheme: 'light'});
   tab.errors = [];
   tab.on('pageerror', (error) => { if (!/Automatic publicPath/u.test(error.message)) tab.errors.push(error.message); });
@@ -124,12 +124,12 @@ async function open({rights = {save: true}} = {}) {
     window.uploads = [];
     editor.media = {
       async upload(file) { window.uploads.push(file.name); return {answer: 'applied', data: {ref: 'media:8', url: '/media/8.png'}}; },
-      url: (ref) => `/media/${ref.slice(6)}.png`,
+      url: (ref) => (ref === 'media:9' ? null : `/media/${ref.slice(6)}.png`),
     };
     document.getElementById('box').append(editor);
     window.connected = editor.connectPort(host);
-  }, {stored: STORED, rights});
-  await tab.waitForSelector('#editor [data-sf-composition-id="p1"]', {timeout: 10000});
+  }, {stored, rights});
+  await tab.waitForSelector(ready, {timeout: 10000});
   return tab;
 }
 
@@ -218,6 +218,34 @@ try {
     && (await reader.evaluate(() => document.querySelector('#editor [data-sf-composition-id="p1"]')?.textContent.trim())) === 'Привезём заказ за два дня.');
   check('no page errors for the reader', reader.errors.length === 0, reader.errors);
   await reader.close();
+
+  // 5. 1.6.1: a media reference the host does not know draws the picture's
+  // placeholder through the render's media option, and the page is drawn.
+  const unknown = JSON.parse(JSON.stringify(STORED));
+  unknown.root.slots.default[0].slots.default[0].slots.default[2].data.src = 'media:9';
+  const placeholder = await open({stored: unknown});
+  const mark = await placeholder.evaluate(() => document.querySelector('#editor [data-sf-media-unresolved]')?.getAttribute('data-sf-media-unresolved') ?? '');
+  check('an unknown media reference draws the placeholder, the page all the same', mark === 'media:9', mark);
+  await placeholder.close();
+
+  // 6. 1.6.1 (Larena 11-27): a Document the render refuses (inline {text}
+  // without type) is named in a bar and open read-only; typing saves nothing.
+  const invalid = {schema: 'simai.composition.document', schema_version: 1, id: 'page', profile: 'ui-layout', locale: 'ru',
+    root: {id: 'root', type: 'layout.page', slots: {default: [{id: 'main-1', type: 'content.paragraph', data: {content: [{text: 'Правка из второй вкладки'}]}}]}}};
+  const refused = await open({stored: invalid, ready: '#editor .sf-editor-refused'});
+  const refusal = await refused.evaluate(() => ({
+    text: document.querySelector('#editor .sf-editor-refused')?.textContent.trim() ?? '',
+    role: document.querySelector('#editor .sf-editor-refused')?.getAttribute('role'),
+    readonly: document.querySelector('#editor .sf-editor')?.classList.contains('sf-editor--readonly'),
+  }));
+  check('a refused page names the refusal in an alert and is read only', refusal.role === 'alert' && refusal.readonly && /schema_one_of/u.test(refusal.text) && /content\[0\]/u.test(refusal.text), refusal);
+  await refused.locator('#editor .sf-editor-canvas').click();
+  await refused.keyboard.type('x');
+  await refused.waitForTimeout(1200);
+  const saves = await refused.evaluate(() => window.host.sent.filter(({intent}) => intent === 'document.save').length);
+  check('nothing is saved over a refused page', saves === 0, saves);
+  check('no page errors on a refused page', refused.errors.length === 0, refused.errors);
+  await refused.close();
 } finally {
   await browser.close();
 }

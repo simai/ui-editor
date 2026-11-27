@@ -3,6 +3,21 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
+## 1.6.2 — 2026-11-28
+
+- `sf-editor` 1.6.2: a page the SIMAI Framework render refuses (an invalid
+  Document) is no longer drawn as an empty canvas you can type on. A bar
+  names the reason and the page opens read-only, so nothing is saved over
+  the stored page.
+- `media:<id>` pictures are drawn through the render's `media(ref)` option
+  with the host's `editor.media.url`; an unknown reference keeps the
+  picture's placeholder.
+- No more «no word … the key is shown» warnings for the Framework's
+  catalogue words while its editor dictionary is still loading.
+- Built over SIMAI Framework `ui-4f5678e8c0ed` (group build 20).
+- This content was prepared as 1.6.1; that number was already taken by the
+  lock-only re-release below, so it is released as 1.6.2.
+
 ## 1.6.1 — 2026-11-27
 
 - The components of 1.6.0 (`sf-editor` 1.6.0), rebuilt over SIMAI Framework

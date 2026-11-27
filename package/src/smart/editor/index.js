@@ -213,14 +213,19 @@ class SfEditor extends EditorElement {
             seen.screen = this.screen;
             redraw = true;
         }
-        const readOnly = this.isReadOnly;
-        if (readOnly !== seen.readOnly) {
-            seen.readOnly = readOnly;
-            this.finishSession(false);
-            this.main.setReadOnly(readOnly);
-            redraw = true;
-        }
+        if (this.applyReadOnly()) redraw = true;
         if (redraw) this.redraw();
+    }
+
+    /** Puts the model in or out of read-only when isReadOnly changed; true when it did. */
+    applyReadOnly() {
+        const seen = this.seen;
+        const readOnly = this.isReadOnly;
+        if (readOnly === seen.readOnly) return false;
+        seen.readOnly = readOnly;
+        this.finishSession(false);
+        this.main.setReadOnly(readOnly);
+        return true;
     }
 
     // ------------------------------------------------------------ words
@@ -236,9 +241,14 @@ class SfEditor extends EditorElement {
         if (site !== undefined) return site;
         // The Framework's words (sf.composition.*) are not the editor's own:
         // asked there first, so the editor's dictionary does not warn of them.
+        // While the Framework's editor pack is on its way (the Loader fetches
+        // lang/<locale>/editor.json) its word is not missing: the name stands
+        // in and the pack's arrival draws the editor again. The editor's own
+        // dictionary has no sf.* word, so it is not asked (it warned «the key
+        // is shown» on Larena's stand, 11-27).
         if (String(key).startsWith("sf.")) {
             const framework = localeText(EDITOR_FIELD_WORDS, key, locale, EDITOR_WORDS_OWNER);
-            if (framework !== key) return framework;
+            return framework !== key ? framework : humanize(key);
         }
         const own = this.sfWord(key, vars ? {vars} : undefined);
         if (own !== key) return own;
@@ -399,7 +409,7 @@ class SfEditor extends EditorElement {
         this.finishSession(false);
         const canvas = this.model.canvasDocument(this.breakpoint);
         const hidden = canvas.hidden;
-        const document = this.withMediaAddresses(canvas.document);
+        const document = canvas.document;
         let result;
         try {
             // The canvas stands inside the editor's own page, which has its own
@@ -412,6 +422,11 @@ class SfEditor extends EditorElement {
                 registry: this.model.canvasRegistry,
                 preview: true,
                 options: {embedded: true},
+                // A media reference (media:<id>) is drawn from the host's
+                // address for it (Composition render option media, pair
+                // ui-4f5678e8c0ed); one the host does not know is drawn as the
+                // block's placeholder, the page all the same.
+                media: (ref) => this.mediaUrl(ref),
                 resolveBinding: (binding, context) => this.previewBinding(binding, context),
             });
         } catch (error) {
@@ -424,6 +439,16 @@ class SfEditor extends EditorElement {
             if (/^(?:data-[a-z0-9-]+|class|lang|dir)$/u.test(name)) page.setAttribute(name, String(value));
         }
         this.diagnostics = result.diagnostics ?? [];
+        // A Document the render refuses draws nothing at all: the editor names
+        // the refusal and keeps the page read-only, so nothing typed on an
+        // empty canvas is saved over the stored page.
+        const refused = !result.html && this.diagnostics.length ? this.diagnostics[0] : null;
+        const wasRefused = Boolean(this.renderRefused);
+        this.renderRefused = refused;
+        if (Boolean(refused) !== wasRefused) {
+            this.applyReadOnly();
+            this.refresh();
+        }
         // A page with its own main landmark keeps its landmarks top level: the canvas around it is then no region.
         // Drawn embedded, that main is <div data-sf-composition-landmark="main">: the page still has one.
         const landmarks = Boolean(page.querySelector('main, [role="main"], [data-sf-composition-landmark="main"]'));
@@ -578,6 +603,7 @@ class SfEditor extends EditorElement {
     /** Read-only: the readonly setting, or a port that does not let this reader write the language. */
     get isReadOnly() {
         if (this.readonly === true || this.hasAttribute("readonly")) return true;
+        if (this.renderRefused) return true;
         const session = this.documentSession;
         if (session?.element && !session.canWrite(this.documentLanguage)) return true;
         return false;
@@ -657,32 +683,6 @@ class SfEditor extends EditorElement {
         } catch {
             return null;
         }
-    }
-
-    /**
-     * The canvas copy of a Document with every media reference ("media:<id>" in
-     * a block's data.src) replaced by the host's address for it, else by a
-     * local "#media:<id>": the Framework's Composition render takes only http,
-     * https and local addresses for an image, and would refuse the whole page
-     * for one media reference. The stored Document keeps the reference.
-     */
-    withMediaAddresses(document) {
-        let copied = null;
-        const visit = (node) => {
-            if (!isPlainObject(node)) return;
-            const src = node.data?.src;
-            if (typeof src === "string" && src.startsWith("media:")) {
-                const url = this.mediaUrl(src);
-                node.data = {...node.data, src: url && /^(?:https?:\/\/|\/(?!\/)|\.?\.\/)/u.test(url) ? url : `#${src}`};
-            }
-            for (const children of Object.values(isPlainObject(node.slots) ? node.slots : {})) {
-                if (Array.isArray(children)) children.forEach(visit);
-            }
-        };
-        if (!JSON.stringify(document ?? null).includes('"media:')) return document;
-        copied = JSON.parse(JSON.stringify(document));
-        visit(copied.root);
-        return copied;
     }
 
     /** Uploads a chosen file through the host and puts its media reference into the field. */
@@ -2156,6 +2156,7 @@ class SfEditor extends EditorElement {
             landmarks: Boolean(this.pageLandmarks),
             save: this.saveStatus(),
             readOnly: this.isReadOnly,
+            refused: this.renderRefused ?? null,
             tree: this.treeOf(model.doc.root, 0),
         };
     }
