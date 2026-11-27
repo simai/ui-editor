@@ -81,6 +81,7 @@ export function renderEditorTemplate(component) {
                 ${left(component, view, w)}
                 <div class="sf-editor-stage">
                     ${view.save?.conflict ? conflictBar(component, view, w) : nothing}
+                    ${view.refused ? refusedBar(view, w) : nothing}
                     <div class="sf-editor-canvas" tabindex="0" role=${view.landmarks ? "group" : "region"} aria-roledescription=${w("canvas-role")}
                          aria-label=${view.landmarks ? nothing : component.label || w("label")} aria-describedby="sf-editor-help">
                         <div class="sf-editor-frame" data-screen=${component.screenName}>
@@ -462,6 +463,21 @@ function conflictBar(component, view, w) {
             <p class="sf-editor-conflict-text">${w(view.save.reason === "idempotency-conflict" ? "conflict-repeat" : "conflict-text")}</p>
             <sf-button size="1/3" appearance="tonal" scheme="primary" text=${w("conflict-keep")} @click=${() => component.keepMine()}></sf-button>
             <sf-button size="1/3" appearance="ghost" scheme="on-surface-variant" text=${w("conflict-take")} @click=${() => component.takeTheirs()}></sf-button>
+        </div>
+    `;
+}
+
+/**
+ * The bar over a page the Framework's render refused: it drew nothing, so the
+ * editor says why (the first diagnostic, its code and where) and the page is
+ * open read-only until a valid Document comes.
+ */
+function refusedBar(view, w) {
+    const {code = "", path = ""} = view.refused;
+    return html`
+        <div class="sf-editor-conflict sf-editor-refused" role="alert">
+            <sf-icon icon="error" size="1/2" aria-hidden="true"></sf-icon>
+            <p class="sf-editor-conflict-text">${w("render-refused", {code, path})}</p>
         </div>
     `;
 }

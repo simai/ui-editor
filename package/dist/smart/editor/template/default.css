@@ -902,6 +902,11 @@
     color: var(--sf-on-warning-container);
   }
 
+  .sf-editor-refused {
+    background: var(--sf-error-container);
+    color: var(--sf-on-error-container);
+  }
+
   .sf-editor-conflict-text {
     flex: 1 1 16rem;
     margin: 0;
