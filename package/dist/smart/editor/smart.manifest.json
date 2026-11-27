@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "id": "smart.editor",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "title": "Page editor",
   "summary": "The one block editor of the SIMAI page: layout and text in one Composition Document, edited by depth. A click on text types, a click beside it chooses the block, Esc goes up and Enter down. One catalogue (Text and Blocks, groups, variants with pictures, search, favourites, recent) serves the + between blocks, / in text and the library; blocks move by the grip with drop lines or Alt+arrows, and a drop beside a block splits it into columns. The parameter panel says where every value comes from (type, theme, variant, block, screen) and sets values per screen; the Data tab binds a block to a host source through the source port. The block builder makes and changes site blocks everywhere; the site template is a separate, explicit edit. Rights and theme come from the host. One undo history; output as JSON, HTML and Markdown.",
   "kind": "smart",
@@ -73,6 +73,11 @@
           "phone"
         ]
       },
+      "readonly": {
+        "type": "boolean",
+        "default": false,
+        "description": "Read only: the page opens without edit affordances (no library, insertion, moving, removing, parameters, uploads or saving); choosing, the structure, the screen switch and the outputs stay. The editor is read only by itself too when its document port answers rights.save false, or a language outside rights.languages."
+      },
       "preferences-key": {
         "type": "string",
         "default": "",
@@ -135,6 +140,11 @@
         "default": null,
         "description": "The site's theme: its defaults are a level of where a value comes from, its attributes are put on the drawn page. The editor never changes it; settings_url links to where it is changed."
       },
+      "media": {
+        "type": "object",
+        "default": null,
+        "description": "The host's upload beside the document port: an image field gets an upload button, the file goes to upload(file) and the field takes the media reference it answers; the canvas draws a media reference from url(ref). Without it the upload is hidden and a media reference is kept as an opaque string."
+      },
       "page-settings": {
         "type": "object",
         "default": null,
@@ -168,7 +178,7 @@
       "const": "Every change dispatches change {document, reason, scope}; nothing is stored by the element. select {ids} says which block is chosen; block-save {manifest, words, changes} hands a new or changed site block to the host."
     },
     "port": {
-      "const": "connect-port {sources(shape), fields(source), preview(binding, {settings, shape}), saveBlock?(manifest, words)}: the host's data sources (Composition source port) and where site blocks are kept."
+      "const": "connect-port {port}: simai.document-port 1.0.2 {id, capabilities, send(intent, payload)} is the page's storage (load, then drafts saved against the revision, a conflict shown with a choice); the Composition source port {sources(shape), fields(source), preview(binding, {settings, shape}), saveBlock?(manifest, words)} gives the data sources and keeps site blocks. Both may be handed; each is kept apart."
     }
   },
   "methods": {
@@ -495,10 +505,10 @@
     ]
   },
   "persistence": {
-    "mode": "none",
+    "mode": "external-host",
     "source_of_truth": "host",
     "network_owner": "host",
-    "revision_field": null
+    "revision_field": "revision"
   },
   "ownership": {
     "source": "simai/ui-pro",
@@ -590,11 +600,11 @@
     "source_artifacts": [
       {
         "path": "src/smart/editor/index.js",
-        "sha256": "9ef78e8ad129ee210e96ddd922f263462ae7deabe4bc039f51e6416c16e05f76"
+        "sha256": "a7fecba0199d20ca7d92cdf59c3ba9f71cbe9a07a437e889470fbe1903dcad10"
       },
       {
         "path": "src/smart/editor/js/model.mjs",
-        "sha256": "a122ac47f15d5fc6da0d7efef8bdfcb6cc4723691a63e670552b9bcc21e0e28c"
+        "sha256": "1b0a7043105e1b700a515dd98f6c540440ffd8e33e7643ab040c2eddef398670"
       },
       {
         "path": "src/smart/editor/js/catalogue.mjs",
@@ -606,11 +616,11 @@
       },
       {
         "path": "src/smart/editor/js/templates/default.js",
-        "sha256": "f013fd3f392e6ddd13bc105cc813dd4b81ed9031baa0546afeade417fe241e1e"
+        "sha256": "432236b888f4df34983e36d0821c5acfb5d54f94c32c2cc465a923bb1c868762"
       },
       {
         "path": "src/smart/editor/js/templates/default.css",
-        "sha256": "dcb5c18c28e295c3aeafefec7a7c0b8c0841cf61a861ec74ba20e40a1e1d8233"
+        "sha256": "7e6fe64ae6f635f181ef871671a84861bcac663568d27e5baf73815d67808db7"
       },
       {
         "path": "src/smart/editor/rule.js",
@@ -618,19 +628,19 @@
       },
       {
         "path": "src/smart/editor/docs.md",
-        "sha256": "d529da977851de083b978659db06223baf0bc166fce0f1f58620e1c8a5848f4a"
+        "sha256": "d2416ef9a6ee57f0a487bb4f3a9e45deb374788fdbcf7dbbbe1831ed79badb04"
       },
       {
         "path": "src/smart/editor/component.json",
-        "sha256": "c620c989297fdeb354acc488188c54613416bfc82d53d06e86c12fbf3810f3d5"
+        "sha256": "d37fbcba18a3529323b463f211bea89c35ce5209918ead4fa899e1adb10d0dd1"
       },
       {
         "path": "src/smart/editor/lang/en.json",
-        "sha256": "a4c6d651fe9b80838065bd4dfd10eb3129e71e958757fe68723d9c599b412180"
+        "sha256": "da28e4ce5274582e85bb78f1cd0bf1b4db057838bfd41cc34d8fb0c7b600c8fe"
       },
       {
         "path": "src/smart/editor/lang/ru.json",
-        "sha256": "1f94928a797ba4835083a174eb35bb5d7202faa98bdf4000246764e45eebcf88"
+        "sha256": "5e3c1c8b0cfd40e88b09328ad9aabee2e64c74377acccb0c082bb97a2851f41f"
       }
     ],
     "generated_runtime": []

@@ -2384,9 +2384,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__("8d9331f1f24f");
 /* harmony import */ var _js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__("c584913fd94f");
 /* harmony import */ var _js_templates_default_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__("d62589d9772e");
-/* harmony import */ var _component_json__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__("b1c5d4f6dddd");
-/* harmony import */ var _lang_en_json__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__("5bf8f84cf5a8");
-/* harmony import */ var _lang_ru_json__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__("362a712abf5e");
+/* harmony import */ var _js_document_port_mjs__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__("455cebeb1238");
+/* harmony import */ var _component_json__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__("b1c5d4f6dddd");
+/* harmony import */ var _lang_en_json__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__("5bf8f84cf5a8");
+/* harmony import */ var _lang_ru_json__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__("362a712abf5e");
 var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_core_js_smart_base__WEBPACK_IMPORTED_MODULE_0__, _core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__, _core_js_composition_index_mjs__WEBPACK_IMPORTED_MODULE_2__, _core_js_composition_inline_editor_mjs__WEBPACK_IMPORTED_MODULE_5__, _core_js_page_language_js__WEBPACK_IMPORTED_MODULE_6__, _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__, _js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__, _js_templates_default_js__WEBPACK_IMPORTED_MODULE_11__]);
 ([_core_js_smart_base__WEBPACK_IMPORTED_MODULE_0__, _core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__, _core_js_composition_index_mjs__WEBPACK_IMPORTED_MODULE_2__, _core_js_composition_inline_editor_mjs__WEBPACK_IMPORTED_MODULE_5__, _core_js_page_language_js__WEBPACK_IMPORTED_MODULE_6__, _js_model_mjs__WEBPACK_IMPORTED_MODULE_8__, _js_catalogue_mjs__WEBPACK_IMPORTED_MODULE_9__, _js_templates_default_js__WEBPACK_IMPORTED_MODULE_11__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 /* harmony import */ var _core_js_smart_base__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_core_js_smart_base__WEBPACK_IMPORTED_MODULE_0__);
@@ -2409,6 +2410,7 @@ var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_cor
 // composed site blocks, named places and data from the host's source port.
 // The model (js/model.mjs) holds the Document and every change; this element
 // draws it with the Framework's own renderers and its own Smart components.
+
 
 
 
@@ -2464,11 +2466,11 @@ const SCREEN_ICONS = {
   phone: "smartphone"
 };
 const STATES = ["auto", "empty", "error", "loading"];
-const EditorElement = (0,_core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__.elementFromManifest)(_component_json__WEBPACK_IMPORTED_MODULE_12__, {
+const EditorElement = (0,_core_js_element_manifest__WEBPACK_IMPORTED_MODULE_1__.elementFromManifest)(_component_json__WEBPACK_IMPORTED_MODULE_13__, {
   base: (_core_js_smart_base__WEBPACK_IMPORTED_MODULE_0___default()),
   lang: {
-    en: _lang_en_json__WEBPACK_IMPORTED_MODULE_13__,
-    ru: _lang_ru_json__WEBPACK_IMPORTED_MODULE_14__
+    en: _lang_en_json__WEBPACK_IMPORTED_MODULE_14__,
+    ru: _lang_ru_json__WEBPACK_IMPORTED_MODULE_15__
   },
   source: "en",
   actions: {
@@ -2565,7 +2567,7 @@ class SfEditor extends EditorElement {
   constructor() {
     super();
 
-    for (const name of ["document", "types", "editorManifests", "siteBlocks", "words", "rights", "theme", "renderers", "pageSettings"]) {
+    for (const name of ["document", "types", "editorManifests", "siteBlocks", "words", "rights", "theme", "renderers", "pageSettings", "media"]) {
       if (Object.prototype.hasOwnProperty.call(this, name)) {
         const early = this[name];
         delete this[name];
@@ -2607,6 +2609,9 @@ class SfEditor extends EditorElement {
     this.helpOpen = null;
     this.codeCache = new Map();
     this.hintSeen = false;
+    this.documentSession = null;
+    this.documentLanguage = "";
+    this.uploading = "";
   } // ------------------------------------------------------------ inputs
 
 
@@ -2679,6 +2684,15 @@ class SfEditor extends EditorElement {
       redraw = true;
     }
 
+    const readOnly = this.isReadOnly;
+
+    if (readOnly !== seen.readOnly) {
+      seen.readOnly = readOnly;
+      this.finishSession(false);
+      this.main.setReadOnly(readOnly);
+      redraw = true;
+    }
+
     if (redraw) this.redraw();
   } // ------------------------------------------------------------ words
 
@@ -2714,7 +2728,7 @@ class SfEditor extends EditorElement {
   wordsOf(key) {
     const host = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.isPlainObject)(this.words) ? this.words : {};
     const site = (0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.isPlainObject)(this.builderWords) ? this.builderWords : {};
-    const own = [_lang_en_json__WEBPACK_IMPORTED_MODULE_13__, _lang_ru_json__WEBPACK_IMPORTED_MODULE_14__].map(dictionary => dictionary.runtime?.[key]);
+    const own = [_lang_en_json__WEBPACK_IMPORTED_MODULE_14__, _lang_ru_json__WEBPACK_IMPORTED_MODULE_15__].map(dictionary => dictionary.runtime?.[key]);
     const hosted = [...Object.values(host), ...Object.values(site)].map(dictionary => dictionary?.[key]);
     const field = ["en", "ru"].map(locale => _core_js_composition_index_mjs__WEBPACK_IMPORTED_MODULE_2__.EDITOR_FIELD_WORDS[locale]?.[key]);
     return [...own, ...hosted, ...field].filter(value => typeof value === "string");
@@ -2819,7 +2833,10 @@ class SfEditor extends EditorElement {
       document: JSON.parse(this.sent),
       reason: event.reason,
       scope: event.scope
-    });
+    }); // With a document port the page's language is saved as a draft; the
+    // template belongs to the site level, which this port does not write.
+
+    if (this.documentSession && this.model === this.main && event.scope !== "template") this.documentSession.edit(this.documentLanguage, JSON.parse(this.sent));
   }
 
   readPreferences() {
@@ -2877,10 +2894,9 @@ class SfEditor extends EditorElement {
       at: this.session ? this.caretOffset() : "end"
     } : null;
     this.finishSession(false);
-    const {
-      document,
-      hidden
-    } = this.model.canvasDocument(this.breakpoint);
+    const canvas = this.model.canvasDocument(this.breakpoint);
+    const hidden = canvas.hidden;
+    const document = this.withMediaAddresses(canvas.document);
     let result;
 
     try {
@@ -2947,9 +2963,9 @@ class SfEditor extends EditorElement {
       // frame of a page with a template (the regions) and a container that
       // holds an open place (an author's text area) only say why on a press.
 
-      const lock = this.model.lockOf(id);
+      const lock = this.model.lockOf(id); // Read only locks every part: nothing is dimmed, the bar says it once.
 
-      if (lock) {
+      if (lock && lock !== "read-only") {
         element.dataset.sfEditorLock = lock; // Inactive for this person: said so, and its dimmed text is not
         // held to the contrast of what can be changed (WCAG 1.4.3).
 
@@ -3061,6 +3077,219 @@ class SfEditor extends EditorElement {
 
   onPortConnected() {
     this.dataCache.clear();
+    this.redraw();
+  }
+  /**
+   * connect-port {port}: a simai.document-port (1.0.2) is the storage of the
+   * page and is kept beside the source port; any other port is the
+   * Framework's base action as before (the Composition source port).
+   */
+
+
+  connectPort(params) {
+    const port = params && typeof params === "object" && params.port && typeof params.port === "object" ? params.port : params;
+    if ((0,_js_document_port_mjs__WEBPACK_IMPORTED_MODULE_12__.isDocumentPort)(port)) return this.connectDocumentPort(port);
+    return super.connectPort(params);
+  }
+
+  connectDocumentPort(port) {
+    this.documentSession?.close();
+    const session = new _js_document_port_mjs__WEBPACK_IMPORTED_MODULE_12__.DocumentSession(port);
+    this.documentSession = session;
+    session.subscribe(event => {
+      if (this.documentSession === session) this.onDocumentSession(event);
+    });
+    session.load();
+    return applied();
+  }
+  /** The document port's port, or null. */
+
+
+  get documentPort() {
+    return this.documentSession?.port ?? null;
+  }
+  /** Read-only: the readonly setting, or a port that does not let this reader write the language. */
+
+
+  get isReadOnly() {
+    if (this.readonly === true || this.hasAttribute("readonly")) return true;
+    const session = this.documentSession;
+    if (session?.element && !session.canWrite(this.documentLanguage)) return true;
+    return false;
+  }
+  /** The page's language when the element has it, else the main language (the first). */
+
+
+  pickLanguage(languages) {
+    const page = String(this.locale || "").toLowerCase();
+    return languages.find(tag => tag.toLowerCase() === page) ?? languages.find(tag => tag.toLowerCase().split("-")[0] === page.split("-")[0]) ?? languages[0] ?? page;
+  }
+
+  onDocumentSession({
+    type,
+    session
+  }) {
+    if (type === "loaded" || type === "taken") {
+      if (type === "loaded") this.documentLanguage = this.pickLanguage(session.languages);
+      const value = session.valueOf(this.documentLanguage) ?? {
+        schema: "simai.composition.document",
+        schema_version: 1,
+        locale: this.documentLanguage,
+        root: {
+          id: "root",
+          type: "layout.page",
+          slots: {
+            default: []
+          }
+        }
+      };
+      this.finishSession(false);
+      this.main.setDocument(value);
+      this.builder = null;
+      this.model = this.main;
+      this.sent = JSON.stringify(this.main.doc);
+      this.adopted = this.document;
+      this.seen.readOnly = undefined;
+      this.adopt();
+      this.redraw();
+      if (type === "taken") this.say(this.sfWord("save-taken"));
+      return;
+    }
+
+    this.requestComponentUpdate?.("state");
+  }
+  /** What the save line says, or null without a document port. */
+
+
+  saveStatus() {
+    const session = this.documentSession;
+    if (!session) return null;
+    const reason = session.reason;
+    const key = {
+      idle: "save-loading",
+      loading: "save-loading",
+      ready: "save-saved",
+      pending: "save-pending",
+      saving: "save-saving",
+      conflict: "save-conflict",
+      unavailable: "save-unavailable",
+      failed: "save-load-failed"
+    }[session.state] ?? (reason === "session-expired" ? "save-expired" : "save-refused");
+    const reasonWord = reason ? this.sfWord(`reason-${reason}`) : "";
+    return {
+      state: session.state,
+      reason,
+      text: this.sfWord(key, {
+        vars: {
+          reason: reasonWord
+        }
+      }),
+      retry: session.state === "refused" && Boolean(session.pending),
+      readOnly: this.isReadOnly,
+      conflict: session.state === "conflict"
+    };
+  }
+
+  keepMine() {
+    return this.documentSession?.keepMine();
+  }
+
+  takeTheirs() {
+    return this.documentSession?.takeTheirs();
+  }
+
+  retrySave() {
+    return this.documentSession?.retry();
+  }
+  /** The host's upload, beside the port: {upload(file) -> Promise<answer>, url(ref) -> address}, or null. */
+
+
+  get mediaHost() {
+    const media = this.media;
+    return media && typeof media === "object" && typeof media.upload === "function" ? media : null;
+  }
+  /** The address a media reference is drawn from on the canvas: the host's url(ref), else none. */
+
+
+  mediaUrl(ref) {
+    if (typeof ref !== "string" || !ref.startsWith("media:")) return null;
+
+    try {
+      const url = this.media?.url?.(ref);
+      return typeof url === "string" && url ? url : null;
+    } catch {
+      return null;
+    }
+  }
+  /**
+   * The canvas copy of a Document with every media reference ("media:<id>" in
+   * a block's data.src) replaced by the host's address for it, else by a
+   * local "#media:<id>": the Framework's Composition render takes only http,
+   * https and local addresses for an image, and would refuse the whole page
+   * for one media reference. The stored Document keeps the reference.
+   */
+
+
+  withMediaAddresses(document) {
+    let copied = null;
+
+    const visit = node => {
+      if (!(0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.isPlainObject)(node)) return;
+      const src = node.data?.src;
+
+      if (typeof src === "string" && src.startsWith("media:")) {
+        const url = this.mediaUrl(src);
+        node.data = { ...node.data,
+          src: url && /^(?:https?:\/\/|\/(?!\/)|\.?\.\/)/u.test(url) ? url : `#${src}`
+        };
+      }
+
+      for (const children of Object.values((0,_js_tree_mjs__WEBPACK_IMPORTED_MODULE_10__.isPlainObject)(node.slots) ? node.slots : {})) {
+        if (Array.isArray(children)) children.forEach(visit);
+      }
+    };
+
+    if (!JSON.stringify(document ?? null).includes('"media:')) return document;
+    copied = JSON.parse(JSON.stringify(document));
+    visit(copied.root);
+    return copied;
+  }
+  /** Uploads a chosen file through the host and puts its media reference into the field. */
+
+
+  async uploadInto(field, file) {
+    const media = this.mediaHost;
+    const id = this.model.selected;
+    if (!media || !file || !id || this.isReadOnly) return;
+    this.uploading = field.key;
+    this.say(this.sfWord("upload-busy"));
+    this.refresh();
+    let answer;
+
+    try {
+      answer = await media.upload(file);
+    } catch {
+      answer = {
+        answer: "unavailable",
+        reason: "storage-unavailable"
+      };
+    }
+
+    this.uploading = "";
+    const ref = answer?.answer === "applied" ? answer.data?.ref : null;
+
+    if (typeof ref === "string" && ref) {
+      const result = this.model.setParam(id, field.key, ref, this.breakpoint);
+      this.say(this.sfWord(result?.ok === false ? `refused-${result.reason}` : "upload-done"));
+    } else {
+      const reason = answer?.reason ? this.sfWord(`reason-${answer.reason}`) : "";
+      this.say(this.sfWord("upload-failed", {
+        vars: {
+          reason
+        }
+      }));
+    }
+
     this.redraw();
   } // ------------------------------------------------------------ overlays
 
@@ -4937,6 +5166,8 @@ class SfEditor extends EditorElement {
       caption: this.getAttribute("caption") || "",
       page: this.pageSettings && typeof this.pageSettings === "object" && !Array.isArray(this.pageSettings) ? this.pageSettings : null,
       landmarks: Boolean(this.pageLandmarks),
+      save: this.saveStatus(),
+      readOnly: this.isReadOnly,
       tree: this.treeOf(model.doc.root, 0)
     };
   }
@@ -5235,7 +5466,7 @@ function renderEditorTemplate(component) {
     if (event.target !== event.currentTarget) event.stopPropagation();
   };
 
-  const classes = ["sf-editor", component.getRootClass?.() ?? "", component.builder ? "sf-editor--builder" : "", view.model.templateEditing ? "sf-editor--template" : ""].filter(Boolean).join(" ");
+  const classes = ["sf-editor", component.getRootClass?.() ?? "", component.builder ? "sf-editor--builder" : "", view.model.templateEditing ? "sf-editor--template" : "", view.readOnly ? "sf-editor--readonly" : ""].filter(Boolean).join(" ");
   return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
         <div class=${classes} @input=${stop} @change=${stop}>
             <div class="sf-editor-top" role="region" aria-label=${component.label || w("label")}>
@@ -5247,6 +5478,7 @@ function renderEditorTemplate(component) {
             <div class="sf-editor-body">
                 ${left(component, view, w)}
                 <div class="sf-editor-stage">
+                    ${view.save?.conflict ? conflictBar(component, view, w) : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
                     <div class="sf-editor-canvas" tabindex="0" role=${view.landmarks ? "group" : "region"} aria-roledescription=${w("canvas-role")}
                          aria-label=${view.landmarks ? lit__WEBPACK_IMPORTED_MODULE_0__.nothing : component.label || w("label")} aria-describedby="sf-editor-help">
                         <div class="sf-editor-frame" data-screen=${component.screenName}>
@@ -5298,11 +5530,12 @@ function bar(component, view, w) {
             <div class="sf-editor-bar-start">
                 ${slotted(component, "start")}
                 ${view.heading ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<span class="sf-editor-title"><strong class="sf-editor-title-name">${view.heading}</strong>${view.caption ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<span class="sf-editor-title-caption">${view.caption}</span>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}</span>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
+                ${view.readOnly ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<span class="sf-editor-readonly-mark"><sf-icon icon="visibility" size="1/3" aria-hidden="true"></sf-icon><span>${w("read-only")}</span></span>` : (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
                 <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="undo" aria-label=${w("undo-label")} title=${`${w("undo-label")} (${keysText("mod+z")})`}
                                 ?disabled=${!model.canUndo} @click=${() => component.history("undo")}></sf-button-icon>
                 <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="redo" aria-label=${w("redo-label")} title=${`${w("redo-label")} (${keysText("shift+mod+z")})`}
-                                ?disabled=${!model.canRedo} @click=${() => component.history("redo")}></sf-button-icon>
-                ${template ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button class="sf-editor-template-toggle" size="1/3" appearance=${model.templateEditing ? "tonal" : "ghost"} scheme=${model.templateEditing ? "primary" : "on-surface-variant"}
+                                ?disabled=${!model.canRedo} @click=${() => component.history("redo")}></sf-button-icon>`}
+                ${template && !view.readOnly ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button class="sf-editor-template-toggle" size="1/3" appearance=${model.templateEditing ? "tonal" : "ghost"} scheme=${model.templateEditing ? "primary" : "on-surface-variant"}
                         icon-start=${model.templateEditing ? "check" : ""} text=${w(model.templateEditing ? "template-done" : "template-edit")}
                         @click=${() => component.toggleTemplate(!model.templateEditing)}></sf-button>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
                 ${model.templateEditing ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<span class="sf-editor-badge">${w("template-badge")}</span>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
@@ -5383,6 +5616,16 @@ function builderBar(component, w) {
 
 
 function left(component, view, w) {
+  // A reader sees the structure only: the library inserts, and nothing is inserted.
+  if (view.readOnly) {
+    return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
+            <aside class="sf-editor-left" aria-label=${w("left-label")}>
+                <h2 class="sf-editor-heading sf-editor-left-title">${w("left-structure")}</h2>
+                <div class="sf-editor-left-body">${structure(component, view, w)}</div>
+            </aside>
+        `;
+  }
+
   const tabs = [{
     id: "blocks",
     label: w("left-blocks")
@@ -5687,8 +5930,27 @@ function pathBar(component, view, w) {
                            text=${component.typeLabel(node.type)} aria-current=${node.id === view.model.selected ? "true" : "false"}
                            @click=${() => component.choose(node.id)}></sf-button>`)}
             <span class="sf-editor-spacer"></span>
+            ${view.save ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<span class="sf-editor-save" data-state=${view.save.state}>${view.save.text}</span>
+                ${view.save.retry ? (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-button size="1/3" appearance="ghost" scheme="primary" text=${w("save-retry")} @click=${() => component.retrySave()}></sf-button>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
             <span class="sf-editor-keys">${w(view.model.typing ? "keys-typing" : view.selected ? "keys-chosen" : "keys-page", keyWords())}</span>
         </nav>
+    `;
+}
+/**
+ * The page was changed elsewhere since it was loaded: the person's version is
+ * kept unsaved, and they choose to write it over the stored one or take the
+ * stored one (simai.document-port conflict stale-revision).
+ */
+
+
+function conflictBar(component, view, w) {
+  return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
+        <div class="sf-editor-conflict" role="alert">
+            <sf-icon icon="sync_problem" size="1/2" aria-hidden="true"></sf-icon>
+            <p class="sf-editor-conflict-text">${w(view.save.reason === "idempotency-conflict" ? "conflict-repeat" : "conflict-text")}</p>
+            <sf-button size="1/3" appearance="tonal" scheme="primary" text=${w("conflict-keep")} @click=${() => component.keepMine()}></sf-button>
+            <sf-button size="1/3" appearance="ghost" scheme="on-surface-variant" text=${w("conflict-take")} @click=${() => component.takeTheirs()}></sf-button>
+        </div>
     `;
 } // ------------------------------------------------------------ the right panel
 
@@ -5963,6 +6225,7 @@ function fieldRow(component, field, w) {
     const numeric = field.kind === "number" || field.kind === "integer";
     control = (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`<sf-input class="sf-editor-control" aria-label=${field.label} inputmode=${numeric ? "numeric" : ""} .value=${String(value)}
                                  @change=${event => component.onField(event, field)}></sf-input>`;
+    if (field.media && component.mediaHost && !component.isReadOnly) control = uploadRow(component, field, control, w);
   }
 
   const own = field.origin === "block" || field.origin === "screen";
@@ -5993,6 +6256,30 @@ function fieldRow(component, field, w) {
     event.stopPropagation();
     component.toggleExposed(component.model.selected, field, Boolean(event.currentTarget.checked));
   }}></sf-switch>` : lit__WEBPACK_IMPORTED_MODULE_0__.nothing}
+        </div>
+    `;
+}
+/** A media field with the host's upload: the reference's field and a button that picks a file for it. */
+
+
+function uploadRow(component, field, control, w) {
+  const pick = event => event.currentTarget.parentElement.querySelector("input[type=file]")?.click();
+
+  const chosen = event => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (file) component.uploadInto(field, file);
+  };
+
+  const busy = component.uploading === field.key;
+  return (0,lit__WEBPACK_IMPORTED_MODULE_0__.html)`
+        <div class="sf-editor-upload">
+            ${control}
+            <sf-button-icon size="1/2" appearance="ghost" scheme="on-surface-variant" icon="upload" aria-label=${w("upload-label", {
+    name: field.label
+  })} title=${w("upload")}
+                            ?disabled=${busy} @click=${pick}></sf-button-icon>
+            <input type="file" accept="image/*" hidden @change=${chosen}>
         </div>
     `;
 }
@@ -18124,6 +18411,290 @@ __webpack_async_result__();
 
 /***/ },
 
+/***/ "455cebeb1238"
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   DOCUMENT_PORT: () => (/* binding */ DOCUMENT_PORT),
+/* harmony export */   DocumentSession: () => (/* binding */ DocumentSession),
+/* harmony export */   capabilitiesOf: () => (/* binding */ capabilitiesOf),
+/* harmony export */   isDocumentPort: () => (/* binding */ isDocumentPort),
+/* harmony export */   portId: () => (/* binding */ portId)
+/* harmony export */ });
+// The editor's side of simai.document-port (SIMAI Framework, edition 1.0.2):
+// one storage element, a value per language and one revision for all. The
+// host hands a port {id: "simai.document-port", capabilities, send(intent,
+// payload) -> Promise<answer>}; this session asks it to load, then saves the
+// language being edited as drafts against the revision it was given, and
+// keeps the unsaved input through every answer that is not applied.
+//
+// Answers are taken as the port gives them: applied | conflict | refused |
+// unavailable with the port's reasons. A send that throws or rejects is read
+// as unavailable / storage-unavailable. A conflict is never repeated
+// unchanged: the person keeps their version (a new save against the stored
+// revision) or takes the stored one. An unavailable save is repeated with the
+// same input and the same client_key, after retry_after when the host gave
+// it; session-expired waits for retry() after sign-in.
+
+const DOCUMENT_PORT = "simai.document-port";
+
+const ANSWERS = new Set(["applied", "conflict", "refused", "unavailable"]);
+
+/** The port's id, read the way the Framework's connect-port reads it (id, else port). */
+function portId(port) {
+    if (!port || typeof port !== "object") return "";
+    if (typeof port.id === "string" && port.id) return port.id;
+    if (typeof port.port === "string" && port.port) return port.port;
+    return "";
+}
+
+/** A document port: named simai.document-port and able to send. */
+function isDocumentPort(port) {
+    return portId(port) === DOCUMENT_PORT && typeof port.send === "function";
+}
+
+/** The capabilities a port announces, as a set of names (a list or an object of names). */
+function capabilitiesOf(port) {
+    const given = port?.capabilities;
+    if (Array.isArray(given)) return new Set(given.filter((name) => typeof name === "string"));
+    if (given && typeof given === "object") return new Set(Object.keys(given).filter((name) => given[name]));
+    return new Set();
+}
+
+function randomKey() {
+    const crypto = globalThis.crypto;
+    if (crypto?.randomUUID) return crypto.randomUUID();
+    return `k-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+/** One answer object, whatever the port gave: an unknown shape is a port failure. */
+function normalize(answer) {
+    if (answer && typeof answer === "object" && ANSWERS.has(answer.answer)) return answer;
+    return {answer: "unavailable", reason: "storage-unavailable", message: "The port gave no answer object."};
+}
+
+/**
+ * The session of one storage element.
+ *
+ * state: idle (nothing loaded) | loading | ready (saved, nothing pending) |
+ * pending (an edit waits for its save) | saving | conflict | refused |
+ * unavailable | failed (the load was not applied).
+ * Listeners get {type: "state" | "loaded" | "taken"} after each step.
+ */
+class DocumentSession {
+    constructor(port, {delay = 800, key = randomKey, timers = globalThis} = {}) {
+        this.port = port;
+        this.delay = delay;
+        this.key = key;
+        this.timers = timers;
+        this.capabilities = capabilitiesOf(port);
+        this.listeners = new Set();
+        this.state = "idle";
+        this.reason = "";
+        this.element = null;
+        this.pending = null;
+        this.flight = null;
+        this.conflict = null;
+        this.timer = null;
+        this.closed = false;
+    }
+
+    subscribe(listener) {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+    }
+
+    emit(type) {
+        for (const listener of this.listeners) listener({type, session: this});
+    }
+
+    set(state, reason = "") {
+        this.state = state;
+        this.reason = reason;
+        this.emit("state");
+    }
+
+    async send(intent, payload) {
+        try {
+            return normalize(await this.port.send(intent, payload));
+        } catch (error) {
+            return {answer: "unavailable", reason: "storage-unavailable", message: String(error?.message ?? error)};
+        }
+    }
+
+    get revision() {
+        return this.element?.revision ?? null;
+    }
+
+    get languages() {
+        return Array.isArray(this.element?.languages) ? this.element.languages : [];
+    }
+
+    get rights() {
+        return this.element?.rights ?? {};
+    }
+
+    /** Whether the reader may write this language. */
+    canWrite(language) {
+        const rights = this.rights;
+        if (rights.save !== true) return false;
+        if (Array.isArray(rights.languages) && !rights.languages.includes(language)) return false;
+        return true;
+    }
+
+    /** The stored value of a language, or null when it has none. */
+    valueOf(language) {
+        const values = this.element?.values;
+        return values && Object.prototype.hasOwnProperty.call(values, language) ? values[language] : null;
+    }
+
+    async load() {
+        this.set("loading");
+        const answer = await this.send("document.load", {});
+        if (this.closed) return answer;
+        if (answer.answer !== "applied") {
+            this.set("failed", answer.reason ?? "");
+            return answer;
+        }
+        this.element = answer.data ?? {};
+        this.pending = null;
+        this.conflict = null;
+        this.emit("loaded");
+        this.set("ready");
+        return answer;
+    }
+
+    /** An edit of one language: kept as pending and saved after the delay. */
+    edit(language, value) {
+        if (this.closed || !this.element) return false;
+        if (!this.canWrite(language)) return false;
+        this.pending = {...(this.pending ?? {}), [language]: value};
+        // New input is a new write: a key belongs to one input.
+        this.pendingKey = null;
+        if (this.state === "conflict" || this.state === "refused" && this.reason === "session-expired") {
+            this.emit("state");
+            return true;
+        }
+        this.set("pending");
+        this.schedule(this.delay);
+        return true;
+    }
+
+    schedule(ms) {
+        if (this.timer) this.timers.clearTimeout(this.timer);
+        this.timer = this.timers.setTimeout(() => {
+            this.timer = null;
+            this.save();
+        }, Math.max(0, ms));
+    }
+
+    /** Saves what is pending now, if nothing is on its way; another edit meanwhile waits for the answer. */
+    async save() {
+        if (this.closed || !this.pending || this.flight || this.state === "conflict") return null;
+        const values = this.pending;
+        this.pendingKey = this.pendingKey ?? this.key();
+        const payload = {values, expected_revision: this.revision, client_key: this.pendingKey};
+        this.set("saving");
+        this.flight = payload;
+        const answer = await this.send("document.save", payload);
+        this.flight = null;
+        if (this.closed) return answer;
+        const changedMeanwhile = this.pending !== values;
+        if (answer.answer === "applied") {
+            const data = answer.data ?? {};
+            const stored = data.values && typeof data.values === "object" ? data.values : values;
+            const next = {...(this.element?.values ?? {})};
+            for (const [language, value] of Object.entries(stored)) {
+                if (value === null) delete next[language];
+                else next[language] = value;
+            }
+            this.element = {...this.element, revision: data.revision ?? this.revision, values: next};
+            if (changedMeanwhile) {
+                // Only what came after this save is still unsaved.
+                const rest = {};
+                for (const [language, value] of Object.entries(this.pending)) if (values[language] !== value) rest[language] = value;
+                this.pending = Object.keys(rest).length ? rest : null;
+                this.pendingKey = null;
+            } else {
+                this.pending = null;
+                this.pendingKey = null;
+            }
+            if (this.pending) {
+                this.set("pending");
+                this.schedule(0);
+            } else {
+                this.set("ready");
+            }
+            return answer;
+        }
+        if (answer.answer === "conflict") {
+            this.conflict = {reason: answer.reason ?? "stale-revision", revision: answer.current_revision ?? answer.current?.revision ?? null, current: answer.current ?? null};
+            this.pendingKey = null;
+            this.set("conflict", this.conflict.reason);
+            return answer;
+        }
+        if (answer.answer === "unavailable") {
+            if (changedMeanwhile) this.pendingKey = null;
+            this.set("unavailable", answer.reason ?? "storage-unavailable");
+            const after = Number(answer.retry_after);
+            this.schedule(Number.isFinite(after) && after > 0 ? after * 1000 : Math.max(this.delay * 4, 3000));
+            return answer;
+        }
+        // refused: nothing written. session-expired waits for retry(); any
+        // other refusal waits for a new edit or retry().
+        this.pendingKey = null;
+        this.refusal = answer;
+        this.set("refused", answer.reason ?? "");
+        return answer;
+    }
+
+    /** Repeats the pending save now (after sign-in, or a refusal the person dealt with). */
+    retry() {
+        if (!this.pending || this.state === "conflict") return null;
+        if (this.timer) {
+            this.timers.clearTimeout(this.timer);
+            this.timer = null;
+        }
+        this.set("pending");
+        return this.save();
+    }
+
+    /** Conflict: keep the person's version, written against the stored revision. */
+    keepMine() {
+        if (this.state !== "conflict" || !this.conflict) return null;
+        const current = this.conflict.current;
+        this.element = {...this.element, ...(current ?? {}), revision: this.conflict.revision ?? current?.revision ?? this.revision};
+        this.conflict = null;
+        this.pendingKey = null;
+        this.set("pending");
+        return this.save();
+    }
+
+    /** Conflict: take the stored version; the unsaved input is let go. */
+    takeTheirs() {
+        if (this.state !== "conflict" || !this.conflict) return false;
+        const current = this.conflict.current;
+        this.element = {...this.element, ...(current ?? {}), revision: this.conflict.revision ?? current?.revision ?? this.revision};
+        this.conflict = null;
+        this.pending = null;
+        this.pendingKey = null;
+        this.emit("taken");
+        this.set("ready");
+        return true;
+    }
+
+    close() {
+        this.closed = true;
+        if (this.timer) this.timers.clearTimeout(this.timer);
+        this.timer = null;
+        this.listeners.clear();
+    }
+}
+
+
+/***/ },
+
 /***/ "50d340b22253"
 (__webpack_module__, __webpack_exports__, __webpack_require__) {
 
@@ -18211,6 +18782,9 @@ function normalizeRights(rights) {
     };
 }
 
+// The methods that change the Document (or start a change); a read-only model refuses them.
+const MUTATORS = ["addColumn", "dropBeside", "duplicate", "insert", "insertBeside", "insertFromSlash", "insertNode", "joinBack", "markdownShortcut", "move", "moveBy", "redo", "remove", "resetParam", "saveBuilder", "setModifiers", "setParam", "setRuntime", "setSettings", "setSource", "setText", "splitColumns", "splitText", "startBuilder", "startTyping", "undo", "writeText", "editTemplate"];
+
 class EditorModel {
     /**
      * options: {document, types, renderers, editorManifests, siteBlocks, rights, theme, now}
@@ -18226,8 +18800,23 @@ class EditorModel {
         this.rights = normalizeRights(options.rights);
         this.theme = (0,_tree_mjs__WEBPACK_IMPORTED_MODULE_4__.isPlainObject)(options.theme) ? options.theme : null;
         this.templateEditing = false;
+        this.readOnly = options.readOnly === true;
+        // A reader without the right to write changes nothing: every method
+        // that changes the Document answers false while readOnly is set.
+        for (const name of MUTATORS) {
+            const change = this[name];
+            this[name] = (...args) => (this.readOnly ? false : change.apply(this, args));
+        }
         this.buildRegistry();
         this.setDocument(options.document);
+    }
+
+    setReadOnly(on) {
+        this.readOnly = on === true;
+        if (this.readOnly) {
+            this.typing = null;
+            this.templateEditing = false;
+        }
     }
 
     // ------------------------------------------------------------ setup
@@ -18340,6 +18929,7 @@ class EditorModel {
      * right to; an author writes only in text areas).
      */
     lockOf(id) {
+        if (this.readOnly) return "read-only";
         const scope = this.scopeOf(id);
         if ((scope === "template" || scope === "frame") && !this.templateEditing) return "template";
         if (scope === "page" && this.templateEditing) return "page";
@@ -18351,6 +18941,7 @@ class EditorModel {
     placeLock(parentId) {
         const parent = this.node(parentId);
         if (!parent) return "unknown";
+        if (this.readOnly) return "read-only";
         const scope = this.scopeOf(parentId);
         if ((scope === "template" || scope === "frame") && !this.templateEditing) return "template";
         if (scope === "page" && this.templateEditing) return "page";
@@ -19241,6 +19832,9 @@ class EditorModel {
             target: field.target,
             plane: field.plane,
             kind,
+            // A media reference (an image source): a host with an upload may fill it
+            // with a "media:<id>" reference (simai.document-port, E4).
+            media: kind === "text" && (field.property?.format === "media" || (Array.isArray(field.capability_hints) && field.capability_hints.includes("composition.data.src"))),
             responsive,
             label_key: field.label_key,
             help_key: field.help_key,
@@ -20000,21 +20594,21 @@ module.exports = /*#__PURE__*/JSON.parse('{"runtime":{"heading":"This block coul
 /***/ "b1c5d4f6dddd"
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.5.2","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"host-states":{},"css-variables":{}}');
+module.exports = /*#__PURE__*/JSON.parse('{"id":"smart.editor","tag":"sf-editor","version":"1.6.0","kind":"leaf","settings":{"document":{"type":"object","default":null},"types":{"type":"list","default":[],"of":"object"},"renderers":{"type":"object","default":null},"editor-manifests":{"type":"list","default":[],"of":"object","entries":{"key":"type","changes":"content"}},"site-blocks":{"type":"list","default":[],"of":"object"},"words":{"type":"object","default":null},"rights":{"type":"object","default":null},"theme":{"type":"object","default":null},"screen":{"type":"enum","values":["desktop","tablet","phone"],"default":"desktop"},"readonly":{"type":"boolean","default":false},"media":{"type":"object","default":null},"preferences-key":{"type":"string","default":""},"heading":{"type":"string","default":""},"caption":{"type":"string","default":""},"page-settings":{"type":"object","default":null},"label":{"type":"string","default-from":"runtime.label"}},"values":{},"events":{"change":{"carries":{"document":"object","reason":"string","scope":{"type":"enum","values":["page","template"]}}},"select":{"carries":{"ids":"list"}},"block-save":{"carries":{"manifest":"object","words":"object","changes":"list"},"own-verb":true},"page-change":{"carries":{"key":{"type":"enum","values":["name","address","template"]},"value":"string"},"own-verb":true},"page-action":{"carries":{"action":{"type":"enum","values":["publish","history"]}},"own-verb":true}},"actions":{"select":{"with":{"id":{"type":"id","optional":true}}},"edit":{"with":{"id":"id"}},"insert":{"with":{"type":"string","variant":{"type":"id","optional":true},"after":{"type":"id","optional":true}}},"undo":{"with":{}},"redo":{"with":{}},"set-parameter":{"with":{"id":"id","key":"string","value":"any","screen":{"type":"enum","values":["desktop","tablet","phone"],"optional":true}}},"edit-template":{"with":{"on":{"type":"boolean","optional":true}}},"build-block":{"with":{"id":{"type":"id","optional":true},"type":{"type":"string","optional":true}}},"output":{"with":{"format":{"type":"enum","values":["json","html","markdown"]}},"waits":true}},"port":{"id":"simai.document-port","version":"1.0.2","contract":"src/core/contracts/ports/simai.document-port/1.0.2/port.json"},"presentation":{"skeleton":{"late":[]}},"host-states":{},"css-variables":{}}');
 
 /***/ },
 
 /***/ "5bf8f84cf5a8"
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"title":"Page editor","runtime":{"back":"Back","bar-label":"Editor tools","binding":"SIMAI Framework: {classes}","block-not-kept-text":"The site did not keep the block","block-saved-text":"Site block saved","builder-editing":"Changing a site block","builder-group":"Group","builder-invalid":"Not saved","builder-label":"Block builder","builder-name":"Name","builder-new":"New site block","builder-note":"Parameters for the author: {count}","builder-save":"Save block","builder-save-everywhere":"Save and change everywhere","builder-start":"Create your own block","cancel":"Cancel","canvas-role":"page","catalogue-label":"Add a block","catalogue-tabs":"Kind","columns-text":"Columns changed","data-binding":"Data: {target}","data-empty-text":"When there is nothing","data-follows":"Block in this section","data-limit":"How many","data-mapping":"Fields","data-no-port":"The site gives no data sources here; demo data is shown.","data-no-publishers":"No block in this section gives this.","data-none":"None","data-own-mapping":"My own","data-preset":"Mapping","data-runtime":"Follows: {target}","data-source":"Source","data-states":"Show as","data-states-help":"Look at the block with data, empty, with an error or while loading. Only the preview changes.","duplicated-text":"Block duplicated","editing-for":"Values for","empty-place":"Add a block here","expose":"For the author","favourite":"Add {name} to favourites","favourites":"Favourites","favourites-empty":"Star a block and it shows up here.","grip-label":"Drag to move, press for the menu","gutter-hint":"Drag ⠿ to move a block · press it for the menu","gutter-label":"Block actions","heading-placeholder":"Heading","help-1":"Press text to type in it; press beside it to choose its block.","help-2":"Drag a block from the library onto the page, or press it to add it after the chosen block.","help-3":"Drag ⠿ to move a block; + adds one after it; / in an empty line opens the catalogue.","help-4":"Esc goes a level up, Enter a level down; {alt} and the arrows move the chosen block; {undo} undoes.","help-label":"Help","help-text":"Click text to type, click beside it to choose the block. Esc goes up a level, Enter goes down. {alt} and the arrows move the chosen block; {altShift} and the arrows move it while typing. / in an empty line opens the catalogue.","help-title":"How to edit","hidden-here":"Hidden on this screen","html-none":"This block prints nothing on its own.","html-note":"The block as the site prints it.","inserted-text":"Block added","item-drag-hint":"Drag onto the page, or press to add","json-note":"The block as the Document holds it.","keys-chosen":"Esc up · Enter down · {move} move · {remove} remove","keys-page":"Enter: into the page","keys-typing":"Esc: choose the block · / insert · {moveTyping} move","label":"Page editor","left-blocks":"Blocks","left-label":"Blocks and structure","left-structure":"Structure","lock-layout":"The layout is set by the site; you write inside its text areas.","lock-mark-layout":"Layout","lock-mark-page":"Page","lock-mark-template":"Template","lock-page":"While the template is edited, the page waits.","lock-template":"The header and footer are the site template. Change them with Edit template.","locked":"locked","menu-add-column":"Add a column","menu-change-block":"Change the site block everywhere","menu-columns":"Split into columns","menu-down":"Move down","menu-duplicate":"Duplicate","menu-make-block":"Make a site block","menu-more":"More","menu-remove":"Remove","menu-up":"Move up","modifiers-dropped":"Not taken: {classes}","modifiers-hint":"Framework utilities only","modifiers-invalid":"Not a class: {classes}","modifiers-label":"Extra classes","modifiers-limit":"Over the limit: {classes}","modifiers-placeholder":"Framework classes","modifiers-unchecked":"Cannot be checked without the Framework rules: {classes}","modifiers-unknown":"Not in SIMAI Framework: {classes}","more":"more","more-steps":"{name}: other values","moved-text":"Block moved","no":"No","no-parameters":"This block has no parameters.","nothing-chosen":"Choose a block to see its parameters.","nothing-fits":"Nothing fits here.","nothing-found":"Nothing found.","origin-block":"Block","origin-block-help":"set on this block","origin-screen":"Screen","origin-screen-help":"set for this screen and wider","origin-theme":"Theme","origin-theme-help":"set by the site\'s theme","origin-type":"Type","origin-type-help":"what the block draws with nothing set","origin-variant":"Variant","origin-variant-help":"set by the variant the block was made from","origins-label":"Where a value comes from","origins-note":"The dot says where a value comes from: the type, the theme, the variant, this block or this screen.","output-html":"HTML","output-json":"JSON","output-markdown":"Markdown","output-open":"Output","output-title":"What the page is made of","page-address":"Address","page-hint":"Choose a block on the page to see its settings here. How to work here: the help button at the top.","page-history":"History · {count}","page-history-plain":"History","page-name":"Name","page-publish":"Publish","page-publishing":"Publishing","page-theme":"Site theme","page-title":"Page","path-label":"Where the chosen block is","path-page":"Page","per-screen":"Set per screen","plus-label":"Add a block below","range-hint":"From {min} to {max}","recent":"Recent","redo-label":"Redo","redone-text":"Redone","refused-closed":"A site block is changed in the block builder.","refused-edge":"It is already at the edge.","refused-empty":"There is nothing here.","refused-inside-itself":"A block cannot go inside itself.","refused-invalid":"That would break the page.","refused-layout":"The layout is set by the site.","refused-leaf":"This block has nothing inside.","refused-limit":"No more fit here.","refused-none":"Nothing is chosen.","refused-not-paragraph":"Only a paragraph can become that.","refused-not-text":"This is not text.","refused-page":"This is outside the template.","refused-place":"It does not fit there.","refused-publisher":"That block does not give this.","refused-required":"This block must stay.","refused-rights":"Your role does not allow it.","refused-same":"Nothing changed.","refused-template":"This is the site template.","refused-unknown":"That block is not on the page.","removed-text":"Block removed","reset":"Reset","reset-field":"Reset {name}","right-label":"Parameters","screen-desktop":"Desktop","screen-label":"Screen","screen-phone":"Phone","screen-tablet":"Tablet","screens-note":"Fields marked with a screen are set for {screen} and wider.","search-placeholder":"Find a block","section-count":"{count} blocks","from-section":"from {name}","search-results":"Found","section-content":"Content","section-extra":"More","section-layout":"Layout","section-open":"{name}, {count} blocks","sections":"Sections","set-alignment":"Alignment","set-background":"Background","set-breakout":"Breakout","set-color":"Colour","set-for":"Set for: {screens}","set-grid":"Grid","set-spacing":"Spacing","set-visibility":"Visibility","set-width":"Width","sets-none":"This block\'s parameters come from its type; no SIMAI Framework utilities are bound.","sets-note":"Sets: {sets}. Every parameter is bound to SIMAI Framework.","show-on-screen":"Show on this screen","site-block":"Site block","slash-filter":"Blocks with «{query}»","slash-hint":"Type to filter, Enter to insert, Esc to close","slash-label":"Insert","state-auto":"Data","state-empty":"Empty","state-error":"Error","state-error-text":"The source did not answer","state-loading":"Loading","structure-empty":"The page is empty.","tab-blocks":"Blocks","tab-data":"Data","tab-html":"HTML","tab-json":"JSON","tab-parameters":"Parameters","tab-text":"Text","template-badge":"Template: header and footer of every page","template-done":"Done with template","template-edit":"Edit template","template-help":"The header and footer are the same on every page. Change them only on purpose: Edit template.","template-no-rights":"The header and footer are the site template; your role does not change it.","template-off-text":"Back to the page","template-on-text":"Editing the site template","template-title":"Site template","text-placeholder":"Type, or / for a block","theme-label":"Theme: {name}","theme-read-only":"The theme is set for the whole site; it is not changed here.","theme-settings":"Theme settings","theme-title":"Theme","toolbar-label":"Chosen block","type-content-alert":"Note","type-content-card":"Card","type-content-code":"Code","type-content-details":"Details","type-content-diagram":"Diagram","type-content-divider":"Divider","type-content-document":"Document","type-content-figure":"Picture","type-content-file":"File","type-content-grid":"Grid","type-content-heading":"Heading","type-content-html":"HTML","type-content-list":"List","type-content-list-item":"List item","type-content-math":"Formula","type-content-media":"Media","type-content-paragraph":"Paragraph","type-content-quote":"Quote","type-content-step":"Step","type-content-steps":"Steps","type-content-tab":"Tab","type-content-table":"Table","type-content-tabs":"Tabs","type-layout-area":"Text area","type-layout-columns":"Columns","type-layout-page":"Page","type-layout-region":"Region","type-layout-regions":"Page with template","type-layout-section":"Section","undo-label":"Undo","undone-text":"Undone","unfavourite":"Remove {name} from favourites","utility-help":"The utility classes this value writes","variants-count":"Variants: {count}","variants-label":"Variants of {name}","yes":"Yes"}}');
+module.exports = /*#__PURE__*/JSON.parse('{"title":"Page editor","runtime":{"back":"Back","bar-label":"Editor tools","binding":"SIMAI Framework: {classes}","block-not-kept-text":"The site did not keep the block","block-saved-text":"Site block saved","builder-editing":"Changing a site block","builder-group":"Group","builder-invalid":"Not saved","builder-label":"Block builder","builder-name":"Name","builder-new":"New site block","builder-note":"Parameters for the author: {count}","builder-save":"Save block","builder-save-everywhere":"Save and change everywhere","builder-start":"Create your own block","cancel":"Cancel","canvas-role":"page","catalogue-label":"Add a block","catalogue-tabs":"Kind","columns-text":"Columns changed","data-binding":"Data: {target}","data-empty-text":"When there is nothing","data-follows":"Block in this section","data-limit":"How many","data-mapping":"Fields","data-no-port":"The site gives no data sources here; demo data is shown.","data-no-publishers":"No block in this section gives this.","data-none":"None","data-own-mapping":"My own","data-preset":"Mapping","data-runtime":"Follows: {target}","data-source":"Source","data-states":"Show as","data-states-help":"Look at the block with data, empty, with an error or while loading. Only the preview changes.","duplicated-text":"Block duplicated","editing-for":"Values for","empty-place":"Add a block here","expose":"For the author","favourite":"Add {name} to favourites","favourites":"Favourites","favourites-empty":"Star a block and it shows up here.","grip-label":"Drag to move, press for the menu","gutter-hint":"Drag ⠿ to move a block · press it for the menu","gutter-label":"Block actions","heading-placeholder":"Heading","help-1":"Press text to type in it; press beside it to choose its block.","help-2":"Drag a block from the library onto the page, or press it to add it after the chosen block.","help-3":"Drag ⠿ to move a block; + adds one after it; / in an empty line opens the catalogue.","help-4":"Esc goes a level up, Enter a level down; {alt} and the arrows move the chosen block; {undo} undoes.","help-label":"Help","help-text":"Click text to type, click beside it to choose the block. Esc goes up a level, Enter goes down. {alt} and the arrows move the chosen block; {altShift} and the arrows move it while typing. / in an empty line opens the catalogue.","help-title":"How to edit","hidden-here":"Hidden on this screen","html-none":"This block prints nothing on its own.","html-note":"The block as the site prints it.","inserted-text":"Block added","item-drag-hint":"Drag onto the page, or press to add","json-note":"The block as the Document holds it.","keys-chosen":"Esc up · Enter down · {move} move · {remove} remove","keys-page":"Enter: into the page","keys-typing":"Esc: choose the block · / insert · {moveTyping} move","label":"Page editor","left-blocks":"Blocks","left-label":"Blocks and structure","left-structure":"Structure","lock-layout":"The layout is set by the site; you write inside its text areas.","lock-mark-layout":"Layout","lock-mark-page":"Page","lock-mark-template":"Template","lock-page":"While the template is edited, the page waits.","lock-template":"The header and footer are the site template. Change them with Edit template.","locked":"locked","menu-add-column":"Add a column","menu-change-block":"Change the site block everywhere","menu-columns":"Split into columns","menu-down":"Move down","menu-duplicate":"Duplicate","menu-make-block":"Make a site block","menu-more":"More","menu-remove":"Remove","menu-up":"Move up","modifiers-dropped":"Not taken: {classes}","modifiers-hint":"Framework utilities only","modifiers-invalid":"Not a class: {classes}","modifiers-label":"Extra classes","modifiers-limit":"Over the limit: {classes}","modifiers-placeholder":"Framework classes","modifiers-unchecked":"Cannot be checked without the Framework rules: {classes}","modifiers-unknown":"Not in SIMAI Framework: {classes}","more":"more","more-steps":"{name}: other values","moved-text":"Block moved","no":"No","no-parameters":"This block has no parameters.","nothing-chosen":"Choose a block to see its parameters.","nothing-fits":"Nothing fits here.","nothing-found":"Nothing found.","origin-block":"Block","origin-block-help":"set on this block","origin-screen":"Screen","origin-screen-help":"set for this screen and wider","origin-theme":"Theme","origin-theme-help":"set by the site\'s theme","origin-type":"Type","origin-type-help":"what the block draws with nothing set","origin-variant":"Variant","origin-variant-help":"set by the variant the block was made from","origins-label":"Where a value comes from","origins-note":"The dot says where a value comes from: the type, the theme, the variant, this block or this screen.","output-html":"HTML","output-json":"JSON","output-markdown":"Markdown","output-open":"Output","output-title":"What the page is made of","page-address":"Address","page-hint":"Choose a block on the page to see its settings here. How to work here: the help button at the top.","page-history":"History · {count}","page-history-plain":"History","page-name":"Name","page-publish":"Publish","page-publishing":"Publishing","page-theme":"Site theme","page-title":"Page","path-label":"Where the chosen block is","path-page":"Page","per-screen":"Set per screen","plus-label":"Add a block below","range-hint":"From {min} to {max}","recent":"Recent","redo-label":"Redo","redone-text":"Redone","refused-closed":"A site block is changed in the block builder.","refused-edge":"It is already at the edge.","refused-empty":"There is nothing here.","refused-inside-itself":"A block cannot go inside itself.","refused-invalid":"That would break the page.","refused-layout":"The layout is set by the site.","refused-leaf":"This block has nothing inside.","refused-limit":"No more fit here.","refused-none":"Nothing is chosen.","refused-not-paragraph":"Only a paragraph can become that.","refused-not-text":"This is not text.","refused-page":"This is outside the template.","refused-place":"It does not fit there.","refused-publisher":"That block does not give this.","refused-required":"This block must stay.","refused-rights":"Your role does not allow it.","refused-same":"Nothing changed.","refused-template":"This is the site template.","refused-unknown":"That block is not on the page.","removed-text":"Block removed","reset":"Reset","reset-field":"Reset {name}","right-label":"Parameters","screen-desktop":"Desktop","screen-label":"Screen","screen-phone":"Phone","screen-tablet":"Tablet","screens-note":"Fields marked with a screen are set for {screen} and wider.","search-placeholder":"Find a block","section-count":"{count} blocks","from-section":"from {name}","search-results":"Found","section-content":"Content","section-extra":"More","section-layout":"Layout","section-open":"{name}, {count} blocks","sections":"Sections","set-alignment":"Alignment","set-background":"Background","set-breakout":"Breakout","set-color":"Colour","set-for":"Set for: {screens}","set-grid":"Grid","set-spacing":"Spacing","set-visibility":"Visibility","set-width":"Width","sets-none":"This block\'s parameters come from its type; no SIMAI Framework utilities are bound.","sets-note":"Sets: {sets}. Every parameter is bound to SIMAI Framework.","show-on-screen":"Show on this screen","site-block":"Site block","slash-filter":"Blocks with «{query}»","slash-hint":"Type to filter, Enter to insert, Esc to close","slash-label":"Insert","state-auto":"Data","state-empty":"Empty","state-error":"Error","state-error-text":"The source did not answer","state-loading":"Loading","structure-empty":"The page is empty.","tab-blocks":"Blocks","tab-data":"Data","tab-html":"HTML","tab-json":"JSON","tab-parameters":"Parameters","tab-text":"Text","template-badge":"Template: header and footer of every page","template-done":"Done with template","template-edit":"Edit template","template-help":"The header and footer are the same on every page. Change them only on purpose: Edit template.","template-no-rights":"The header and footer are the site template; your role does not change it.","template-off-text":"Back to the page","template-on-text":"Editing the site template","template-title":"Site template","text-placeholder":"Type, or / for a block","theme-label":"Theme: {name}","theme-read-only":"The theme is set for the whole site; it is not changed here.","theme-settings":"Theme settings","theme-title":"Theme","toolbar-label":"Chosen block","type-content-alert":"Note","type-content-card":"Card","type-content-code":"Code","type-content-details":"Details","type-content-diagram":"Diagram","type-content-divider":"Divider","type-content-document":"Document","type-content-figure":"Picture","type-content-file":"File","type-content-grid":"Grid","type-content-heading":"Heading","type-content-html":"HTML","type-content-list":"List","type-content-list-item":"List item","type-content-math":"Formula","type-content-media":"Media","type-content-paragraph":"Paragraph","type-content-quote":"Quote","type-content-step":"Step","type-content-steps":"Steps","type-content-tab":"Tab","type-content-table":"Table","type-content-tabs":"Tabs","type-layout-area":"Text area","type-layout-columns":"Columns","type-layout-page":"Page","type-layout-region":"Region","type-layout-regions":"Page with template","type-layout-section":"Section","undo-label":"Undo","undone-text":"Undone","unfavourite":"Remove {name} from favourites","utility-help":"The utility classes this value writes","variants-count":"Variants: {count}","variants-label":"Variants of {name}","yes":"Yes","save-loading":"Loading the page…","save-saved":"Saved","save-pending":"Unsaved changes","save-saving":"Saving…","save-conflict":"Not saved: the page was changed elsewhere","save-unavailable":"Not saved yet: no connection, will retry","save-load-failed":"The page did not load: {reason}","save-expired":"Sign in again: your changes are kept and will be saved","save-refused":"Not saved: {reason}","save-retry":"Save again","save-taken":"The saved version is shown; your changes were dropped","conflict-text":"The page was changed elsewhere after you opened it. Your changes are not saved yet.","conflict-repeat":"This save was already sent with other content. Your changes are not saved yet.","conflict-keep":"Keep mine","conflict-take":"Take the saved version","read-only":"Read only","reason-invalid":"the page has an error","reason-too-large":"the page is too large","reason-structure-mismatch":"the page does not fit its language","reason-area-locked":"a locked area was changed","reason-would-lose":"the storage would lose part of the page","reason-unknown-language":"the language is not on this page","reason-missing-translation":"a translation is missing","reason-not-found":"the page was not found","reason-access-denied":"no right to save","reason-session-expired":"the session has ended","reason-capability-not-provided":"the storage cannot do this","reason-unknown-intent":"the storage does not know this request","reason-storage-unavailable":"the storage cannot be reached","reason-stale-revision":"the page was changed elsewhere","reason-environment-changed":"the published page changed","reason-idempotency-conflict":"the same save was sent twice with other content","lock-read-only":"Read only: this page cannot be changed here","upload":"Upload a file","upload-label":"Upload a file for {name}","upload-busy":"Uploading…","upload-done":"The file is uploaded","upload-failed":"The file is not uploaded: {reason}"}}');
 
 /***/ },
 
 /***/ "362a712abf5e"
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"title":"Редактор страницы","runtime":{"back":"Назад","bar-label":"Инструменты редактора","binding":"SIMAI Framework: {classes}","block-not-kept-text":"Сайт не сохранил блок","block-saved-text":"Блок сайта сохранён","builder-editing":"Изменение блока сайта","builder-group":"Группа","builder-invalid":"Не сохранено","builder-label":"Конструктор блоков","builder-name":"Название","builder-new":"Новый блок сайта","builder-note":"Параметров для автора: {count}","builder-save":"Сохранить блок","builder-save-everywhere":"Сохранить и изменить везде","builder-start":"Создать свой блок","cancel":"Отмена","canvas-role":"страница","catalogue-label":"Добавить блок","catalogue-tabs":"Вид","columns-text":"Колонки изменены","data-binding":"Данные: {target}","data-empty-text":"Когда ничего нет","data-follows":"Блок в этой секции","data-limit":"Сколько","data-mapping":"Поля","data-no-port":"Сайт не даёт здесь источников данных; показаны демо-данные.","data-no-publishers":"Ни один блок этой секции этого не даёт.","data-none":"Нет","data-own-mapping":"Своё","data-preset":"Сопоставление","data-runtime":"Следует за: {target}","data-source":"Источник","data-states":"Показать как","data-states-help":"Посмотрите блок с данными, пустым, с ошибкой или в загрузке. Меняется только предпросмотр.","duplicated-text":"Блок продублирован","editing-for":"Значения для","empty-place":"Добавьте блок сюда","expose":"Для автора","favourite":"Добавить «{name}» в избранное","favourites":"Избранное","favourites-empty":"Отметьте блок звёздочкой — он появится здесь.","grip-label":"Тяните, чтобы переместить; нажмите для меню","gutter-hint":"Тяните за ⠿, чтобы переместить блок · щелчок — меню","gutter-label":"Действия с блоком","heading-placeholder":"Заголовок","help-1":"Щёлкните по тексту, чтобы печатать; рядом с ним — чтобы выбрать блок.","help-2":"Перетащите блок из библиотеки на страницу или нажмите его, чтобы добавить после выбранного.","help-3":"Тяните за ⠿, чтобы переместить блок; + добавляет блок после него; / в пустой строке открывает каталог.","help-4":"Esc — уровень вверх, Enter — вниз; {alt} и стрелки двигают выбранный блок; {undo} отменяет.","help-label":"Справка","help-text":"Щёлкните по тексту, чтобы печатать, рядом с ним — чтобы выбрать блок. Esc — уровень вверх, Enter — вниз. {alt} и стрелки двигают выбранный блок, {altShift} и стрелки — во время набора. / в пустой строке открывает каталог.","help-title":"Как редактировать","hidden-here":"Скрыто на этом экране","html-none":"Этот блок сам по себе ничего не печатает.","html-note":"Блок, как его печатает сайт.","inserted-text":"Блок добавлен","item-drag-hint":"Перетащите на страницу или нажмите, чтобы добавить","json-note":"Блок, как его хранит документ.","keys-chosen":"Esc вверх · Enter вниз · {move} двигать · {remove} удалить","keys-page":"Enter: внутрь страницы","keys-typing":"Esc: выбрать блок · / вставить · {moveTyping} двигать","label":"Редактор страницы","left-blocks":"Блоки","left-label":"Блоки и структура","left-structure":"Структура","lock-layout":"Раскладку задаёт сайт; вы пишете в её текстовых областях.","lock-mark-layout":"Макет","lock-mark-page":"Страница","lock-mark-template":"Шаблон","lock-page":"Пока редактируется шаблон, страница ждёт.","lock-template":"Шапка и подвал — шаблон сайта. Их меняют через «Изменить шаблон».","locked":"закреплён","menu-add-column":"Добавить колонку","menu-change-block":"Изменить блок сайта везде","menu-columns":"Разделить на колонки","menu-down":"Ниже","menu-duplicate":"Дублировать","menu-make-block":"Сделать блоком сайта","menu-more":"Ещё","menu-remove":"Удалить","menu-up":"Выше","modifiers-dropped":"Не приняты: {classes}","modifiers-hint":"Только утилиты Framework","modifiers-invalid":"Не класс: {classes}","modifiers-label":"Дополнительные классы","modifiers-limit":"Сверх предела: {classes}","modifiers-placeholder":"Классы SIMAI Framework","modifiers-unchecked":"Не проверить без правил Framework: {classes}","modifiers-unknown":"Нет в SIMAI Framework: {classes}","more":"ещё","more-steps":"{name}: другие значения","moved-text":"Блок перемещён","no":"Нет","no-parameters":"У этого блока нет параметров.","nothing-chosen":"Выберите блок, чтобы увидеть его параметры.","nothing-fits":"Сюда ничего не подходит.","nothing-found":"Ничего не найдено.","origin-block":"Блок","origin-block-help":"задано у этого блока","origin-screen":"Экран","origin-screen-help":"задано для этого экрана и шире","origin-theme":"Тема","origin-theme-help":"задано темой сайта","origin-type":"Тип","origin-type-help":"что блок рисует без настроек","origin-variant":"Вариант","origin-variant-help":"задано вариантом, из которого сделан блок","origins-label":"Откуда значение","origins-note":"Точка показывает, откуда значение: тип, тема, вариант, этот блок или этот экран.","output-html":"HTML","output-json":"JSON","output-markdown":"Markdown","output-open":"Результат","output-title":"Из чего состоит страница","page-address":"Адрес","page-hint":"Выберите блок на странице — здесь появятся его настройки. Как здесь работать — кнопка помощи вверху.","page-history":"История · {count}","page-history-plain":"История","page-name":"Название","page-publish":"Опубликовать","page-publishing":"Публикация","page-theme":"Тема сайта","page-title":"Страница","path-label":"Где выбранный блок","path-page":"Страница","per-screen":"Задаётся для каждого экрана","plus-label":"Добавить блок ниже","range-hint":"От {min} до {max}","recent":"Недавние","redo-label":"Повторить","redone-text":"Повторено","refused-closed":"Блок сайта меняется в конструкторе блоков.","refused-edge":"Блок уже с краю.","refused-empty":"Здесь ничего нет.","refused-inside-itself":"Блок нельзя поместить в себя.","refused-invalid":"Так страница сломается.","refused-layout":"Раскладку задаёт сайт.","refused-leaf":"Внутри этого блока ничего нет.","refused-limit":"Больше сюда не поместится.","refused-none":"Ничего не выбрано.","refused-not-paragraph":"Так можно превратить только абзац.","refused-not-text":"Это не текст.","refused-page":"Это вне шаблона.","refused-place":"Туда это не подходит.","refused-publisher":"Этот блок этого не даёт.","refused-required":"Этот блок обязателен.","refused-rights":"Ваша роль этого не позволяет.","refused-same":"Ничего не изменилось.","refused-template":"Это шаблон сайта.","refused-unknown":"Такого блока на странице нет.","removed-text":"Блок удалён","reset":"Сбросить","reset-field":"Сбросить «{name}»","right-label":"Параметры","screen-desktop":"Компьютер","screen-label":"Экран","screen-phone":"Телефон","screen-tablet":"Планшет","screens-note":"Поля со значком экрана задаются для экрана «{screen}» и шире.","search-placeholder":"Найти блок","section-count":"блоков: {count}","from-section":"из раздела «{name}»","search-results":"Найдено","section-content":"Содержимое","section-extra":"Дополнительно","section-layout":"Расположение","section-open":"{name}, блоков: {count}","sections":"Разделы","set-alignment":"Выравнивание","set-background":"Фон","set-breakout":"Выход за колонку","set-color":"Цвет","set-for":"Задано для: {screens}","set-grid":"Сетка","set-spacing":"Отступы","set-visibility":"Видимость","set-width":"Ширина","sets-none":"Параметры этого блока задаёт его тип; утилиты SIMAI Framework не подключены.","sets-note":"Наборы: {sets}. Каждый параметр связан с SIMAI Framework.","show-on-screen":"Показывать на этом экране","site-block":"Блок сайта","slash-filter":"Блоки с «{query}»","slash-hint":"Печатайте для отбора, Enter — вставить, Esc — закрыть","slash-label":"Вставить","state-auto":"Данные","state-empty":"Пусто","state-error":"Ошибка","state-error-text":"Источник не ответил","state-loading":"Загрузка","structure-empty":"Страница пуста.","tab-blocks":"Блоки","tab-data":"Данные","tab-html":"HTML","tab-json":"JSON","tab-parameters":"Параметры","tab-text":"Текст","template-badge":"Шаблон: шапка и подвал всех страниц","template-done":"Готово с шаблоном","template-edit":"Изменить шаблон","template-help":"Шапка и подвал одинаковы на всех страницах. Меняйте их только намеренно: «Изменить шаблон».","template-no-rights":"Шапка и подвал — шаблон сайта; ваша роль его не меняет.","template-off-text":"Снова страница","template-on-text":"Редактируется шаблон сайта","template-title":"Шаблон сайта","text-placeholder":"Печатайте или / для блока","theme-label":"Тема: {name}","theme-read-only":"Тема задана для всего сайта и здесь не меняется.","theme-settings":"Настройки темы","theme-title":"Тема","toolbar-label":"Выбранный блок","type-content-alert":"Заметка","type-content-card":"Карточка","type-content-code":"Код","type-content-details":"Подробности","type-content-diagram":"Диаграмма","type-content-divider":"Разделитель","type-content-document":"Документ","type-content-figure":"Изображение","type-content-file":"Файл","type-content-grid":"Сетка","type-content-heading":"Заголовок","type-content-html":"HTML","type-content-list":"Список","type-content-list-item":"Пункт списка","type-content-math":"Формула","type-content-media":"Медиа","type-content-paragraph":"Абзац","type-content-quote":"Цитата","type-content-step":"Шаг","type-content-steps":"Шаги","type-content-tab":"Вкладка","type-content-table":"Таблица","type-content-tabs":"Вкладки","type-layout-area":"Текстовая область","type-layout-columns":"Колонки","type-layout-page":"Страница","type-layout-region":"Область","type-layout-regions":"Страница с шаблоном","type-layout-section":"Секция","undo-label":"Отменить","undone-text":"Отменено","unfavourite":"Убрать «{name}» из избранного","utility-help":"Классы утилит, которые даёт это значение","variants-count":"Варианты: {count}","variants-label":"Варианты блока «{name}»","yes":"Да"}}');
+module.exports = /*#__PURE__*/JSON.parse('{"title":"Редактор страницы","runtime":{"back":"Назад","bar-label":"Инструменты редактора","binding":"SIMAI Framework: {classes}","block-not-kept-text":"Сайт не сохранил блок","block-saved-text":"Блок сайта сохранён","builder-editing":"Изменение блока сайта","builder-group":"Группа","builder-invalid":"Не сохранено","builder-label":"Конструктор блоков","builder-name":"Название","builder-new":"Новый блок сайта","builder-note":"Параметров для автора: {count}","builder-save":"Сохранить блок","builder-save-everywhere":"Сохранить и изменить везде","builder-start":"Создать свой блок","cancel":"Отмена","canvas-role":"страница","catalogue-label":"Добавить блок","catalogue-tabs":"Вид","columns-text":"Колонки изменены","data-binding":"Данные: {target}","data-empty-text":"Когда ничего нет","data-follows":"Блок в этой секции","data-limit":"Сколько","data-mapping":"Поля","data-no-port":"Сайт не даёт здесь источников данных; показаны демо-данные.","data-no-publishers":"Ни один блок этой секции этого не даёт.","data-none":"Нет","data-own-mapping":"Своё","data-preset":"Сопоставление","data-runtime":"Следует за: {target}","data-source":"Источник","data-states":"Показать как","data-states-help":"Посмотрите блок с данными, пустым, с ошибкой или в загрузке. Меняется только предпросмотр.","duplicated-text":"Блок продублирован","editing-for":"Значения для","empty-place":"Добавьте блок сюда","expose":"Для автора","favourite":"Добавить «{name}» в избранное","favourites":"Избранное","favourites-empty":"Отметьте блок звёздочкой — он появится здесь.","grip-label":"Тяните, чтобы переместить; нажмите для меню","gutter-hint":"Тяните за ⠿, чтобы переместить блок · щелчок — меню","gutter-label":"Действия с блоком","heading-placeholder":"Заголовок","help-1":"Щёлкните по тексту, чтобы печатать; рядом с ним — чтобы выбрать блок.","help-2":"Перетащите блок из библиотеки на страницу или нажмите его, чтобы добавить после выбранного.","help-3":"Тяните за ⠿, чтобы переместить блок; + добавляет блок после него; / в пустой строке открывает каталог.","help-4":"Esc — уровень вверх, Enter — вниз; {alt} и стрелки двигают выбранный блок; {undo} отменяет.","help-label":"Справка","help-text":"Щёлкните по тексту, чтобы печатать, рядом с ним — чтобы выбрать блок. Esc — уровень вверх, Enter — вниз. {alt} и стрелки двигают выбранный блок, {altShift} и стрелки — во время набора. / в пустой строке открывает каталог.","help-title":"Как редактировать","hidden-here":"Скрыто на этом экране","html-none":"Этот блок сам по себе ничего не печатает.","html-note":"Блок, как его печатает сайт.","inserted-text":"Блок добавлен","item-drag-hint":"Перетащите на страницу или нажмите, чтобы добавить","json-note":"Блок, как его хранит документ.","keys-chosen":"Esc вверх · Enter вниз · {move} двигать · {remove} удалить","keys-page":"Enter: внутрь страницы","keys-typing":"Esc: выбрать блок · / вставить · {moveTyping} двигать","label":"Редактор страницы","left-blocks":"Блоки","left-label":"Блоки и структура","left-structure":"Структура","lock-layout":"Раскладку задаёт сайт; вы пишете в её текстовых областях.","lock-mark-layout":"Макет","lock-mark-page":"Страница","lock-mark-template":"Шаблон","lock-page":"Пока редактируется шаблон, страница ждёт.","lock-template":"Шапка и подвал — шаблон сайта. Их меняют через «Изменить шаблон».","locked":"закреплён","menu-add-column":"Добавить колонку","menu-change-block":"Изменить блок сайта везде","menu-columns":"Разделить на колонки","menu-down":"Ниже","menu-duplicate":"Дублировать","menu-make-block":"Сделать блоком сайта","menu-more":"Ещё","menu-remove":"Удалить","menu-up":"Выше","modifiers-dropped":"Не приняты: {classes}","modifiers-hint":"Только утилиты Framework","modifiers-invalid":"Не класс: {classes}","modifiers-label":"Дополнительные классы","modifiers-limit":"Сверх предела: {classes}","modifiers-placeholder":"Классы SIMAI Framework","modifiers-unchecked":"Не проверить без правил Framework: {classes}","modifiers-unknown":"Нет в SIMAI Framework: {classes}","more":"ещё","more-steps":"{name}: другие значения","moved-text":"Блок перемещён","no":"Нет","no-parameters":"У этого блока нет параметров.","nothing-chosen":"Выберите блок, чтобы увидеть его параметры.","nothing-fits":"Сюда ничего не подходит.","nothing-found":"Ничего не найдено.","origin-block":"Блок","origin-block-help":"задано у этого блока","origin-screen":"Экран","origin-screen-help":"задано для этого экрана и шире","origin-theme":"Тема","origin-theme-help":"задано темой сайта","origin-type":"Тип","origin-type-help":"что блок рисует без настроек","origin-variant":"Вариант","origin-variant-help":"задано вариантом, из которого сделан блок","origins-label":"Откуда значение","origins-note":"Точка показывает, откуда значение: тип, тема, вариант, этот блок или этот экран.","output-html":"HTML","output-json":"JSON","output-markdown":"Markdown","output-open":"Результат","output-title":"Из чего состоит страница","page-address":"Адрес","page-hint":"Выберите блок на странице — здесь появятся его настройки. Как здесь работать — кнопка помощи вверху.","page-history":"История · {count}","page-history-plain":"История","page-name":"Название","page-publish":"Опубликовать","page-publishing":"Публикация","page-theme":"Тема сайта","page-title":"Страница","path-label":"Где выбранный блок","path-page":"Страница","per-screen":"Задаётся для каждого экрана","plus-label":"Добавить блок ниже","range-hint":"От {min} до {max}","recent":"Недавние","redo-label":"Повторить","redone-text":"Повторено","refused-closed":"Блок сайта меняется в конструкторе блоков.","refused-edge":"Блок уже с краю.","refused-empty":"Здесь ничего нет.","refused-inside-itself":"Блок нельзя поместить в себя.","refused-invalid":"Так страница сломается.","refused-layout":"Раскладку задаёт сайт.","refused-leaf":"Внутри этого блока ничего нет.","refused-limit":"Больше сюда не поместится.","refused-none":"Ничего не выбрано.","refused-not-paragraph":"Так можно превратить только абзац.","refused-not-text":"Это не текст.","refused-page":"Это вне шаблона.","refused-place":"Туда это не подходит.","refused-publisher":"Этот блок этого не даёт.","refused-required":"Этот блок обязателен.","refused-rights":"Ваша роль этого не позволяет.","refused-same":"Ничего не изменилось.","refused-template":"Это шаблон сайта.","refused-unknown":"Такого блока на странице нет.","removed-text":"Блок удалён","reset":"Сбросить","reset-field":"Сбросить «{name}»","right-label":"Параметры","screen-desktop":"Компьютер","screen-label":"Экран","screen-phone":"Телефон","screen-tablet":"Планшет","screens-note":"Поля со значком экрана задаются для экрана «{screen}» и шире.","search-placeholder":"Найти блок","section-count":"блоков: {count}","from-section":"из раздела «{name}»","search-results":"Найдено","section-content":"Содержимое","section-extra":"Дополнительно","section-layout":"Расположение","section-open":"{name}, блоков: {count}","sections":"Разделы","set-alignment":"Выравнивание","set-background":"Фон","set-breakout":"Выход за колонку","set-color":"Цвет","set-for":"Задано для: {screens}","set-grid":"Сетка","set-spacing":"Отступы","set-visibility":"Видимость","set-width":"Ширина","sets-none":"Параметры этого блока задаёт его тип; утилиты SIMAI Framework не подключены.","sets-note":"Наборы: {sets}. Каждый параметр связан с SIMAI Framework.","show-on-screen":"Показывать на этом экране","site-block":"Блок сайта","slash-filter":"Блоки с «{query}»","slash-hint":"Печатайте для отбора, Enter — вставить, Esc — закрыть","slash-label":"Вставить","state-auto":"Данные","state-empty":"Пусто","state-error":"Ошибка","state-error-text":"Источник не ответил","state-loading":"Загрузка","structure-empty":"Страница пуста.","tab-blocks":"Блоки","tab-data":"Данные","tab-html":"HTML","tab-json":"JSON","tab-parameters":"Параметры","tab-text":"Текст","template-badge":"Шаблон: шапка и подвал всех страниц","template-done":"Готово с шаблоном","template-edit":"Изменить шаблон","template-help":"Шапка и подвал одинаковы на всех страницах. Меняйте их только намеренно: «Изменить шаблон».","template-no-rights":"Шапка и подвал — шаблон сайта; ваша роль его не меняет.","template-off-text":"Снова страница","template-on-text":"Редактируется шаблон сайта","template-title":"Шаблон сайта","text-placeholder":"Печатайте или / для блока","theme-label":"Тема: {name}","theme-read-only":"Тема задана для всего сайта и здесь не меняется.","theme-settings":"Настройки темы","theme-title":"Тема","toolbar-label":"Выбранный блок","type-content-alert":"Заметка","type-content-card":"Карточка","type-content-code":"Код","type-content-details":"Подробности","type-content-diagram":"Диаграмма","type-content-divider":"Разделитель","type-content-document":"Документ","type-content-figure":"Изображение","type-content-file":"Файл","type-content-grid":"Сетка","type-content-heading":"Заголовок","type-content-html":"HTML","type-content-list":"Список","type-content-list-item":"Пункт списка","type-content-math":"Формула","type-content-media":"Медиа","type-content-paragraph":"Абзац","type-content-quote":"Цитата","type-content-step":"Шаг","type-content-steps":"Шаги","type-content-tab":"Вкладка","type-content-table":"Таблица","type-content-tabs":"Вкладки","type-layout-area":"Текстовая область","type-layout-columns":"Колонки","type-layout-page":"Страница","type-layout-region":"Область","type-layout-regions":"Страница с шаблоном","type-layout-section":"Секция","undo-label":"Отменить","undone-text":"Отменено","unfavourite":"Убрать «{name}» из избранного","utility-help":"Классы утилит, которые даёт это значение","variants-count":"Варианты: {count}","variants-label":"Варианты блока «{name}»","yes":"Да","save-loading":"Загружаем страницу…","save-saved":"Сохранено","save-pending":"Есть несохранённые изменения","save-saving":"Сохраняем…","save-conflict":"Не сохранено: страницу изменили в другом месте","save-unavailable":"Пока не сохранено: нет связи, повторим","save-load-failed":"Страница не загрузилась: {reason}","save-expired":"Войдите снова: изменения не потеряются и сохранятся","save-refused":"Не сохранено: {reason}","save-retry":"Сохранить ещё раз","save-taken":"Показана сохранённая версия, ваши изменения отброшены","conflict-text":"Страницу изменили в другом месте, пока она была открыта у вас. Ваши изменения ещё не сохранены.","conflict-repeat":"Это сохранение уже отправлялось с другим содержимым. Ваши изменения ещё не сохранены.","conflict-keep":"Оставить мои","conflict-take":"Взять сохранённую","read-only":"Только просмотр","reason-invalid":"в странице ошибка","reason-too-large":"страница слишком большая","reason-structure-mismatch":"страница не подходит к языку","reason-area-locked":"изменена закрытая область","reason-would-lose":"хранилище потеряло бы часть страницы","reason-unknown-language":"этого языка нет у страницы","reason-missing-translation":"нет перевода","reason-not-found":"страница не найдена","reason-access-denied":"нет права сохранять","reason-session-expired":"сеанс закончился","reason-capability-not-provided":"хранилище этого не умеет","reason-unknown-intent":"хранилище не знает такого запроса","reason-storage-unavailable":"нет связи с хранилищем","reason-stale-revision":"страницу изменили в другом месте","reason-environment-changed":"опубликованная страница изменилась","reason-idempotency-conflict":"то же сохранение пришло дважды с разным содержимым","lock-read-only":"Только просмотр: менять страницу здесь нельзя","upload":"Загрузить файл","upload-label":"Загрузить файл для поля «{name}»","upload-busy":"Загружаем…","upload-done":"Файл загружен","upload-failed":"Файл не загружен: {reason}"}}');
 
 /***/ }
 

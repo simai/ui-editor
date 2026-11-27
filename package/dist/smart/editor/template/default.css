@@ -859,6 +859,71 @@
     line-height: var(--sf-editor-small-height);
   }
 
+  /* The save line of a document port: before the keys, in the same small text. */
+  .sf-editor-save {
+    color: var(--sf-on-surface-variant);
+    font-size: var(--sf-editor-small);
+    line-height: var(--sf-editor-small-height);
+  }
+
+  .sf-editor-save[data-state="conflict"],
+  .sf-editor-save[data-state="refused"],
+  .sf-editor-save[data-state="failed"] {
+    color: var(--sf-on-error-container);
+  }
+
+  .sf-editor-save + .sf-editor-keys,
+  .sf-editor-save + sf-button + .sf-editor-keys {
+    margin-inline-start: var(--sf-space-1\/2);
+  }
+
+  /* An image field with the host's upload: the reference and the upload button in one row. */
+  .sf-editor-upload {
+    display: flex;
+    align-items: center;
+    gap: var(--sf-space-1\/4);
+    min-inline-size: 0;
+  }
+
+  .sf-editor-upload > .sf-editor-control {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
+  /* A conflict: the stored page changed; the person's version waits for a choice. */
+  .sf-editor-conflict {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sf-space-1\/2);
+    padding: var(--sf-space-1\/2) var(--sf-space-1);
+    border-block-end: var(--sf-border--width) solid var(--sf-outline-variant);
+    background: var(--sf-warning-container);
+    color: var(--sf-on-warning-container);
+  }
+
+  .sf-editor-conflict-text {
+    flex: 1 1 16rem;
+    margin: 0;
+    font-size: var(--sf-editor-small);
+    line-height: var(--sf-editor-small-height);
+  }
+
+  /* Read only: a mark where undo and redo stand; the structure alone on the left. */
+  .sf-editor-readonly-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sf-space-1\/4);
+    color: var(--sf-on-surface-variant);
+    font-size: var(--sf-editor-small);
+    line-height: var(--sf-editor-small-height);
+  }
+
+  .sf-editor-left-title {
+    margin: 0;
+    padding: var(--sf-space-1\/2) var(--sf-space-1\/2) 0;
+  }
+
   /* The parameter panel: the block's icon, name and section; the tabs;
      fields under Content, Layout and More. */
   .sf-editor-panel-head {
