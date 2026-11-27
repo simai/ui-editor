@@ -9769,7 +9769,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.badge",
-    "version": "1.8.0"
+    "version": "1.9.0"
   },
   "sf-button": {
     "inputs": {
@@ -10171,7 +10171,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.button-icon",
-    "version": "1.14.1"
+    "version": "1.14.2"
   },
   "sf-checkbox": {
     "inputs": {
@@ -10247,7 +10247,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.checkbox",
-    "version": "1.6.1"
+    "version": "1.6.2"
   },
   "sf-divider": {
     "component": "component.content-divider",
@@ -10491,7 +10491,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.icon",
-    "version": "1.4.4"
+    "version": "1.4.5"
   },
   "sf-input": {
     "inputs": {
@@ -10989,7 +10989,7 @@ const PRINTED_ELEMENT_TABLE = Object.freeze({
     },
     "kind": "custom-element",
     "manifest": "smart.switch",
-    "version": "1.10.1"
+    "version": "1.10.3"
   }
 });
 
@@ -12779,6 +12779,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   extendRegistry: () => (/* binding */ extendRegistry),
 /* harmony export */   inlineText: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.inlineText),
 /* harmony export */   instantiateVariant: () => (/* reexport safe */ _catalogue_mjs__WEBPACK_IMPORTED_MODULE_16__.instantiateVariant),
+/* harmony export */   isMediaReference: () => (/* binding */ isMediaReference),
 /* harmony export */   loadEditorWords: () => (/* reexport safe */ _editor_words_runtime_mjs__WEBPACK_IMPORTED_MODULE_3__.loadEditorWords),
 /* harmony export */   marksIn: () => (/* reexport safe */ _inline_model_mjs__WEBPACK_IMPORTED_MODULE_12__.marksIn),
 /* harmony export */   normalize: () => (/* binding */ normalize),
@@ -12888,6 +12889,14 @@ const FORBIDDEN_KEYS = new Set([
   'cssclass', 'style', 'secret', 'password', 'token', 'cookie', 'authorization', 'request',
 ]);
 const SAFE_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:']);
+// A media reference (simai.document-port: an opaque media:<id> string until the
+// media edition): a picture's src or a file's href a host keeps itself. It is
+// no address: render asks the host for one (context.media) and draws a
+// placeholder without it; it never refuses the page.
+const MEDIA_REFERENCE = /^media:[^\s<>"'`\\]{1,2042}$/u;
+function isMediaReference(value) {
+  return typeof value === 'string' && MEDIA_REFERENCE.test(value);
+}
 const DEFAULT_LIMITS = Object.freeze({
   maxDocumentBytes: 1024 * 1024,
   maxDepth: 32,
@@ -13082,8 +13091,10 @@ function validateContentRules(root, diagnostics, { hostSources = false } = {}) {
     if (!(0,_canonical_mjs__WEBPACK_IMPORTED_MODULE_6__.isPlainObject)(node)) return;
     for (const [content, contentPath] of inlineFields(node, path)) validateInlineContent(content, contentPath, diagnostics);
     // With a host source resolver the stored name is the host's (media:<id>),
-    // and the address it resolves to is checked where it is drawn.
-    if ((node.type === 'content.figure' || node.type === 'content.media') && typeof node.data?.src === 'string' && !hostSources && !validUrl(node.data.src)) {
+    // and the address it resolves to is checked where it is drawn. A media
+    // reference is the Document port's own form: valid without a resolver,
+    // resolved (context.media) or drawn as a placeholder at render.
+    if ((node.type === 'content.figure' || node.type === 'content.media') && typeof node.data?.src === 'string' && !hostSources && !isMediaReference(node.data.src) && !validUrl(node.data.src)) {
       diagnostics.push(diagnostic('unsafe_url', `${path}.data.src`, 'Image source protocol is not allowed'));
     }
     if (node.type === 'element.button' && typeof node.data?.href === 'string' && !validUrl(node.data.href)) {
@@ -13095,7 +13106,7 @@ function validateContentRules(root, diagnostics, { hostSources = false } = {}) {
     if (node.type === 'content.card' && typeof node.data?.action_href === 'string' && !validUrl(node.data.action_href)) {
       diagnostics.push(diagnostic('unsafe_url', `${path}.data.action_href`, 'Link protocol is not allowed'));
     }
-    if (node.type === 'content.file' && typeof node.data?.href === 'string' && !validUrl(node.data.href)) {
+    if (node.type === 'content.file' && typeof node.data?.href === 'string' && !isMediaReference(node.data.href) && !validUrl(node.data.href)) {
       diagnostics.push(diagnostic('unsafe_url', `${path}.data.href`, 'File address protocol is not allowed'));
     }
     const parent = _builtins_mjs__WEBPACK_IMPORTED_MODULE_0__.CONTENT_ITEM_PARENTS[node.type];
@@ -13804,11 +13815,43 @@ const BUILTIN_RENDERERS = {
 // origin (simai/ui-source#71). The address is held to the Document's URL rule
 // with that one addition; one that fails it draws nothing and is reported.
 const HOST_SOURCE_TYPES = new Set(['content.figure', 'content.media']);
+// context.media(ref, {node, field}) → address (simai.document-port media
+// references, 2026-11-27): a host that stores media:<id> in a picture's src
+// or a file's href gives the address to draw at render, here or on a server
+// (toHTML). It is asked before the URL check, and its answer is held to the
+// Document's URL rule (a blob: address of the page's origin too). Without it,
+// or when it knows no address (no string), the block draws its placeholder
+// and render reports media_unresolved; the page is drawn all the same.
+const MEDIA_FIELDS = Object.freeze({ 'content.figure': 'src', 'content.media': 'src', 'content.file': 'href' });
+
+// The block drawn for a media reference no address was given for: the
+// figure's empty media box (component.figure's placeholder, the container
+// fill) at the block's ratio, 16:9 when it has none, so the page keeps the
+// picture's place; a file's row with its name and no link.
+function unresolvedMedia(node, slots) {
+  const reference = ` data-sf-media-unresolved="${escapeHtml(node.data[MEDIA_FIELDS[node.type]])}"`;
+  if (node.type === 'content.file') {
+    // No address, so no name from one: the label, else the reference itself.
+    const name = node.data.label || node.data.href;
+    return `<span class="sf-download-file" aria-disabled="true"${reference}${id(node)}><span class="sf-download-file__body sf-download-file-wrap"><span class="sf-download-file__main sf-download-file-container"><i class="sf-download-file__icon sf-icon" aria-hidden="true">${(0,_file_size_mjs__WEBPACK_IMPORTED_MODULE_5__.fileIcon)(node.data.mime)}</i><span class="sf-download-file__name sf-download-file-file-name">${escapeHtml(name)}</span></span></span></span>`;
+  }
+  const alt = typeof node.data.alt === 'string' && node.data.alt ? ` role="img" aria-label="${escapeHtml(node.data.alt)}"` : ' aria-hidden="true"';
+  const ratio = node.props?.ratio && node.props.ratio !== 'auto' ? node.props.ratio : '16/9';
+  if (node.type === 'content.media') {
+    const figure = `<figure class="sf-figure${ratioClass(ratio)}"${reference}><div class="sf-figure-media"${alt}></div></figure>`;
+    const text = `<div class="min-w-0">${slots.default || ''}</div>`;
+    const parts = node.props?.side === 'left' ? figure + text : text + figure;
+    return `<div class="grid grid-col-1 md:grid-col-2 gap-3 items-cross-center"${id(node)}>${parts}</div>`;
+  }
+  const caption = Array.isArray(node.data.caption) ? `<figcaption class="sf-figure-caption">${renderInline(node.data.caption)}</figcaption>` : '';
+  return `<figure class="sf-figure${ratioClass(ratio)}"${reference}${id(node)}><div class="sf-figure-media"${alt}></div>${caption}</figure>`;
+}
 
 async function render(document, context = {}) {
   const registry = normalizeRegistry(context.registry);
   renderEmbedded(context.options);
   const resolveSource = typeof context.resolveSource === 'function' ? context.resolveSource : null;
+  const resolveMedia = typeof context.media === 'function' ? context.media : null;
   const normalized = await normalize(document, registry, { ...(context.options || {}), ...(resolveSource ? { resolveSource } : {}) });
   if (!normalized.document) return { html: '', assets: [], hydration: [], diagnostics: normalized.diagnostics, digest: null };
   const diagnostics = [];
@@ -13845,7 +13888,21 @@ async function render(document, context = {}) {
   // container and its own frame keeps the gutter (2026-11-04).
   const renderNode = async (given, depth = 0, inside = false) => {
     let node = given;
-    if (resolveSource && HOST_SOURCE_TYPES.has(node.type) && typeof node.data?.src === 'string') {
+    let unresolved = false;
+    const mediaField = MEDIA_FIELDS[node.type];
+    if (mediaField && isMediaReference(node.data?.[mediaField]) && (resolveMedia || !(resolveSource && HOST_SOURCE_TYPES.has(node.type)))) {
+      const reference = node.data[mediaField];
+      const address = resolveMedia ? await resolveMedia(reference, { node, field: mediaField }) : undefined;
+      if (typeof address !== 'string' || !address) {
+        diagnostics.push(diagnostic('media_unresolved', `node:${node.id}.data.${mediaField}`, resolveMedia ? `The host gave no address for ${reference}` : `A media reference is drawn from an address the render option media(ref) gives`, { reference }));
+        unresolved = true;
+      } else if (!(validUrl(address) || hostBlobUrl(address))) {
+        diagnostics.push(diagnostic('unsafe_url', `node:${node.id}.data.${mediaField}`, mediaField === 'src' ? 'The resolved image source is not allowed' : 'The resolved file address is not allowed'));
+        return '';
+      } else {
+        node = { ...node, data: { ...node.data, [mediaField]: address } };
+      }
+    } else if (resolveSource && HOST_SOURCE_TYPES.has(node.type) && typeof node.data?.src === 'string') {
       const address = await resolveSource(node.data.src, { node });
       if (typeof address !== 'string' || !(validUrl(address) || hostBlobUrl(address))) {
         diagnostics.push(diagnostic('unsafe_url', `node:${node.id}.data.src`, 'The resolved image source is not allowed'));
@@ -13900,7 +13957,9 @@ async function render(document, context = {}) {
     const own = (0,_utilities_mjs__WEBPACK_IMPORTED_MODULE_15__.modifierNotices)(node, { rules: context.options?.utilityRules });
     notices.push(...own.notices);
     const utilities = [...new Set([...(byPart[''] || []), ...modifierUtilities(node, manifest), ...own.kept])];
-    let renderer = registry.renderers.get(manifest.renderer.name) || BUILTIN_RENDERERS[manifest.renderer.name];
+    let renderer = unresolved
+      ? ({ node: current, slots: currentSlots }) => unresolvedMedia(current, currentSlots)
+      : registry.renderers.get(manifest.renderer.name) || BUILTIN_RENDERERS[manifest.renderer.name];
     if (!renderer && manifest.renderer.kind === 'custom-element' && manifest.renderer.name) {
       renderer = ({ node: current, slots: currentSlots, endpoint }) => {
         const endpointAttribute = endpoint ? ` data-sf-endpoint="${escapeHtml(endpoint)}"` : '';
@@ -17001,6 +17060,8 @@ const isToken = (value) => typeof value === 'string' && TOKEN.test(value);
 const isCollection = (value) => typeof value === 'string' && value.length > 0 && value.length <= 128 && !CONTROL.test(value);
 const isRevision = (value) => (typeof value === 'string' && value.length > 0 && value.length <= 128 && !CONTROL.test(value)) || Number.isSafeInteger(value);
 const PREFERENCE_KEY = /^[\w.*:-]+(?:\/[\w.*:/-]+)?$/u;
+// A query key of a refreshable block (SF.FragmentRefresh URL_KEY).
+const QUERY_KEY = /^[a-z][a-z0-9_-]{0,63}$/u;
 // An address inside the same site: a path, never a scheme of its own, never
 // another origin's protocol-relative form.
 const isLocalUrl = (value) => typeof value === 'string' && value.length > 0 && value.length <= 2048
@@ -17136,6 +17197,29 @@ const VALUE_TYPES = Object.freeze({
       closedObject(value, ['key'], [], 'preference-changed.v1');
       if (typeof value.key !== 'string' || value.key.length > 256 || !PREFERENCE_KEY.test(value.key)) throw new TypeError('preference-changed.v1 value is invalid');
       return Object.freeze({ key: value.key });
+    },
+  }),
+  // simai.interface-fragment 1.1 (block refresh): a block that changed its
+  // query keys says which and the address it now stands at; every block that
+  // reads one of them refreshes with its own request (SF.FragmentRefresh,
+  // the sf-fragment-parameters event). Closed here in GB20 (gb19-refresh
+  // open item): the keys are the descriptor's own (refresh.keys form).
+  'parameters-changed.v1': Object.freeze({
+    summary: 'A block changed its query keys: the keys that changed (1 to 16 unique names, a lowercase letter then up to 63 of a-z, 0-9, _ and -) and the address it stands at now, a path of this site with its query. Says which keys, never their values beyond the address.',
+    schema: {
+      type: 'object', additionalProperties: false, required: ['keys', 'url'],
+      properties: {
+        keys: { type: 'array', minItems: 1, maxItems: 16, uniqueItems: true, items: { type: 'string', pattern: '^[a-z][a-z0-9_-]{0,63}$' } },
+        url: { type: 'string', minLength: 1, maxLength: 2048, pattern: '^/(?!/)' },
+      },
+    },
+    check(value) {
+      closedObject(value, ['keys', 'url'], [], 'parameters-changed.v1');
+      const keys = value.keys;
+      if (!Array.isArray(keys) || keys.length === 0 || keys.length > 16 || !keys.every((key) => typeof key === 'string' && QUERY_KEY.test(key))
+        || new Set(keys).size !== keys.length) throw new TypeError('parameters-changed.v1 keys are invalid');
+      if (!isLocalUrl(value.url)) throw new TypeError('parameters-changed.v1 url is invalid');
+      return Object.freeze({ keys: freezeList(keys), url: value.url });
     },
   }),
 });

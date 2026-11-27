@@ -9,9 +9,9 @@
   },
   "package_source": {
     "repository": "simai/ui-editor",
-    "revision": "3b5dc0c1b939de6fc78eb74f1fbcb53180f53259",
+    "revision": "d263e994c3ff294a916a6299b90414c5d08d1e35",
     "path": "package",
-    "tree": "b2b8d034d007f5a5c4088edacd4bfc3c7cc19a57"
+    "tree": "47dc4e4c722a704d35d08b0a33de64d2d7e933c1"
   },
   "licence": {
     "ref": "PolyForm-Small-Business-1.0.0 OR PolyForm-Noncommercial-1.0.0 OR LicenseRef-SIMAI-Commercial"
@@ -19,9 +19,9 @@
   "framework": {
     "source": {
       "repository": "simai/ui-source",
-      "revision": "5e30b946fd0e620a4d00ab771af143dc286be1b8"
+      "revision": "1b1b9ea7561030d59727d588da0990e5f5fb51e3"
     },
-    "release": "ui-73df5d1b4d4c",
+    "release": "ui-4f5678e8c0ed",
     "runtime": {
       "abi": 1,
       "modules": {
@@ -67,9 +67,9 @@
   "output": {
     "runtime_path": "smart",
     "files_count": 37,
-    "manifest_sha256": "0b7e6be2152c3ac6cc80cb7e4f029eb5a866806fbd172e7f461ca44bf89a6fcf",
+    "manifest_sha256": "5d79ae2c3ddef185ecd81ad95b40d4cbf8d5fb1a85951b3e195243b5a7b8ecd4",
     "archive": "package-editor.tar",
-    "archive_sha256": "ba47a00f5ac49592ac7f0d2f796eeae15ca62a1f019760264cd762bf5e513807",
+    "archive_sha256": "4f55ed9a83c92dccf2645fbb8c936e0f6d5992a62c8664b336a9b5a9fd7dc118",
     "archive_format": "ustar; entries sorted; owner 0:0; mtime 0; modes 0755/0644"
   },
   "required_files": [
@@ -80,8 +80,8 @@
     },
     {
       "path": "smart/editor/js/editor.js",
-      "sha256": "ae5cec3863efb9514f34c42a04c03fb72394f228e8af220eaaf9723137bb5b5d",
-      "size": 1050402
+      "sha256": "15044b2a5e26910e393d8bba0f6f175411434f9dca103f6be443a5dc30beca82",
+      "size": 1056834
     },
     {
       "path": "smart/editor/css/editor.css",
@@ -120,20 +120,20 @@
   },
   "package_reference": {
     "path": "distr/core/contracts/packages/editor.package.json",
-    "release": "ui-73df5d1b4d4c",
+    "release": "ui-4f5678e8c0ed",
     "status": "set-passport"
   },
   "set": {
     "id": "editor",
     "passport": "set.json",
-    "sha256": "06d7d002e02b806a40435153f6739a815e8fc44e291910a5c0c4cd7ee61e2a3d",
+    "sha256": "6cb7a9d0cb73d5d1a407303205449a52a28f1bf76766f24145207db91ee3eaca",
     "api": null,
     "families": [
       "editor"
     ],
     "framework": {
       "core_runtime": ">=1.43.0",
-      "source_revision": "5e30b946fd0e620a4d00ab771af143dc286be1b8"
+      "source_revision": "1b1b9ea7561030d59727d588da0990e5f5fb51e3"
     },
     "requires_sets": [],
     "registry": {
@@ -144,7 +144,7 @@
   "files": [
     {
       "path": "set.json",
-      "sha256": "06d7d002e02b806a40435153f6739a815e8fc44e291910a5c0c4cd7ee61e2a3d",
+      "sha256": "6cb7a9d0cb73d5d1a407303205449a52a28f1bf76766f24145207db91ee3eaca",
       "size": 1392
     },
     {
@@ -189,23 +189,23 @@
     },
     {
       "path": "smart/editor/js/editor.js",
-      "sha256": "ae5cec3863efb9514f34c42a04c03fb72394f228e8af220eaaf9723137bb5b5d",
-      "size": 1050402
+      "sha256": "15044b2a5e26910e393d8bba0f6f175411434f9dca103f6be443a5dc30beca82",
+      "size": 1056834
     },
     {
       "path": "smart/editor/js/editor.js.gz",
-      "sha256": "b68ec4ccf98c4cb392f4f9d55f14256c099be8671d1258a6143d9a3e570abb35",
-      "size": 248835
+      "sha256": "1136905e6e750ee2752ca1ee8c8008d9b409854317e738d9ab0f14ae41b6e679",
+      "size": 250464
     },
     {
       "path": "smart/editor/js/editor.min.js",
-      "sha256": "9b3219f6cec37a66d90fe1d52ab006a72dfb776654da23d5ef8111eb0d0ade65",
-      "size": 468131
+      "sha256": "4e496143336e1e76ca52363e50b7b15e721f9a34ca9ff808239479f58c2b869c",
+      "size": 471181
     },
     {
       "path": "smart/editor/js/editor.min.js.gz",
-      "sha256": "a6a9c337bad832b1345f982ac1c24c1179ee1168ec753d9007b56185a54093f5",
-      "size": 131339
+      "sha256": "ea7d30fee50277ef306ec96ca6fb711c9045e90485cf4e13ea3f1bb87de86309",
+      "size": 132103
     },
     {
       "path": "smart/editor/lang/en.json",
