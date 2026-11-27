@@ -241,9 +241,14 @@ class SfEditor extends EditorElement {
         if (site !== undefined) return site;
         // The Framework's words (sf.composition.*) are not the editor's own:
         // asked there first, so the editor's dictionary does not warn of them.
+        // While the Framework's editor pack is on its way (the Loader fetches
+        // lang/<locale>/editor.json) its word is not missing: the name stands
+        // in and the pack's arrival draws the editor again. The editor's own
+        // dictionary has no sf.* word, so it is not asked (it warned «the key
+        // is shown» on Larena's stand, 11-27).
         if (String(key).startsWith("sf.")) {
             const framework = localeText(EDITOR_FIELD_WORDS, key, locale, EDITOR_WORDS_OWNER);
-            if (framework !== key) return framework;
+            return framework !== key ? framework : humanize(key);
         }
         const own = this.sfWord(key, vars ? {vars} : undefined);
         if (own !== key) return own;

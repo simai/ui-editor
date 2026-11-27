@@ -12,6 +12,8 @@ versions in brackets.
 - `media:<id>` pictures are drawn through the render's `media(ref)` option
   with the host's `editor.media.url`; an unknown reference keeps the
   picture's placeholder.
+- No more «no word … the key is shown» warnings for the Framework's
+  catalogue words while its editor dictionary is still loading.
 - Built over SIMAI Framework `ui-4f5678e8c0ed` (group build 20).
 
 ## 1.6.0 — 2026-11-27
