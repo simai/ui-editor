@@ -30,7 +30,7 @@ Paid sets publish on the public npm registry (owner, 2026-11-05); nothing here
 is published by this repository's own hand. One line connects it:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@simai-studio/ui@5.20261125.1855/distr/core/js/core.min.js" data-sf-sets="editor@1.6.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@simai-studio/ui@5.20261127.1637/distr/core/js/core.min.js" data-sf-sets="editor@1.6.1"></script>
 ```
 
 ## A Russian page needs the Russian language file
@@ -59,8 +59,9 @@ ui-source at the revision `framework.lock.json` pins (from git, never a
 working tree), with this folder's `src/` and `tests/` laid over it. A file
 here may not replace a ui-source file.
 
-The pin is `5e30b946fd0e`, the source of the released pair
-`ui-73df5d1b4d4c` (group build 19); `ui-9ceecc24c988` (group build 15) was the first whose sf-button-icon has the
+The pin is `1b1b9ea75610`, the source of the released pair
+`ui-4f5678e8c0ed` (group build 20), the first whose Composition render takes
+the host's `media(ref)` address for a `media:<id>` reference; `ui-73df5d1b4d4c` (group build 19) carried 1.5.2 and 1.6.0; `ui-9ceecc24c988` (group build 15) was the first whose sf-button-icon has the
 toggle look (1.14.0, C393); `ui-dc9fc39aeb26` was the first that carries `simai.document-port` 1.0.0,
 `sf-form` and the core roving helper; `ui-7fb26d395af2` was the first segmented track folds into its dropdown when its
 labels do not fit (C47); `ui-b4a77681f0a7` was the first whose 1/3 control
