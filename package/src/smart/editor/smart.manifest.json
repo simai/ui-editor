@@ -632,7 +632,7 @@
       },
       {
         "path": "src/smart/editor/component.json",
-        "sha256": "e23467ffcf30b8b1891204b1f1ee267620e73b9d50380dc04b3507d172de619d"
+        "sha256": "d37fbcba18a3529323b463f211bea89c35ce5209918ead4fa899e1adb10d0dd1"
       },
       {
         "path": "src/smart/editor/lang/en.json",

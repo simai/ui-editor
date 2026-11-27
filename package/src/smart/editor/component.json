@@ -438,6 +438,12 @@
     }
   },
   "styles": "js/templates/default.css",
+  "presentation": {
+    "skeleton": {
+      "$comment": "The examples hand the document on the element, so nothing arrives after the first paint here (standard 1.3.8 §5.4). A document from simai.document-port arrives late: until document.load answers, the editor draws its empty canvas with the save line «Loading the page…», which is shorter than a page; a skeleton of the loading editor is a follow-up of 1.6.0, not measured by the first-paint gate.",
+      "late": []
+    }
+  },
   "examples": "examples.json",
   "docs": "docs.md",
   "lang": "lang/",
