@@ -35,7 +35,7 @@ editor.connectPort({sources, fields, preview, saveBlock});
 ## Хранилище страницы (simai.document-port)
 
 С 1.6.0 хост может отдать редактору порт хранилища SIMAI Framework
-`simai.document-port` 1.0.2 — тем же `connectPort`, что и порт источников.
+`simai.document-port` 1.0.2 или 1.0.3 (с 1.6.3) — тем же `connectPort`, что и порт источников.
 Порт с этим именем хранится отдельно, порт источников остаётся как был.
 
 ```js

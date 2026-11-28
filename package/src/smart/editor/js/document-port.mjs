@@ -1,4 +1,4 @@
-// The editor's side of simai.document-port (SIMAI Framework, edition 1.0.2):
+// The editor's side of simai.document-port (SIMAI Framework, editions 1.0.0-1.0.3, contract file 1.0.2):
 // one storage element, a value per language and one revision for all. The
 // host hands a port {id: "simai.document-port", capabilities, send(intent,
 // payload) -> Promise<answer>}; this session asks it to load, then saves the

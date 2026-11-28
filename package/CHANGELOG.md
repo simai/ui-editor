@@ -3,6 +3,13 @@
 The set `editor`, by its npm version `@simai-studio/editor`; component
 versions in brackets.
 
+## 1.6.3 — 2026-11-28
+
+- `sf-editor` 1.6.3 also takes `simai.document-port` 1.0.3 (draft 3 with valid
+  Composition case documents): it supports 1.0.0–1.0.3. The new edition changes
+  no intent, answer or schema; its pages have `layout.regions` as their root,
+  which the editor already draws. Still over SIMAI Framework `ui-4f5678e8c0ed`.
+
 ## 1.6.2 — 2026-11-28
 
 - `sf-editor` 1.6.2: a page the SIMAI Framework render refuses (an invalid
